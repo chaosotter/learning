@@ -1370,6 +1370,53 @@
       chunkCompletedReady: false, // true when current chunk's questions were just completed
     };
 
+    const IDB_NAME = 'kk_standalone_idb_v1';
+    const IDB_STORE = 'kv';
+
+    function openModulesIdb() {
+      return new Promise((resolve, reject) => {
+        if (!window.indexedDB) {
+          reject(new Error('IndexedDB not supported'));
+          return;
+        }
+        try {
+          const req = window.indexedDB.open(IDB_NAME, 1);
+          req.onupgradeneeded = () => {
+            const db = req.result;
+            if (!db.objectStoreNames.contains(IDB_STORE)) {
+              db.createObjectStore(IDB_STORE);
+            }
+          };
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error || new Error('IndexedDB open failed'));
+        } catch (err) {
+          reject(err);
+        }
+      });
+    }
+
+    async function idbGetModules() {
+      const db = await openModulesIdb();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(IDB_STORE, 'readonly');
+        const store = tx.objectStore(IDB_STORE);
+        const req = store.get(STORAGE_KEYS.MODULES);
+        req.onsuccess = () => resolve(req.result && typeof req.result === 'object' ? req.result : null);
+        req.onerror = () => reject(req.error || new Error('IndexedDB read failed'));
+      });
+    }
+
+    async function idbSetModules(modulesObj) {
+      const db = await openModulesIdb();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(IDB_STORE, 'readwrite');
+        const store = tx.objectStore(IDB_STORE);
+        store.put(modulesObj, STORAGE_KEYS.MODULES);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error || new Error('IndexedDB write failed'));
+      });
+    }
+
     function safeJsonParse(raw, fallback) {
       if (!raw) return fallback;
       try {
@@ -1380,8 +1427,19 @@
       }
     }
 
-    function loadLocalState() {
-      state.modulesById = safeJsonParse(localStorage.getItem(STORAGE_KEYS.MODULES), {});
+    function safeLocalStorageSet(key, value) {
+      try {
+        localStorage.setItem(key, value);
+        return true;
+      } catch (_e) {
+        return false;
+      }
+    }
+
+    async function loadLocalState() {
+      const legacyModules = safeJsonParse(localStorage.getItem(STORAGE_KEYS.MODULES), {});
+      state.modulesById = legacyModules && typeof legacyModules === 'object' ? legacyModules : {};
+
       const savedProfile = safeJsonParse(localStorage.getItem(STORAGE_KEYS.PROFILE), { badges: [] });
       state.profile = {
         badges: Array.isArray(savedProfile.badges) ? savedProfile.badges : [],
@@ -1403,30 +1461,55 @@
           ? savedPrefs.collapsedTagKeys.map(k => String(k || '')).filter(Boolean)
           : []
       );
+
+      try {
+        const idbModules = await idbGetModules();
+        if (idbModules && typeof idbModules === 'object') {
+          state.modulesById = { ...state.modulesById, ...idbModules };
+        }
+        if (Object.keys(state.modulesById).length > 0) {
+          await idbSetModules(state.modulesById);
+          try {
+            localStorage.removeItem(STORAGE_KEYS.MODULES);
+          } catch (_e) {}
+        }
+      } catch (_e) {
+        // Fallback to localStorage if IndexedDB is blocked in private browsing.
+      }
+
       if (typeof savedPrefs.activeModuleId === 'string' && state.modulesById[savedPrefs.activeModuleId]) {
         state.activeModuleId = savedPrefs.activeModuleId;
+      } else if (!state.activeModuleId) {
+        state.activeModuleId = Object.keys(state.modulesById)[0] || null;
       }
       reconcileCompletedBadges();
     }
 
-    function saveModules() {
-      localStorage.setItem(STORAGE_KEYS.MODULES, JSON.stringify(state.modulesById));
+    async function saveModules() {
+      try {
+        await idbSetModules(state.modulesById);
+        try {
+          localStorage.removeItem(STORAGE_KEYS.MODULES);
+        } catch (_e) {}
+      } catch (_e) {
+        safeLocalStorageSet(STORAGE_KEYS.MODULES, JSON.stringify(state.modulesById));
+      }
     }
 
     function saveProfile() {
-      localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(state.profile));
+      safeLocalStorageSet(STORAGE_KEYS.PROFILE, JSON.stringify(state.profile));
     }
 
     function saveSessions() {
-      localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(state.sessions));
+      safeLocalStorageSet(STORAGE_KEYS.SESSIONS, JSON.stringify(state.sessions));
     }
 
     function saveRepoConfig() {
-      localStorage.setItem(STORAGE_KEYS.REPO_CONFIG, JSON.stringify(state.repoConfig));
+      safeLocalStorageSet(STORAGE_KEYS.REPO_CONFIG, JSON.stringify(state.repoConfig));
     }
 
     function savePrefs() {
-      localStorage.setItem(STORAGE_KEYS.PREFS, JSON.stringify({
+      safeLocalStorageSet(STORAGE_KEYS.PREFS, JSON.stringify({
         hideMastered: state.hideMastered,
         ontologyPanelOpen: state.ontologyPanelOpen,
         collapsedTagKeys: Array.from(state.collapsedTagKeys),
@@ -2036,7 +2119,7 @@
       switchTab('quest');
     }
 
-    function removeCachedModule(moduleId) {
+    async function removeCachedModule(moduleId) {
       const mod = state.modulesById[moduleId];
       if (!mod) return;
       if (!window.confirm(`Remove "${mod.title}" from this device's cached library? (Your earned badge and session progress will be kept.)`)) {
@@ -2047,7 +2130,7 @@
         state.activeModuleId = Object.keys(state.modulesById)[0] || null;
         savePrefs();
       }
-      saveModules();
+      await saveModules();
       renderApp();
     }
 
@@ -2904,17 +2987,17 @@
         state.modulesById[mod.id] = mod;
         ensureSession(mod.id);
         if (!state.activeModuleId) state.activeModuleId = mod.id;
-        saveModules();
+        await saveModules();
         savePrefs();
         reconcileCompletedBadges();
-        state.repoBrowser.loading = false;
         state.repoBrowser.status = `✓ Loaded "${mod.title}" (${mod.chunk_count} chunks, ${mod.question_count} questions).`;
       } catch (err) {
-        state.repoBrowser.loading = false;
         state.repoBrowser.error = `Failed to load ${label || 'module'}: ${err.message || err}`;
         state.repoBrowser.status = '';
+      } finally {
+        state.repoBrowser.loading = false;
+        renderApp();
       }
-      renderApp();
     }
 
     async function loadAllGitHubFiles() {
@@ -2926,31 +3009,34 @@
       let loadedCount = 0;
       const errors = [];
 
-      for (let i = 0; i < files.length; i++) {
-        const f = files[i];
-        state.repoBrowser.status = `Loading (${i + 1}/${files.length}): ${f.name}...`;
-        renderApp();
-        try {
-          const resp = await fetch(f.download_url);
-          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-          const rawJson = await resp.json();
-          const mod = validateAndNormalizeModule(rawJson);
-          state.modulesById[mod.id] = mod;
-          ensureSession(mod.id);
-          if (!state.activeModuleId) state.activeModuleId = mod.id;
-          loadedCount++;
-        } catch (err) {
-          errors.push(`${f.name}: ${err.message || err}`);
+      try {
+        for (let i = 0; i < files.length; i++) {
+          const f = files[i];
+          state.repoBrowser.status = `Loading (${i + 1}/${files.length}): ${f.name}...`;
+          renderApp();
+          try {
+            const resp = await fetch(f.download_url);
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const rawJson = await resp.json();
+            const mod = validateAndNormalizeModule(rawJson);
+            state.modulesById[mod.id] = mod;
+            ensureSession(mod.id);
+            if (!state.activeModuleId) state.activeModuleId = mod.id;
+            loadedCount++;
+          } catch (err) {
+            errors.push(`${f.name}: ${err.message || err}`);
+          }
         }
-      }
 
-      saveModules();
-      savePrefs();
-      reconcileCompletedBadges();
-      state.repoBrowser.loading = false;
-      state.repoBrowser.status = `✓ Loaded ${loadedCount} of ${files.length} module file(s).`;
-      state.repoBrowser.error = errors.length > 0 ? `Skipped non-module/invalid files: ${errors.join('; ')}` : '';
-      renderApp();
+        await saveModules();
+        savePrefs();
+        reconcileCompletedBadges();
+        state.repoBrowser.status = `✓ Loaded ${loadedCount} of ${files.length} module file(s).`;
+        state.repoBrowser.error = errors.length > 0 ? `Skipped non-module/invalid files: ${errors.join('; ')}` : '';
+      } finally {
+        state.repoBrowser.loading = false;
+        renderApp();
+      }
     }
 
     async function loadRawUrlInput() {
@@ -2983,7 +3069,7 @@
           errors.push(`${file.name}: ${err.message || err}`);
         }
       }
-      saveModules();
+      await saveModules();
       savePrefs();
       reconcileCompletedBadges();
       state.repoBrowser.status = loaded > 0 ? `✓ Imported ${loaded} local module file(s) into device cache.` : '';
@@ -3385,8 +3471,8 @@
     // =========================================================================
     // 10. INITIALIZATION
     // =========================================================================
-    window.addEventListener('DOMContentLoaded', () => {
-      loadLocalState();
+    window.addEventListener('DOMContentLoaded', async () => {
+      await loadLocalState();
       renderApp();
     });
   </script>
