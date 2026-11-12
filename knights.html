@@ -1,0 +1,3081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Knowledge Knights · Standalone Mobile Client</title>
+  <link rel="stylesheet" href="https://www.gstatic.com/external_hosted/katex/dist/katex.min.css">
+  <script defer src="https://www.gstatic.com/external_hosted/katex/dist/katex.min.js"></script>
+  <script defer src="https://www.gstatic.com/external_hosted/katex/dist/contrib/mhchem.min.js"></script>
+  <style>
+    :root {
+      --bg-deep: #0b0e17;
+      --bg-panel: #131826;
+      --bg-card: #1a2133;
+      --bg-hover: #232c44;
+      --border: #2a3550;
+      --border-gold: #85682a;
+      --text-main: #e8ecf4;
+      --text-muted: #94a3b8;
+      --gold: #eab308;
+      --gold-soft: #fef08a;
+      --gold-dim: rgba(234, 179, 8, 0.14);
+      --blue: #38bdf8;
+      --blue-dim: rgba(56, 189, 248, 0.14);
+      --green: #10b981;
+      --green-dim: rgba(16, 185, 129, 0.16);
+      --red: #ef4444;
+      --red-dim: rgba(239, 68, 68, 0.16);
+      --purple: #a855f7;
+      --purple-dim: rgba(168, 85, 247, 0.16);
+      --radius: 12px;
+      --shadow: 0 8px 24px rgba(0, 0, 0, 0.42);
+      --app-max-width: 680px;
+      --bottom-nav-height: 68px;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg-deep);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      line-height: 1.55;
+      min-height: 100vh;
+    }
+
+    body {
+      padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + 18px);
+    }
+
+    .app-frame {
+      max-width: var(--app-max-width);
+      margin: 0 auto;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Sticky Top Header */
+    header.top-bar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(19, 24, 38, 0.96);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px;
+    }
+
+    .top-bar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand-crest {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #ca8a04, #facc15);
+      color: #0b0e17;
+      font-weight: 800;
+      font-size: 1.05rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 12px rgba(234, 179, 8, 0.35);
+      flex-shrink: 0;
+    }
+
+    .brand-text {
+      min-width: 0;
+    }
+
+    .brand-text h1 {
+      margin: 0;
+      font-size: 1.02rem;
+      letter-spacing: 0.02em;
+      color: var(--gold-soft);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand-text p {
+      margin: 0;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .rank-chip {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      background: var(--bg-card);
+      border: 1px solid var(--border-gold);
+      border-radius: 10px;
+      padding: 5px 10px;
+      flex-shrink: 0;
+    }
+
+    .rank-chip-top {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--gold);
+    }
+
+    .rank-chip-sub {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+    }
+
+    /* Main Content Container */
+    main.view-container {
+      flex: 1;
+      padding: 14px 14px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Bottom Navigation Bar */
+    nav.bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 60;
+      background: rgba(19, 24, 38, 0.98);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    .bottom-nav-inner {
+      max-width: var(--app-max-width);
+      margin: 0 auto;
+      height: var(--bottom-nav-height);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      padding: 6px 10px;
+    }
+
+    .nav-tab {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 4px 2px;
+      position: relative;
+      transition: all 0.15s ease;
+    }
+
+    .nav-tab:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .nav-tab.active {
+      color: var(--gold-soft);
+      background: var(--gold-dim);
+      border-color: var(--border-gold);
+    }
+
+    .nav-tab-icon {
+      font-size: 1.15rem;
+      line-height: 1;
+    }
+
+    .nav-tab-badge {
+      position: absolute;
+      top: 4px;
+      right: 14px;
+      background: var(--blue);
+      color: #0b0e17;
+      font-size: 0.62rem;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 999px;
+    }
+
+    /* Buttons */
+    button, .btn {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 44px;
+    }
+
+    button:hover:not(:disabled) {
+      background: var(--bg-hover);
+      border-color: var(--text-muted);
+    }
+
+    button:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #ca8a04, #eab308);
+      color: #0b0e17;
+      border-color: #facc15;
+      font-weight: 700;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, #eab308, #facc15);
+      border-color: #fef08a;
+    }
+
+    .btn-blue {
+      background: var(--blue-dim);
+      color: var(--blue);
+      border-color: rgba(56, 189, 248, 0.45);
+    }
+
+    .btn-danger {
+      background: var(--red-dim);
+      color: #fca5a5;
+      border-color: rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-sm {
+      min-height: 36px;
+      padding: 6px 11px;
+      font-size: 0.8rem;
+      border-radius: 8px;
+    }
+
+    .btn-block {
+      width: 100%;
+    }
+
+    /* Cards & Panels */
+    .panel-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel-card.gold-border {
+      border-color: var(--border-gold);
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 0 0 10px;
+    }
+
+    .section-heading h2 {
+      margin: 0;
+      font-size: 1.05rem;
+      color: var(--gold-soft);
+    }
+
+    .section-heading span {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    /* Ontology Filter Bar */
+    .filter-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .filter-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .filter-title {
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+
+    .toggle-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .toggle-label input {
+      accent-color: var(--gold);
+      width: 16px;
+      height: 16px;
+    }
+
+    .branch-chips {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: thin;
+    }
+
+    .branch-chip {
+      min-height: 36px;
+      padding: 6px 11px;
+      border-radius: 999px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      font-size: 0.78rem;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .branch-chip.active {
+      background: var(--gold-dim);
+      border-color: var(--border-gold);
+      color: var(--gold-soft);
+    }
+
+    .branch-chip .lvl-pill {
+      font-size: 0.68rem;
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.07);
+      color: var(--gold);
+      font-weight: 700;
+    }
+
+    /* Module Cards (Vertical Stack) */
+    .module-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .module-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      box-shadow: var(--shadow);
+    }
+
+    .module-card.completed {
+      border-color: var(--border-gold);
+      background: linear-gradient(180deg, rgba(234, 179, 8, 0.06) 0%, var(--bg-card) 100%);
+    }
+
+    .mod-top-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .tag-crumb {
+      font-size: 0.74rem;
+      color: var(--blue);
+      background: var(--blue-dim);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+      line-height: 1.35;
+    }
+
+    .badge-earned-pill {
+      font-size: 0.73rem;
+      color: var(--gold);
+      background: var(--gold-dim);
+      border: 1px solid var(--border-gold);
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-weight: 700;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .module-card h3 {
+      margin: 0;
+      font-size: 1.12rem;
+      line-height: 1.32;
+      color: var(--text-main);
+    }
+
+    .module-card p.mod-summary {
+      margin: 0;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+
+    .prereq-banner {
+      font-size: 0.78rem;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    .prereq-banner.unmet {
+      border-color: rgba(234, 179, 8, 0.45);
+      background: rgba(234, 179, 8, 0.08);
+      color: var(--gold-soft);
+    }
+
+    .prereq-chip {
+      display: inline-block;
+      margin: 2px 4px 2px 0;
+      padding: 2px 7px;
+      border-radius: 5px;
+      font-size: 0.73rem;
+      font-weight: 600;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      cursor: pointer;
+    }
+
+    .prereq-chip.met {
+      color: var(--green);
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+
+    .mod-progress-box {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-top: 6px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .mod-progress-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .progress-track {
+      height: 7px;
+      background: #0b0e17;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--blue), var(--gold));
+      transition: width 0.25s ease;
+    }
+
+    .mod-actions-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 2px;
+    }
+
+    .mod-actions-row .btn-primary,
+    .mod-actions-row .btn-main-action {
+      flex: 1;
+    }
+
+    /* Active Quest View */
+    .quest-top-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .quest-title-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .quest-title-row h2 {
+      margin: 2px 0 0;
+      font-size: 1.05rem;
+      line-height: 1.3;
+    }
+
+    .phase-pill {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .phase-pill.learning {
+      background: var(--blue-dim);
+      color: var(--blue);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+    }
+
+    .phase-pill.exam {
+      background: var(--purple-dim);
+      color: #d8b4fe;
+      border: 1px solid rgba(168, 85, 247, 0.35);
+    }
+
+    .phase-pill.completed {
+      background: var(--gold-dim);
+      color: var(--gold);
+      border: 1px solid var(--border-gold);
+    }
+
+    /* Collapsible Syllabus Drawer */
+    details.syllabus-drawer {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    details.syllabus-drawer summary {
+      padding: 11px 14px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--gold-soft);
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    details.syllabus-drawer summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .syllabus-body {
+      padding: 0 14px 14px;
+      border-top: 1px solid var(--border);
+      max-height: 340px;
+      overflow-y: auto;
+    }
+
+    .syllabus-sec {
+      margin-top: 10px;
+    }
+
+    .syllabus-sec-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .syllabus-chunk-item {
+      font-size: 0.8rem;
+      padding: 5px 8px;
+      border-radius: 6px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .syllabus-chunk-item:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+    }
+
+    .syllabus-chunk-item.current {
+      background: var(--blue-dim);
+      color: var(--blue);
+      font-weight: 700;
+    }
+
+    .syllabus-chunk-item.done {
+      color: var(--green);
+    }
+
+    /* Chunk Presentation Card */
+    .chunk-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .section-kicker {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--gold);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .chunk-card h3.chunk-title {
+      margin: 0 0 12px;
+      font-size: 1.24rem;
+      line-height: 1.32;
+      color: var(--text-main);
+    }
+
+    .terms-strip {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .term-badge {
+      font-size: 0.74rem;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      color: var(--blue);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .prose {
+      font-size: 0.98rem;
+      line-height: 1.68;
+      color: #dbe4f3;
+      overflow-wrap: break-word;
+    }
+
+    .prose p {
+      margin: 0 0 13px;
+    }
+
+    .prose p:last-child {
+      margin-bottom: 0;
+    }
+
+    .prose strong {
+      color: #ffffff;
+      font-weight: 700;
+    }
+
+    .prose code {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid var(--border);
+      padding: 2px 5px;
+      border-radius: 5px;
+      font-size: 0.88em;
+      color: var(--gold-soft);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .prose pre.code-block {
+      background: #090d16;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      overflow-x: auto;
+      margin: 12px 0;
+    }
+
+    .prose pre.code-block code {
+      background: none;
+      border: none;
+      padding: 0;
+      color: #e2e8f0;
+      font-size: 0.84rem;
+    }
+
+    .prose ul, .prose ol {
+      margin: 0 0 13px;
+      padding-left: 20px;
+    }
+
+    .prose li {
+      margin-bottom: 6px;
+    }
+
+    .prose blockquote.md-quote {
+      margin: 12px 0;
+      padding: 10px 14px;
+      border-left: 3px solid var(--gold);
+      background: rgba(234, 179, 8, 0.07);
+      border-radius: 0 8px 8px 0;
+    }
+
+    .md-table-wrap {
+      overflow-x: auto;
+      margin: 12px 0;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .md-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+    }
+
+    .md-table th, .md-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+
+    .md-table th {
+      background: var(--bg-panel);
+      color: var(--gold-soft);
+      font-weight: 700;
+    }
+
+    .math-display {
+      overflow-x: auto;
+      padding: 8px 4px;
+      margin: 8px 0;
+      text-align: center;
+    }
+
+    .audit-note {
+      margin-top: 14px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #a7f3d0;
+    }
+
+    /* Question Cards */
+    .question-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .question-card.answered {
+      border-color: rgba(16, 185, 129, 0.55);
+    }
+
+    .q-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+
+    .q-prompt {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #ffffff;
+      line-height: 1.5;
+    }
+
+    .choices-list {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .choice-btn {
+      width: 100%;
+      text-align: left;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 13px;
+      color: var(--text-main);
+      font-size: 0.92rem;
+      font-weight: 500;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-start;
+      gap: 11px;
+      line-height: 1.45;
+    }
+
+    .choice-btn:hover:not(:disabled) {
+      border-color: var(--blue);
+      background: rgba(56, 189, 248, 0.08);
+    }
+
+    .choice-btn.correct {
+      background: var(--green-dim);
+      border-color: var(--green);
+      color: #ecfdf5;
+    }
+
+    .choice-btn.wrong {
+      background: var(--red-dim);
+      border-color: var(--red);
+      color: #fef2f2;
+    }
+
+    .choice-letter {
+      width: 26px;
+      height: 26px;
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.07);
+      color: var(--gold-soft);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 800;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .choice-btn.correct .choice-letter {
+      background: var(--green);
+      color: #06281e;
+    }
+
+    .choice-btn.wrong .choice-letter {
+      background: var(--red);
+      color: #ffffff;
+    }
+
+    .feedback-box {
+      padding: 12px 14px;
+      border-radius: 9px;
+      font-size: 0.88rem;
+      line-height: 1.55;
+    }
+
+    .feedback-box.ok {
+      background: var(--green-dim);
+      border: 1px solid rgba(16, 185, 129, 0.45);
+      color: #d1fae5;
+    }
+
+    .feedback-box.err {
+      background: var(--red-dim);
+      border: 1px solid rgba(239, 68, 68, 0.45);
+      color: #fee2e2;
+    }
+
+    /* Form Controls */
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 12px;
+    }
+
+    .field-group label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    input[type="text"],
+    input[type="url"],
+    textarea,
+    select {
+      width: 100%;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 11px 12px;
+      color: var(--text-main);
+      font-size: 0.92rem;
+      font-family: inherit;
+    }
+
+    textarea {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.82rem;
+      resize: vertical;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--gold);
+    }
+
+    .repo-file-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .repo-file-item {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .repo-file-meta {
+      min-width: 0;
+    }
+
+    .repo-file-name {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-main);
+      word-break: break-all;
+    }
+
+    .repo-file-sub {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+    }
+
+    .status-toast {
+      padding: 10px 12px;
+      border-radius: 9px;
+      font-size: 0.84rem;
+      margin-top: 10px;
+    }
+
+    .status-toast.info {
+      background: var(--blue-dim);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: #bae6fd;
+    }
+
+    .status-toast.ok {
+      background: var(--green-dim);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #a7f3d0;
+    }
+
+    .status-toast.err {
+      background: var(--red-dim);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fecaca;
+    }
+
+    .empty-box {
+      text-align: center;
+      padding: 28px 18px;
+      background: var(--bg-panel);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      color: var(--text-muted);
+    }
+
+    .empty-box h3 {
+      margin: 0 0 8px;
+      color: var(--text-main);
+      font-size: 1.05rem;
+    }
+
+    .radio-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .radio-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 10px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .radio-card.active {
+      background: var(--gold-dim);
+      border-color: var(--border-gold);
+    }
+
+    .radio-card-title {
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--gold-soft);
+    }
+
+    .radio-card-desc {
+      font-size: 0.73rem;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    @media (min-width: 600px) {
+      main.view-container {
+        padding: 18px 20px 32px;
+      }
+      .chunk-card {
+        padding: 22px 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-frame">
+    <header class="top-bar">
+      <div class="top-bar-inner">
+        <div class="brand">
+          <div class="brand-crest">⚔</div>
+          <div class="brand-text">
+            <h1>Knowledge Knights</h1>
+            <p id="headerSubtitle">Standalone Mobile Hall</p>
+          </div>
+        </div>
+        <div class="rank-chip" id="overallRankChip">
+          <div class="rank-chip-top">Lv.0 Page</div>
+          <div class="rank-chip-sub">0 / 1 Badges</div>
+        </div>
+      </div>
+    </header>
+
+    <main class="view-container" id="mainView"></main>
+
+    <nav class="bottom-nav" aria-label="Primary Navigation">
+      <div class="bottom-nav-inner">
+        <button type="button" class="nav-tab active" id="tabBtn-hall" onclick="switchTab('hall')">
+          <span class="nav-tab-icon">🏰</span>
+          <span>Hall</span>
+          <span class="nav-tab-badge" id="hallCountBadge" style="display:none">0</span>
+        </button>
+        <button type="button" class="nav-tab" id="tabBtn-quest" onclick="switchTab('quest')">
+          <span class="nav-tab-icon">📜</span>
+          <span>Quest</span>
+          <span class="nav-tab-badge" id="questActiveBadge" style="display:none">•</span>
+        </button>
+        <button type="button" class="nav-tab" id="tabBtn-library" onclick="switchTab('library')">
+          <span class="nav-tab-icon">📦</span>
+          <span>Library</span>
+        </button>
+        <button type="button" class="nav-tab" id="tabBtn-sync" onclick="switchTab('sync')">
+          <span class="nav-tab-icon">🔄</span>
+          <span>Sync</span>
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. PERSISTENT LOCAL STORAGE & DOMAIN CONSTANTS
+    // =========================================================================
+    const STORAGE_KEYS = {
+      MODULES: 'kk_standalone_modules_v1',
+      PROFILE: 'kk_standalone_profile_v1',
+      SESSIONS: 'kk_standalone_sessions_v1',
+      REPO_CONFIG: 'kk_standalone_repo_v1',
+      PREFS: 'kk_standalone_prefs_v1',
+    };
+
+    const RANK_TITLES = [
+      'Page',
+      'Squire',
+      'Knight Errant',
+      'Knight Bachelor',
+      'Knight Banneret',
+      'Knight Commander',
+    ];
+
+    const PHASE_LEARNING = 'LEARNING';
+    const PHASE_FINAL_EXAM = 'FINAL_EXAM';
+    const PHASE_COMPLETED = 'COMPLETED';
+
+    const state = {
+      activeTab: 'hall',
+      selectedTagKey: '',
+      hideMastered: false,
+      activeModuleId: null,
+      reviewChunkIndex: null, // optional read-only chunk inspection when completed
+      modulesById: {},        // { [moduleId]: Module }
+      profile: { badges: [] }, // { badges: [{ module_id, module_title, tag_path, awarded_at }] }
+      sessions: {},           // { [moduleId]: ModuleSession }
+      repoConfig: {
+        ownerRepo: '',
+        path: '',
+        branch: 'main',
+      },
+      repoBrowser: {
+        loading: false,
+        error: '',
+        status: '',
+        files: [], // [{ name, path, download_url, size }]
+      },
+      syncView: {
+        importMode: 'merge', // 'merge' | 'replace'
+        showRawJson: false,
+        status: '',
+        statusKind: 'info',
+      },
+      examFeedback: null,     // transient feedback for current exam question
+      chunkCompletedReady: false, // true when current chunk's questions were just completed
+    };
+
+    function safeJsonParse(raw, fallback) {
+      if (!raw) return fallback;
+      try {
+        const parsed = JSON.parse(raw);
+        return parsed !== null && parsed !== undefined ? parsed : fallback;
+      } catch (_e) {
+        return fallback;
+      }
+    }
+
+    function loadLocalState() {
+      state.modulesById = safeJsonParse(localStorage.getItem(STORAGE_KEYS.MODULES), {});
+      const savedProfile = safeJsonParse(localStorage.getItem(STORAGE_KEYS.PROFILE), { badges: [] });
+      state.profile = {
+        badges: Array.isArray(savedProfile.badges) ? savedProfile.badges : [],
+      };
+      state.sessions = safeJsonParse(localStorage.getItem(STORAGE_KEYS.SESSIONS), {});
+      const savedRepo = safeJsonParse(localStorage.getItem(STORAGE_KEYS.REPO_CONFIG), {});
+      state.repoConfig = {
+        ownerRepo: typeof savedRepo.ownerRepo === 'string' ? savedRepo.ownerRepo : '',
+        path: typeof savedRepo.path === 'string' ? savedRepo.path : '',
+        branch: typeof savedRepo.branch === 'string' && savedRepo.branch.trim() ? savedRepo.branch.trim() : 'main',
+      };
+      const savedPrefs = safeJsonParse(localStorage.getItem(STORAGE_KEYS.PREFS), {});
+      state.hideMastered = Boolean(savedPrefs.hideMastered);
+      if (typeof savedPrefs.activeModuleId === 'string' && state.modulesById[savedPrefs.activeModuleId]) {
+        state.activeModuleId = savedPrefs.activeModuleId;
+      }
+      reconcileCompletedBadges();
+    }
+
+    function saveModules() {
+      localStorage.setItem(STORAGE_KEYS.MODULES, JSON.stringify(state.modulesById));
+    }
+
+    function saveProfile() {
+      localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(state.profile));
+    }
+
+    function saveSessions() {
+      localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(state.sessions));
+    }
+
+    function saveRepoConfig() {
+      localStorage.setItem(STORAGE_KEYS.REPO_CONFIG, JSON.stringify(state.repoConfig));
+    }
+
+    function savePrefs() {
+      localStorage.setItem(STORAGE_KEYS.PREFS, JSON.stringify({
+        hideMastered: state.hideMastered,
+        activeModuleId: state.activeModuleId,
+      }));
+    }
+
+    // =========================================================================
+    // 2. TRIANGULAR LEVELING MATH & ONTOLOGY TREE (matches model/model.go)
+    // =========================================================================
+    function rankTitle(level) {
+      if (level <= 0) return RANK_TITLES[0];
+      if (level < RANK_TITLES.length) return RANK_TITLES[level];
+      return 'Grandmaster';
+    }
+
+    function badgesRequiredForLevel(level) {
+      if (level <= 0) return 0;
+      return Math.floor((level * (level + 1)) / 2);
+    }
+
+    function levelForBadges(badgesCount) {
+      const badges = Math.max(0, Math.floor(badgesCount || 0));
+      let level = Math.floor((Math.sqrt(8 * badges + 1) - 1) / 2);
+      while (badgesRequiredForLevel(level + 1) <= badges) {
+        level++;
+      }
+      while (level > 0 && badgesRequiredForLevel(level) > badges) {
+        level--;
+      }
+      return {
+        badges,
+        level,
+        title: rankTitle(level),
+        current_level_floor: badgesRequiredForLevel(level),
+        next_level_target: badgesRequiredForLevel(level + 1),
+      };
+    }
+
+    function normalizeTagPath(tags) {
+      if (!Array.isArray(tags)) return [];
+      return tags.map(t => String(t || '').trim()).filter(Boolean);
+    }
+
+    function tagPathKey(tags) {
+      return normalizeTagPath(tags).join(' / ');
+    }
+
+    function buildOntologyBranches() {
+      const nodesByKey = {};
+      const ensurePath = (rawTags) => {
+        const clean = normalizeTagPath(rawTags);
+        const chain = [];
+        for (let i = 0; i < clean.length; i++) {
+          const prefix = clean.slice(0, i + 1);
+          const key = prefix.join(' / ');
+          if (!nodesByKey[key]) {
+            nodesByKey[key] = {
+              name: clean[i],
+              path: prefix,
+              path_key: key,
+              depth: i,
+              badges: 0,
+            };
+          }
+          chain.push(nodesByKey[key]);
+        }
+        return chain;
+      };
+
+      Object.values(state.modulesById).forEach(mod => {
+        if (mod && Array.isArray(mod.tag_path)) {
+          ensurePath(mod.tag_path);
+        }
+      });
+
+      const seenBadgeIds = new Set();
+      (state.profile.badges || []).forEach(b => {
+        if (!b) return;
+        const modId = String(b.module_id || '').trim();
+        if (modId) {
+          if (seenBadgeIds.has(modId)) return;
+          seenBadgeIds.add(modId);
+        }
+        const chain = ensurePath(b.tag_path);
+        chain.forEach(node => {
+          node.badges += 1;
+        });
+      });
+
+      return Object.values(nodesByKey)
+        .map(node => ({
+          ...node,
+          level_info: levelForBadges(node.badges),
+        }))
+        .sort((a, b) => a.path_key.localeCompare(b.path_key));
+    }
+
+    function earnedBadgeMap() {
+      const map = {};
+      (state.profile.badges || []).forEach(b => {
+        if (b && b.module_id) {
+          map[b.module_id] = b;
+        }
+      });
+      return map;
+    }
+
+    function awardBadgeForModule(mod, awardedAtIso) {
+      if (!mod || !mod.id) return;
+      const existing = state.profile.badges.find(b => b && b.module_id === mod.id);
+      if (existing) return;
+      state.profile.badges.push({
+        module_id: mod.id,
+        module_title: mod.title || mod.id,
+        tag_path: normalizeTagPath(mod.tag_path),
+        awarded_at: awardedAtIso || new Date().toISOString(),
+      });
+      saveProfile();
+    }
+
+    function reconcileCompletedBadges() {
+      let changed = false;
+      const existingIds = new Set((state.profile.badges || []).map(b => b && b.module_id));
+      Object.entries(state.sessions).forEach(([modId, sess]) => {
+        if (sess && sess.phase === PHASE_COMPLETED && !existingIds.has(modId)) {
+          const mod = state.modulesById[modId];
+          if (mod) {
+            state.profile.badges.push({
+              module_id: mod.id,
+              module_title: mod.title || mod.id,
+              tag_path: normalizeTagPath(mod.tag_path),
+              awarded_at: sess.completed_at || new Date().toISOString(),
+            });
+            existingIds.add(modId);
+            changed = true;
+          }
+        }
+      });
+      if (changed) saveProfile();
+    }
+
+    // =========================================================================
+    // 3. MODULE VALIDATION & PEDAGOGICAL ENGINE (matches engine/engine.go)
+    // =========================================================================
+    function validateAndNormalizeModule(raw) {
+      if (!raw || typeof raw !== 'object') {
+        throw new Error('JSON root must be an object.');
+      }
+      const id = String(raw.id || '').trim();
+      const title = String(raw.title || '').trim();
+      const summary = String(raw.summary || '').trim();
+      if (!id) throw new Error('Module is missing a valid "id".');
+      if (!title) throw new Error(`Module "${id}" is missing a "title".`);
+      if (!Array.isArray(raw.sections) || raw.sections.length === 0) {
+        throw new Error(`Module "${id}" must contain a non-empty "sections" array.`);
+      }
+      const tagPath = normalizeTagPath(raw.tag_path);
+      if (tagPath.length === 0) {
+        throw new Error(`Module "${id}" must have a non-empty "tag_path".`);
+      }
+
+      let chunkCount = 0;
+      let questionCount = 0;
+      const sections = raw.sections.map((sec, sIdx) => {
+        if (!sec || !Array.isArray(sec.chunks) || sec.chunks.length === 0) {
+          throw new Error(`Module "${id}" section ${sIdx + 1} has no chunks.`);
+        }
+        const chunks = sec.chunks.map((ch, cIdx) => {
+          chunkCount++;
+          if (!ch || !Array.isArray(ch.questions) || ch.questions.length === 0) {
+            throw new Error(`Module "${id}" chunk ${cIdx + 1} in section ${sIdx + 1} has no questions.`);
+          }
+          const questions = ch.questions.map((q, qIdx) => {
+            questionCount++;
+            if (!q || !Array.isArray(q.choices) || q.choices.length !== 4) {
+              throw new Error(`Module "${id}" question ${qIdx + 1} in chunk "${ch.id || cIdx}" must have 4 choices.`);
+            }
+            const correctIdx = Number(q.correct_index);
+            if (!Number.isInteger(correctIdx) || correctIdx < 0 || correctIdx > 3) {
+              throw new Error(`Module "${id}" question "${q.id || qIdx}" has invalid correct_index.`);
+            }
+            return {
+              id: String(q.id || `q_${sIdx}_${cIdx}_${qIdx}`),
+              prompt: String(q.prompt || ''),
+              choices: q.choices.map(c => String(c ?? '')),
+              correct_index: correctIdx,
+              explanation: String(q.explanation || ''),
+            };
+          });
+          return {
+            id: String(ch.id || `ch_${chunkCount}`),
+            title: String(ch.title || `Chunk ${chunkCount}`),
+            content_markdown: String(ch.content_markdown || ''),
+            questions,
+            last_audit: ch.last_audit || null,
+          };
+        });
+        return {
+          id: String(sec.id || `sec_${sIdx + 1}`),
+          title: String(sec.title || `Section ${sIdx + 1}`),
+          summary: String(sec.summary || ''),
+          introduced_terms: Array.isArray(sec.introduced_terms)
+            ? sec.introduced_terms.map(t => String(t || '').trim()).filter(Boolean)
+            : [],
+          chunks,
+        };
+      });
+
+      return {
+        id,
+        title,
+        summary,
+        tag_path: tagPath,
+        tag_path_key: tagPathKey(tagPath),
+        prerequisite_ids: Array.isArray(raw.prerequisite_ids)
+          ? raw.prerequisite_ids.map(p => String(p || '').trim()).filter(Boolean)
+          : [],
+        vetting_summary: String(raw.vetting_summary || ''),
+        sections,
+        section_count: sections.length,
+        chunk_count: chunkCount,
+        question_count: questionCount,
+      };
+    }
+
+    function flattenModuleChunks(mod) {
+      const flat = [];
+      if (!mod || !Array.isArray(mod.sections)) return flat;
+      let globalIdx = 0;
+      mod.sections.forEach((sec, sIdx) => {
+        (sec.chunks || []).forEach((chunk) => {
+          flat.push({
+            flat_index: globalIdx,
+            chunk_number: globalIdx + 1,
+            section_index: sIdx,
+            section_number: sIdx + 1,
+            section_id: sec.id,
+            section_title: sec.title,
+            section_summary: sec.summary || '',
+            introduced_terms: sec.introduced_terms || [],
+            chunk,
+          });
+          globalIdx++;
+        });
+      });
+      return flat;
+    }
+
+    function flattenModuleQuestions(mod) {
+      const byId = {};
+      const list = [];
+      flattenModuleChunks(mod).forEach(entry => {
+        (entry.chunk.questions || []).forEach(q => {
+          const item = {
+            question: q,
+            chunk_id: entry.chunk.id,
+            chunk_title: entry.chunk.title,
+            section_title: entry.section_title,
+          };
+          byId[q.id] = item;
+          list.push(item);
+        });
+      });
+      return { byId, list };
+    }
+
+    function randomPerm4() {
+      const arr = [0, 1, 2, 3];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const tmp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = tmp;
+      }
+      return arr;
+    }
+
+    function createFreshSession(moduleId) {
+      return {
+        module_id: moduleId,
+        phase: PHASE_LEARNING,
+        current_chunk_index: 0,
+        answered_in_chunk: [],
+        exam_queue: [],
+        exam_mastered_count: 0,
+        exam_total_attempts: 0,
+        completed_at: '',
+      };
+    }
+
+    function ensureSession(moduleId) {
+      if (!state.sessions[moduleId]) {
+        state.sessions[moduleId] = createFreshSession(moduleId);
+        saveSessions();
+      }
+      const s = state.sessions[moduleId];
+      if (!Array.isArray(s.answered_in_chunk)) s.answered_in_chunk = [];
+      if (!Array.isArray(s.exam_queue)) s.exam_queue = [];
+      return s;
+    }
+
+    function startFinalExam(mod, session) {
+      const { list } = flattenModuleQuestions(mod);
+      const shuffled = list.slice();
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const tmp = shuffled[i];
+        shuffled[i] = shuffled[j];
+        shuffled[j] = tmp;
+      }
+      session.phase = PHASE_FINAL_EXAM;
+      session.answered_in_chunk = [];
+      session.exam_queue = shuffled.map(item => ({
+        question_id: item.question.id,
+        choice_order: randomPerm4(),
+      }));
+      session.exam_mastered_count = 0;
+      session.exam_total_attempts = 0;
+      session.completed_at = '';
+      state.examFeedback = null;
+      state.chunkCompletedReady = false;
+      saveSessions();
+    }
+
+    // =========================================================================
+    // 4. MARKDOWN & KATEX RENDERING (matches web/index.html)
+    // =========================================================================
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function renderMathJax(tex, displayMode) {
+      const trimmed = String(tex || '').trim();
+      if (window.katex && typeof window.katex.renderToString === 'function') {
+        try {
+          return window.katex.renderToString(trimmed, {
+            displayMode: Boolean(displayMode),
+            throwOnError: false,
+            strict: false,
+          });
+        } catch (_e) {
+          return `<code>${escapeHtml(trimmed)}</code>`;
+        }
+      }
+      return `<code>${escapeHtml(trimmed)}</code>`;
+    }
+
+    function formatInlineMarkdown(rawText) {
+      if (!rawText) return '';
+      const mathSegments = [];
+      const withPlaceholders = String(rawText).replace(/\$\$([\s\S]+?)\$\$/g, (_m, tex) => {
+        const idx = mathSegments.length;
+        mathSegments.push(renderMathJax(tex, false));
+        return `\u0000MATH_${idx}\u0000`;
+      });
+
+      let html = escapeHtml(withPlaceholders);
+      html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+      html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+      html = html.replace(/\u0000MATH_(\d+)\u0000/g, (_m, idx) => mathSegments[Number(idx)] || '');
+      return html;
+    }
+
+    function renderMarkdown(md) {
+      if (!md) return '';
+      const mathBlocks = [];
+      const codeBlocks = [];
+
+      let text = String(md).replace(/\r\n/g, '\n');
+
+      // Extract fenced code blocks first.
+      text = text.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (_m, _lang, code) => {
+        const idx = codeBlocks.length;
+        codeBlocks.push(`<pre class="code-block"><code>${escapeHtml(code.replace(/\n$/, ''))}</code></pre>`);
+        return `\n\n@@CODE_BLOCK_${idx}@@\n\n`;
+      });
+
+      // Extract standalone display $$...$$ blocks.
+      text = text.replace(/(?:^|\n)[ \t]*\$\$\s*\n([\s\S]+?)\n[ \t]*\$\$(?=[ \t]*(?:\n|$))/g, (_m, tex) => {
+        const idx = mathBlocks.length;
+        mathBlocks.push(`<div class="math-display">${renderMathJax(tex, true)}</div>`);
+        return `\n\n@@MATH_BLOCK_${idx}@@\n\n`;
+      });
+
+      const blocks = text.split(/\n{2,}/);
+      return blocks.map(b => {
+        const trimmed = b.trim();
+        if (!trimmed) return '';
+
+        const codeMatch = trimmed.match(/^@@CODE_BLOCK_(\d+)@@$/);
+        if (codeMatch) return codeBlocks[Number(codeMatch[1])] || '';
+
+        const blockMatch = trimmed.match(/^@@MATH_BLOCK_(\d+)@@$/);
+        if (blockMatch) return mathBlocks[Number(blockMatch[1])] || '';
+
+        if (trimmed.startsWith('$$') && trimmed.endsWith('$$') && trimmed.length > 4) {
+          const inner = trimmed.slice(2, -2);
+          if (!inner.includes('$$')) {
+            return `<div class="math-display">${renderMathJax(inner, true)}</div>`;
+          }
+        }
+
+        const lines = trimmed.split('\n');
+
+        // Markdown tables
+        if (
+          lines.length >= 2 &&
+          lines[0].includes('|') &&
+          /^\s*\|?[\s:|-]+\|[\s:|-]*$/.test(lines[1])
+        ) {
+          const parseRow = (rowLine) => {
+            let r = rowLine.trim();
+            if (r.startsWith('|')) r = r.slice(1);
+            if (r.endsWith('|')) r = r.slice(0, -1);
+            return r.split('|').map(cell => formatInlineMarkdown(cell.trim()));
+          };
+          const headers = parseRow(lines[0]);
+          const bodyRows = lines.slice(2).filter(l => l.trim().includes('|')).map(parseRow);
+          const thead = `<thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>`;
+          const tbody = `<tbody>${bodyRows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>`;
+          return `<div class="md-table-wrap"><table class="md-table">${thead}${tbody}</table></div>`;
+        }
+
+        // Blockquotes
+        if (lines.every(l => /^\s*>/.test(l))) {
+          const inner = lines.map(l => l.replace(/^\s*>\s?/, '')).join('\n');
+          return `<blockquote class="md-quote">${renderMarkdown(inner)}</blockquote>`;
+        }
+
+        // Unordered list
+        if (lines.every(l => /^\s*[-*]\s+/.test(l))) {
+          const items = lines.map(l => `<li>${formatInlineMarkdown(l.replace(/^\s*[-*]\s+/, ''))}</li>`).join('');
+          return `<ul>${items}</ul>`;
+        }
+
+        // Ordered list
+        if (lines.every(l => /^\s*\d+\.\s+/.test(l))) {
+          const items = lines.map(l => `<li>${formatInlineMarkdown(l.replace(/^\s*\d+\.\s+/, ''))}</li>`).join('');
+          return `<ol>${items}</ol>`;
+        }
+
+        if (/^#{1,4}\s+/.test(trimmed)) {
+          const headingText = trimmed.replace(/^#{1,4}\s+/, '');
+          return `<h4 style="margin:14px 0 6px;color:var(--gold-soft)">${formatInlineMarkdown(headingText)}</h4>`;
+        }
+
+        const joined = lines.map(l => formatInlineMarkdown(l)).join('<br>');
+        return `<p>${joined}</p>`;
+      }).join('');
+    }
+
+    // =========================================================================
+    // 5. TOP HEADER & NAVIGATION RENDERING
+    // =========================================================================
+    function updateHeaderAndNav() {
+      const totalUniqueBadges = new Set((state.profile.badges || []).map(b => b && b.module_id).filter(Boolean)).size;
+      const lvl = levelForBadges(totalUniqueBadges);
+      const chip = document.getElementById('overallRankChip');
+      if (chip) {
+        chip.innerHTML = `
+          <div class="rank-chip-top">Lv.${lvl.level} ${escapeHtml(lvl.title)}</div>
+          <div class="rank-chip-sub">${lvl.badges} / ${lvl.next_level_target} Badges</div>
+        `;
+      }
+
+      const modCount = Object.keys(state.modulesById).length;
+      const hallBadge = document.getElementById('hallCountBadge');
+      if (hallBadge) {
+        if (modCount > 0) {
+          hallBadge.style.display = 'inline-block';
+          hallBadge.textContent = String(modCount);
+        } else {
+          hallBadge.style.display = 'none';
+        }
+      }
+
+      const questBadge = document.getElementById('questActiveBadge');
+      if (questBadge) {
+        questBadge.style.display = state.activeModuleId && state.modulesById[state.activeModuleId] ? 'inline-block' : 'none';
+      }
+
+      ['hall', 'quest', 'library', 'sync'].forEach(tab => {
+        const btn = document.getElementById(`tabBtn-${tab}`);
+        if (btn) {
+          btn.classList.toggle('active', state.activeTab === tab);
+        }
+      });
+    }
+
+    function switchTab(tab) {
+      state.activeTab = tab;
+      renderApp();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renderApp() {
+      updateHeaderAndNav();
+      const container = document.getElementById('mainView');
+      if (!container) return;
+
+      if (state.activeTab === 'hall') {
+        renderHallTab(container);
+      } else if (state.activeTab === 'quest') {
+        renderQuestTab(container);
+      } else if (state.activeTab === 'library') {
+        renderLibraryTab(container);
+      } else if (state.activeTab === 'sync') {
+        renderSyncTab(container);
+      }
+    }
+
+    // =========================================================================
+    // 6. TAB 1: HALL (ONTOLOGY FILTER + MODULE CARDS)
+    // =========================================================================
+    function selectBranchFilter(key) {
+      state.selectedTagKey = key;
+      renderApp();
+    }
+
+    function toggleHideMastered(checked) {
+      state.hideMastered = Boolean(checked);
+      savePrefs();
+      renderApp();
+    }
+
+    function openModuleQuest(moduleId) {
+      if (!state.modulesById[moduleId]) return;
+      state.activeModuleId = moduleId;
+      state.reviewChunkIndex = null;
+      state.examFeedback = null;
+      state.chunkCompletedReady = false;
+      ensureSession(moduleId);
+      savePrefs();
+      switchTab('quest');
+    }
+
+    function removeCachedModule(moduleId) {
+      const mod = state.modulesById[moduleId];
+      if (!mod) return;
+      if (!window.confirm(`Remove "${mod.title}" from this device's cached library? (Your earned badge and session progress will be kept.)`)) {
+        return;
+      }
+      delete state.modulesById[moduleId];
+      if (state.activeModuleId === moduleId) {
+        state.activeModuleId = Object.keys(state.modulesById)[0] || null;
+        savePrefs();
+      }
+      saveModules();
+      renderApp();
+    }
+
+    function renderHallTab(container) {
+      const allModules = Object.values(state.modulesById).sort((a, b) => {
+        const keyCmp = (a.tag_path_key || '').localeCompare(b.tag_path_key || '');
+        if (keyCmp !== 0) return keyCmp;
+        return (a.title || '').localeCompare(b.title || '');
+      });
+
+      if (allModules.length === 0) {
+        container.innerHTML = `
+          <div class="empty-box">
+            <h3>No Modules Loaded Yet</h3>
+            <p style="margin:0 0 16px;font-size:0.9rem">
+              Load Knowledge Knights JSON modules from a public GitHub repository or directly from a local file on your device.
+            </p>
+            <button type="button" class="btn-primary" onclick="switchTab('library')">
+              📦 Open Module Library
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      const branches = buildOntologyBranches();
+      const badgesByMod = earnedBadgeMap();
+
+      const filtered = allModules.filter(mod => {
+        const isCompleted = Boolean(badgesByMod[mod.id]) ||
+          (state.sessions[mod.id] && state.sessions[mod.id].phase === PHASE_COMPLETED);
+        if (state.hideMastered && isCompleted) {
+          return false;
+        }
+        if (!state.selectedTagKey) return true;
+        return mod.tag_path_key === state.selectedTagKey ||
+          mod.tag_path_key.startsWith(state.selectedTagKey + ' / ');
+      });
+
+      const branchChipsHtml = [
+        `<button type="button" class="branch-chip ${state.selectedTagKey === '' ? 'active' : ''}" onclick="selectBranchFilter('')">
+          <span>All Branches</span>
+          <span class="lvl-pill">${allModules.length}</span>
+        </button>`,
+        ...branches.map(b => {
+          const indentPrefix = b.depth > 0 ? '› '.repeat(b.depth) : '';
+          const escapedKey = escapeHtml(b.path_key).replace(/'/g, "\\'");
+          return `
+            <button type="button" class="branch-chip ${state.selectedTagKey === b.path_key ? 'active' : ''}" onclick="selectBranchFilter('${escapedKey}')">
+              <span>${indentPrefix}${escapeHtml(b.name)}</span>
+              <span class="lvl-pill">Lv.${b.level_info.level} · ${b.level_info.badges}/${b.level_info.next_level_target}</span>
+            </button>
+          `;
+        }),
+      ].join('');
+
+      const cardsHtml = filtered.length === 0
+        ? `<div class="empty-box">
+             <h3>No Matching Modules</h3>
+             <p style="margin:0">Try clearing the ontology branch filter or unchecking "Hide Earned Badges".</p>
+           </div>`
+        : filtered.map(mod => renderModuleCardHtml(mod, badgesByMod)).join('');
+
+      container.innerHTML = `
+        <section class="filter-panel">
+          <div class="filter-top-row">
+            <span class="filter-title">Ontology Branches</span>
+            <label class="toggle-label">
+              <input type="checkbox" ${state.hideMastered ? 'checked' : ''} onchange="toggleHideMastered(this.checked)">
+              <span>Hide Earned Badges</span>
+            </label>
+          </div>
+          <div class="branch-chips">${branchChipsHtml}</div>
+        </section>
+
+        <section class="module-stack">
+          ${cardsHtml}
+        </section>
+      `;
+    }
+
+    function renderModuleCardHtml(mod, badgesByMod) {
+      const sess = state.sessions[mod.id];
+      const hasBadge = Boolean(badgesByMod[mod.id]) || (sess && sess.phase === PHASE_COMPLETED);
+      const totalChunks = mod.chunk_count || flattenModuleChunks(mod).length || 50;
+      const totalQuestions = mod.question_count || 100;
+
+      let statusLabel = 'Not Started';
+      let pct = 0;
+      let btnLabel = 'Start Quest';
+
+      if (sess) {
+        if (sess.phase === PHASE_COMPLETED) {
+          statusLabel = `Mastered (${totalQuestions}/${totalQuestions} Exam Questions)`;
+          pct = 100;
+          btnLabel = hasBadge ? 'Review / Replay' : 'Open Quest';
+        } else if (sess.phase === PHASE_FINAL_EXAM) {
+          const mastered = sess.exam_mastered_count || 0;
+          statusLabel = `Final Exam: ${mastered} / ${totalQuestions} Mastered`;
+          pct = Math.min(99, Math.round(50 + (mastered / Math.max(1, totalQuestions)) * 50));
+          btnLabel = 'Resume Final Exam';
+        } else {
+          const idx = sess.current_chunk_index || 0;
+          if (idx > 0 || (sess.answered_in_chunk && sess.answered_in_chunk.length > 0)) {
+            statusLabel = `Learning: Chunk ${Math.min(idx + 1, totalChunks)} / ${totalChunks}`;
+            pct = Math.max(3, Math.round((idx / Math.max(1, totalChunks)) * 50));
+            btnLabel = 'Continue Learning';
+          }
+        }
+      }
+
+      // Soft prerequisites check
+      let prereqHtml = '';
+      if (Array.isArray(mod.prerequisite_ids) && mod.prerequisite_ids.length > 0) {
+        let unmetCount = 0;
+        const chips = mod.prerequisite_ids.map(pid => {
+          const met = Boolean(badgesByMod[pid]);
+          if (!met) unmetCount++;
+          const targetMod = state.modulesById[pid];
+          const label = targetMod ? targetMod.title : pid;
+          const clickAttr = targetMod
+            ? `onclick="openModuleQuest('${escapeHtml(pid).replace(/'/g, "\\'")}')"`
+            : '';
+          return `<span class="prereq-chip ${met ? 'met' : ''}" ${clickAttr}>${met ? '✓ ' : '○ '}${escapeHtml(label)}</span>`;
+        }).join('');
+        prereqHtml = `
+          <div class="prereq-banner ${unmetCount > 0 ? 'unmet' : ''}">
+            <div style="margin-bottom:4px;font-weight:700">
+              ${unmetCount > 0 ? 'Recommended Prerequisites:' : 'Prerequisites Completed:'}
+            </div>
+            <div>${chips}</div>
+          </div>
+        `;
+      }
+
+      const escapedId = escapeHtml(mod.id).replace(/'/g, "\\'");
+
+      return `
+        <article class="module-card ${hasBadge ? 'completed' : ''}">
+          <div class="mod-top-row">
+            <span class="tag-crumb">${escapeHtml(mod.tag_path_key)}</span>
+            ${hasBadge ? '<span class="badge-earned-pill">🛡️ Merit Badge</span>' : ''}
+          </div>
+          <h3>${escapeHtml(mod.title)}</h3>
+          <p class="mod-summary">${escapeHtml(mod.summary)}</p>
+          ${prereqHtml}
+          <div class="mod-progress-box">
+            <div class="mod-progress-meta">
+              <span>${escapeHtml(statusLabel)}</span>
+              <span>${mod.section_count} Sections · ${totalChunks} Chunks</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" style="width:${pct}%"></div>
+            </div>
+          </div>
+          <div class="mod-actions-row">
+            <button type="button" class="${hasBadge ? 'btn-main-action' : 'btn-primary'}" onclick="openModuleQuest('${escapedId}')">
+              ${escapeHtml(btnLabel)}
+            </button>
+            <button type="button" class="btn-sm" title="Remove from cached library" onclick="removeCachedModule('${escapedId}')">
+              🗑️
+            </button>
+          </div>
+        </article>
+      `;
+    }
+
+    // =========================================================================
+    // 7. TAB 2: ACTIVE QUEST (LEARNING, FINAL EXAM, COMPLETED)
+    // =========================================================================
+    function jumpToSyllabusChunk(flatIdx) {
+      const mod = state.modulesById[state.activeModuleId];
+      if (!mod) return;
+      const sess = ensureSession(mod.id);
+      if (sess.phase === PHASE_LEARNING) {
+        sess.current_chunk_index = flatIdx;
+        sess.answered_in_chunk = [];
+        state.chunkCompletedReady = false;
+        saveSessions();
+      } else {
+        state.reviewChunkIndex = flatIdx;
+      }
+      renderApp();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function promptJumpToExam() {
+      const mod = state.modulesById[state.activeModuleId];
+      if (!mod) return;
+      const sess = ensureSession(mod.id);
+      if (sess.phase === PHASE_LEARNING && !window.confirm('Skip the remaining presentation chunks and jump straight into the 100-question Final Exam?')) {
+        return;
+      }
+      state.reviewChunkIndex = null;
+      startFinalExam(mod, sess);
+      renderApp();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function promptRestartModule() {
+      const mod = state.modulesById[state.activeModuleId];
+      if (!mod) return;
+      if (!window.confirm(`Reset your current session progress for "${mod.title}" and start from Chunk 1? (Earned Merit Badges are never deleted.)`)) {
+        return;
+      }
+      state.sessions[mod.id] = createFreshSession(mod.id);
+      state.reviewChunkIndex = null;
+      state.examFeedback = null;
+      state.chunkCompletedReady = false;
+      saveSessions();
+      renderApp();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renderQuestTab(container) {
+      if (!state.activeModuleId || !state.modulesById[state.activeModuleId]) {
+        const firstId = Object.keys(state.modulesById)[0];
+        if (firstId) {
+          state.activeModuleId = firstId;
+        } else {
+          container.innerHTML = `
+            <div class="empty-box">
+              <h3>No Active Quest Selected</h3>
+              <p style="margin:0 0 16px">Load a module from the Library or select a quest in the Hall to begin.</p>
+              <button type="button" class="btn-primary" onclick="switchTab('library')">📦 Open Library</button>
+            </div>
+          `;
+          return;
+        }
+      }
+
+      const mod = state.modulesById[state.activeModuleId];
+      const sess = ensureSession(mod.id);
+      const flatChunks = flattenModuleChunks(mod);
+      const totalChunks = flatChunks.length;
+
+      let phaseClass = 'learning';
+      let phaseLabel = `Learning · Chunk ${Math.min(sess.current_chunk_index + 1, totalChunks)}/${totalChunks}`;
+      let progressPct = Math.round((sess.current_chunk_index / Math.max(1, totalChunks)) * 100);
+
+      if (sess.phase === PHASE_FINAL_EXAM) {
+        phaseClass = 'exam';
+        const totalQ = mod.question_count || 100;
+        phaseLabel = `Final Exam · ${sess.exam_mastered_count}/${totalQ}`;
+        progressPct = Math.round((sess.exam_mastered_count / Math.max(1, totalQ)) * 100);
+      } else if (sess.phase === PHASE_COMPLETED) {
+        phaseClass = 'completed';
+        phaseLabel = 'Mastered';
+        progressPct = 100;
+      }
+
+      // Build collapsible syllabus outline
+      let syllabusHtml = '';
+      let globalCursor = 0;
+      mod.sections.forEach((sec, sIdx) => {
+        const chunkItems = (sec.chunks || []).map(ch => {
+          const idx = globalCursor++;
+          const isCurrent = (sess.phase === PHASE_LEARNING && idx === sess.current_chunk_index) ||
+            (state.reviewChunkIndex === idx);
+          const isDone = sess.phase !== PHASE_LEARNING || idx < sess.current_chunk_index;
+          const icon = isCurrent ? '▶' : (isDone ? '✓' : '○');
+          return `
+            <div class="syllabus-chunk-item ${isCurrent ? 'current' : (isDone ? 'done' : '')}" onclick="jumpToSyllabusChunk(${idx})">
+              <span>${icon}</span>
+              <span>${idx + 1}. ${escapeHtml(ch.title)}</span>
+            </div>
+          `;
+        }).join('');
+        syllabusHtml += `
+          <div class="syllabus-sec">
+            <div class="syllabus-sec-title">Section ${sIdx + 1}: ${escapeHtml(sec.title)}</div>
+            ${chunkItems}
+          </div>
+        `;
+      });
+
+      const vettingBlock = mod.vetting_summary
+        ? `<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-size:0.78rem;color:var(--text-muted)">
+             <strong style="color:var(--gold-soft)">Scope &amp; Pedagogical Notes:</strong>
+             <div style="margin-top:4px">${renderMarkdown(mod.vetting_summary)}</div>
+           </div>`
+        : '';
+
+      container.innerHTML = `
+        <section class="quest-top-card">
+          <div class="quest-title-row">
+            <div>
+              <span class="tag-crumb">${escapeHtml(mod.tag_path_key)}</span>
+              <h2>${escapeHtml(mod.title)}</h2>
+            </div>
+            <span class="phase-pill ${phaseClass}">${escapeHtml(phaseLabel)}</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" style="width:${progressPct}%"></div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            ${sess.phase === PHASE_LEARNING ? `
+              <button type="button" class="btn-sm btn-blue" onclick="promptJumpToExam()">⚡ Jump to Final Exam</button>
+            ` : ''}
+            <button type="button" class="btn-sm" onclick="promptRestartModule()">↺ Restart Module</button>
+            <button type="button" class="btn-sm" onclick="switchTab('hall')">← All Quests</button>
+          </div>
+        </section>
+
+        <details class="syllabus-drawer">
+          <summary>
+            <span>📑 Module Syllabus &amp; Chunk Jump (${totalChunks} Chunks)</span>
+            <span style="font-size:0.75rem;color:var(--text-muted)">Tap to expand ▾</span>
+          </summary>
+          <div class="syllabus-body">
+            ${syllabusHtml}
+            ${vettingBlock}
+          </div>
+        </details>
+
+        <div id="questStageContainer" style="display:flex;flex-direction:column;gap:14px"></div>
+      `;
+
+      const stage = document.getElementById('questStageContainer');
+      if (!stage) return;
+
+      if (state.reviewChunkIndex !== null && flatChunks[state.reviewChunkIndex]) {
+        renderChunkReviewMode(stage, mod, flatChunks[state.reviewChunkIndex], totalChunks);
+      } else if (sess.phase === PHASE_LEARNING) {
+        renderLearningStage(stage, mod, sess, flatChunks);
+      } else if (sess.phase === PHASE_FINAL_EXAM) {
+        renderFinalExamStage(stage, mod, sess);
+      } else {
+        renderCompletedStage(stage, mod, sess);
+      }
+    }
+
+    function renderChunkReviewMode(stage, _mod, entry, totalChunks) {
+      const ch = entry.chunk;
+      const prevIdx = entry.flat_index > 0 ? entry.flat_index - 1 : null;
+      const nextIdx = entry.flat_index + 1 < totalChunks ? entry.flat_index + 1 : null;
+
+      stage.innerHTML = `
+        <div class="panel-card" style="background:var(--bg-panel);display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <span style="font-size:0.84rem;color:var(--blue);font-weight:700">
+            📖 Reviewing Chunk ${entry.chunk_number} of ${totalChunks}
+          </span>
+          <button type="button" class="btn-sm" onclick="state.reviewChunkIndex = null; renderApp();">
+            Exit Review
+          </button>
+        </div>
+        ${renderChunkCardBodyHtml(entry, totalChunks)}
+        <div style="display:flex;gap:8px">
+          <button type="button" class="btn-block" ${prevIdx === null ? 'disabled' : `onclick="jumpToSyllabusChunk(${prevIdx})"`}>
+            ← Previous Chunk
+          </button>
+          <button type="button" class="btn-primary btn-block" ${nextIdx === null ? 'disabled' : `onclick="jumpToSyllabusChunk(${nextIdx})"`}>
+            Next Chunk →
+          </button>
+        </div>
+      `;
+    }
+
+    function renderChunkCardBodyHtml(entry, totalChunks) {
+      const ch = entry.chunk;
+      const termsHtml = (entry.introduced_terms && entry.introduced_terms.length > 0)
+        ? `<div class="terms-strip">
+             <span style="font-size:0.73rem;color:var(--text-muted);align-self:center;margin-right:2px">Section Key Terms:</span>
+             ${entry.introduced_terms.map(t => `<span class="term-badge">${escapeHtml(t)}</span>`).join('')}
+           </div>`
+        : '';
+
+      const auditHtml = (ch.last_audit && ch.last_audit.explanation)
+        ? `<div class="audit-note">
+             <strong>✓ Verified Note (${escapeHtml(ch.last_audit.verdict || 'AUDITED')}):</strong>
+             <div style="margin-top:4px">${renderMarkdown(ch.last_audit.explanation)}</div>
+           </div>`
+        : '';
+
+      return `
+        <article class="chunk-card">
+          <div class="section-kicker">
+            Section ${entry.section_number}: ${escapeHtml(entry.section_title)} · Chunk ${entry.chunk_number} of ${totalChunks}
+          </div>
+          <h3 class="chunk-title">${escapeHtml(ch.title)}</h3>
+          ${termsHtml}
+          <div class="prose">${renderMarkdown(ch.content_markdown)}</div>
+          ${auditHtml}
+        </article>
+      `;
+    }
+
+    function renderLearningStage(stage, mod, sess, flatChunks) {
+      const totalChunks = flatChunks.length;
+      if (sess.current_chunk_index >= totalChunks) {
+        startFinalExam(mod, sess);
+        renderApp();
+        return;
+      }
+
+      // If state.chunkCompletedReady is true, we are showing the completed state of the
+      // chunk at (current_chunk_index - 1) before advancing to current_chunk_index.
+      const displayIdx = state.chunkCompletedReady
+        ? Math.max(0, sess.current_chunk_index - 1)
+        : sess.current_chunk_index;
+      const entry = flatChunks[displayIdx];
+      const ch = entry.chunk;
+      const answeredSet = new Set(sess.answered_in_chunk || []);
+
+      const questionsHtml = (ch.questions || []).map((q, qIdx) => {
+        const isAnswered = state.chunkCompletedReady || answeredSet.has(q.id);
+        const choicesHtml = (q.choices || []).map((choiceText, cIdx) => {
+          const letter = ['A', 'B', 'C', 'D'][cIdx] || String(cIdx + 1);
+          const correctClass = isAnswered && cIdx === q.correct_index ? 'correct' : '';
+          return `
+            <button type="button"
+              class="choice-btn ${correctClass}"
+              id="learnChoice-${escapeHtml(q.id)}-${cIdx}"
+              ${isAnswered ? 'disabled' : ''}
+              onclick="submitLearningAnswer('${escapeHtml(q.id).replace(/'/g, "\\'")}', ${cIdx})">
+              <span class="choice-letter">${letter}</span>
+              <span style="flex:1">${formatInlineMarkdown(choiceText)}</span>
+            </button>
+          `;
+        }).join('');
+
+        const feedbackHtml = isAnswered
+          ? `<div class="feedback-box ok" id="learnFeedback-${escapeHtml(q.id)}">
+               <strong>✓ Correct!</strong> ${formatInlineMarkdown(q.explanation)}
+             </div>`
+          : `<div id="learnFeedback-${escapeHtml(q.id)}"></div>`;
+
+        return `
+          <div class="question-card ${isAnswered ? 'answered' : ''}">
+            <div class="q-header">
+              <span>Comprehension Check ${qIdx + 1} of ${ch.questions.length}</span>
+              <span>${isAnswered ? '✓ Completed' : 'Required'}</span>
+            </div>
+            <div class="q-prompt">${formatInlineMarkdown(q.prompt)}</div>
+            <div class="choices-list">${choicesHtml}</div>
+            ${feedbackHtml}
+          </div>
+        `;
+      }).join('');
+
+      const continueBannerHtml = state.chunkCompletedReady
+        ? `<div class="panel-card gold-border" style="text-align:center">
+             <div style="font-weight:700;color:var(--gold-soft);margin-bottom:10px">
+               Chunk ${entry.chunk_number} Complete!
+             </div>
+             <button type="button" class="btn-primary btn-block" onclick="advanceAfterChunkComplete()">
+               ${sess.current_chunk_index >= totalChunks ? '⚔️ Enter 100-Question Final Exam →' : 'Continue to Next Chunk →'}
+             </button>
+           </div>`
+        : '';
+
+      stage.innerHTML = `
+        ${renderChunkCardBodyHtml(entry, totalChunks)}
+        ${questionsHtml}
+        ${continueBannerHtml}
+      `;
+    }
+
+    function submitLearningAnswer(questionId, choiceIndex) {
+      const mod = state.modulesById[state.activeModuleId];
+      if (!mod) return;
+      const sess = ensureSession(mod.id);
+      const flatChunks = flattenModuleChunks(mod);
+      const entry = flatChunks[sess.current_chunk_index];
+      if (!entry) return;
+
+      const q = (entry.chunk.questions || []).find(item => item.id === questionId);
+      if (!q) return;
+
+      if (choiceIndex !== q.correct_index) {
+        const btn = document.getElementById(`learnChoice-${questionId}-${choiceIndex}`);
+        if (btn) btn.classList.add('wrong');
+        const fb = document.getElementById(`learnFeedback-${questionId}`);
+        if (fb) {
+          fb.innerHTML = `
+            <div class="feedback-box err">
+              <strong>✗ Not quite.</strong> Re-read the chunk above and try another option!
+            </div>
+          `;
+        }
+        return;
+      }
+
+      if (!sess.answered_in_chunk.includes(questionId)) {
+        sess.answered_in_chunk.push(questionId);
+      }
+
+      const allAnswered = (entry.chunk.questions || []).every(item =>
+        sess.answered_in_chunk.includes(item.id)
+      );
+
+      if (allAnswered) {
+        sess.answered_in_chunk = [];
+        sess.current_chunk_index += 1;
+        state.chunkCompletedReady = true;
+      }
+      saveSessions();
+      renderApp();
+    }
+
+    function advanceAfterChunkComplete() {
+      const mod = state.modulesById[state.activeModuleId];
+      if (!mod) return;
+      const sess = ensureSession(mod.id);
+      const flatChunks = flattenModuleChunks(mod);
+      state.chunkCompletedReady = false;
+      if (sess.current_chunk_index >= flatChunks.length) {
+        startFinalExam(mod, sess);
+      }
+      renderApp();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renderFinalExamStage(stage, mod, sess) {
+      if (!Array.isArray(sess.exam_queue) || sess.exam_queue.length === 0) {
+        sess.phase = PHASE_COMPLETED;
+        sess.completed_at = new Date().toISOString();
+        saveSessions();
+        awardBadgeForModule(mod, sess.completed_at);
+        renderApp();
+        return;
+      }
+
+      const { byId } = flattenModuleQuestions(mod);
+      const head = state.examFeedback ? state.examFeedback.headEntry : sess.exam_queue[0];
+      const qMeta = byId[head.question_id];
+      if (!qMeta) {
+        sess.exam_queue.shift();
+        saveSessions();
+        renderApp();
+        return;
+      }
+
+      const q = qMeta.question;
+      const order = Array.isArray(head.choice_order) && head.choice_order.length === 4
+        ? head.choice_order
+        : [0, 1, 2, 3];
+      const totalQ = mod.question_count || 100;
+      const fb = state.examFeedback;
+
+      const choicesHtml = order.map((canonicalIdx, dispIdx) => {
+        const letter = ['A', 'B', 'C', 'D'][dispIdx];
+        let extraClass = '';
+        if (fb) {
+          if (dispIdx === fb.displayedCorrect) extraClass = 'correct';
+          else if (dispIdx === fb.displayedSelected && !fb.correct) extraClass = 'wrong';
+        }
+        return `
+          <button type="button"
+            class="choice-btn ${extraClass}"
+            ${fb ? 'disabled' : ''}
+            onclick="submitExamAnswer(${dispIdx})">
+            <span class="choice-letter">${letter}</span>
+            <span style="flex:1">${formatInlineMarkdown(q.choices[canonicalIdx])}</span>
+          </button>
+        `;
+      }).join('');
+
+      let feedbackBlock = '';
+      if (fb) {
+        const nextBtnLabel = sess.exam_queue.length === 0
+          ? '🏆 Claim Merit Badge →'
+          : 'Next Exam Question →';
+        feedbackBlock = `
+          <div class="feedback-box ${fb.correct ? 'ok' : 'err'}">
+            <div style="font-weight:700;margin-bottom:4px">
+              ${fb.correct
+                ? '✓ Correct! Question mastered and removed from queue.'
+                : '✗ Missed — Requeued at the end of the Final Exam with reshuffled choices.'}
+            </div>
+            <div>${formatInlineMarkdown(q.explanation)}</div>
+            <div style="margin-top:8px;font-size:0.78rem;opacity:0.9">
+              Origin Chunk: <strong>${escapeHtml(qMeta.chunk_title)}</strong> (${escapeHtml(qMeta.section_title)})
+            </div>
+          </div>
+          <button type="button" class="btn-primary btn-block" onclick="advanceExamQuestion()">
+            ${nextBtnLabel}
+          </button>
+        `;
+      }
+
+      stage.innerHTML = `
+        <div class="panel-card" style="background:var(--bg-panel);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:0.84rem">
+          <span>Mastered: <strong style="color:var(--green)">${sess.exam_mastered_count} / ${totalQ}</strong></span>
+          <span>Remaining: <strong style="color:var(--gold)">${sess.exam_queue.length}</strong></span>
+          <span>Attempts: <strong>${sess.exam_total_attempts}</strong></span>
+        </div>
+
+        <div class="question-card">
+          <div class="q-header">
+            <span>⚔️ Final Exam Mastery Queue</span>
+            <span>${ escapeHtml(qMeta.section_title) }</span>
+          </div>
+          <div class="q-prompt">${formatInlineMarkdown(q.prompt)}</div>
+          <div class="choices-list">${choicesHtml}</div>
+          ${feedbackBlock}
+        </div>
+      `;
+    }
+
+    function submitExamAnswer(displayedIdx) {
+      const mod = state.modulesById[state.activeModuleId];
+      if (!mod) return;
+      const sess = ensureSession(mod.id);
+      if (sess.phase !== PHASE_FINAL_EXAM || sess.exam_queue.length === 0 || state.examFeedback) return;
+
+      const head = sess.exam_queue.shift();
+      const { byId } = flattenModuleQuestions(mod);
+      const qMeta = byId[head.question_id];
+      if (!qMeta) {
+        saveSessions();
+        renderApp();
+        return;
+      }
+
+      const q = qMeta.question;
+      const order = Array.isArray(head.choice_order) && head.choice_order.length === 4
+        ? head.choice_order
+        : [0, 1, 2, 3];
+      const canonicalSelected = order[displayedIdx];
+      const displayedCorrect = order.indexOf(q.correct_index);
+      const isCorrect = canonicalSelected === q.correct_index;
+
+      sess.exam_total_attempts = (sess.exam_total_attempts || 0) + 1;
+
+      if (isCorrect) {
+        sess.exam_mastered_count = (sess.exam_mastered_count || 0) + 1;
+      } else {
+        sess.exam_queue.push({
+          question_id: q.id,
+          choice_order: randomPerm4(),
+        });
+      }
+
+      state.examFeedback = {
+        headEntry: head,
+        displayedSelected: displayedIdx,
+        displayedCorrect,
+        correct: isCorrect,
+      };
+
+      saveSessions();
+      renderApp();
+    }
+
+    function advanceExamQuestion() {
+      const mod = state.modulesById[state.activeModuleId];
+      if (!mod) return;
+      const sess = ensureSession(mod.id);
+      state.examFeedback = null;
+
+      if (sess.exam_queue.length === 0) {
+        sess.phase = PHASE_COMPLETED;
+        sess.completed_at = new Date().toISOString();
+        saveSessions();
+        awardBadgeForModule(mod, sess.completed_at);
+      }
+      renderApp();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renderCompletedStage(stage, mod, sess) {
+      stage.innerHTML = `
+        <div class="panel-card gold-border" style="text-align:center;padding:26px 18px">
+          <div style="font-size:3rem;line-height:1;margin-bottom:10px">🛡️</div>
+          <h3 style="margin:0 0 8px;color:var(--gold-soft);font-size:1.3rem">Merit Badge Earned!</h3>
+          <p style="margin:0 0 14px;color:var(--text-muted);font-size:0.92rem">
+            You have mastered all ${mod.question_count || 100} questions in <strong>${escapeHtml(mod.title)}</strong>
+            (${sess.exam_total_attempts || mod.question_count || 100} total Final Exam attempts).
+          </p>
+          <div style="display:flex;flex-direction:column;gap:9px;max-width:340px;margin:0 auto">
+            <button type="button" class="btn-primary btn-block" onclick="switchTab('hall')">
+              🏰 Return to Hall
+            </button>
+            <button type="button" class="btn-block" onclick="jumpToSyllabusChunk(0)">
+              📖 Browse Presentation Chunks
+            </button>
+            <button type="button" class="btn-block" onclick="promptJumpToExam()">
+              ⚔️ Replay 100-Question Final Exam
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // =========================================================================
+    // 8. TAB 3: LIBRARY (PUBLIC GITHUB REPOSITORY LOADER & LOCAL FILE PICKER)
+    // =========================================================================
+    function parseGitHubRepoInput(rawOwnerRepo, rawPath, rawBranch) {
+      let ownerRepo = String(rawOwnerRepo || '').trim();
+      let path = String(rawPath || '').trim().replace(/^\/+|\/+$/g, '');
+      let branch = String(rawBranch || '').trim() || 'main';
+
+      // Support pasting full https://github.com/owner/repo/tree/branch/folder URLs
+      const urlMatch = ownerRepo.match(/^https?:\/\/github\.com\/([^/]+\/[^/]+)(?:\/tree\/([^/]+)(?:\/(.*))?)?\/?$/i);
+      if (urlMatch) {
+        ownerRepo = urlMatch[1];
+        if (urlMatch[2]) branch = urlMatch[2];
+        if (urlMatch[3] && !path) path = urlMatch[3].replace(/^\/+|\/+$/g, '');
+      }
+      return { ownerRepo, path, branch };
+    }
+
+    async function browseGitHubRepo() {
+      const ownerInput = document.getElementById('ghOwnerRepoInput');
+      const pathInput = document.getElementById('ghPathInput');
+      const branchInput = document.getElementById('ghBranchInput');
+
+      const parsed = parseGitHubRepoInput(
+        ownerInput ? ownerInput.value : state.repoConfig.ownerRepo,
+        pathInput ? pathInput.value : state.repoConfig.path,
+        branchInput ? branchInput.value : state.repoConfig.branch
+      );
+
+      if (!parsed.ownerRepo || !/^[^/\s]+\/[^/\s]+$/.test(parsed.ownerRepo)) {
+        state.repoBrowser.error = 'Please enter a valid GitHub repository in "owner/repo" format (or paste a GitHub repository URL).';
+        state.repoBrowser.status = '';
+        renderApp();
+        return;
+      }
+
+      state.repoConfig = parsed;
+      saveRepoConfig();
+
+      state.repoBrowser.loading = true;
+      state.repoBrowser.error = '';
+      state.repoBrowser.status = `Listing JSON modules in ${parsed.ownerRepo}...`;
+      renderApp();
+
+      try {
+        const encodedPath = parsed.path
+          ? '/' + parsed.path.split('/').map(encodeURIComponent).join('/')
+          : '';
+        let apiUrl = `https://api.github.com/repos/${parsed.ownerRepo}/contents${encodedPath}?ref=${encodeURIComponent(parsed.branch)}`;
+        let resp = await fetch(apiUrl, { headers: { Accept: 'application/vnd.github.v3+json' } });
+
+        // Automatic fallback to 'master' if 'main' 404s
+        if (resp.status === 404 && parsed.branch === 'main') {
+          const fallbackUrl = `https://api.github.com/repos/${parsed.ownerRepo}/contents${encodedPath}?ref=master`;
+          const fallbackResp = await fetch(fallbackUrl, { headers: { Accept: 'application/vnd.github.v3+json' } });
+          if (fallbackResp.ok) {
+            resp = fallbackResp;
+            state.repoConfig.branch = 'master';
+            saveRepoConfig();
+          }
+        }
+
+        if (!resp.ok) {
+          throw new Error(`GitHub API returned HTTP ${resp.status}. Verify that the repository and folder path are public.`);
+        }
+
+        const data = await resp.json();
+        const entries = Array.isArray(data) ? data : [data];
+        const jsonFiles = entries
+          .filter(item => item && item.type === 'file' && /\.json$/i.test(item.name) && item.download_url)
+          .map(item => ({
+            name: item.name,
+            path: item.path,
+            download_url: item.download_url,
+            size: item.size || 0,
+          }))
+          .sort((a, b) => a.name.localeCompare(b.name));
+
+        state.repoBrowser.files = jsonFiles;
+        state.repoBrowser.loading = false;
+        state.repoBrowser.status = jsonFiles.length > 0
+          ? `Found ${jsonFiles.length} JSON file(s) in ${parsed.ownerRepo}.`
+          : `No .json files found in "${parsed.path || '/'}" on branch "${state.repoConfig.branch}".`;
+      } catch (err) {
+        state.repoBrowser.loading = false;
+        state.repoBrowser.error = err.message || String(err);
+        state.repoBrowser.status = '';
+      }
+      renderApp();
+    }
+
+    async function fetchAndCacheModuleUrl(downloadUrl, label) {
+      state.repoBrowser.loading = true;
+      state.repoBrowser.error = '';
+      state.repoBrowser.status = `Downloading ${label || downloadUrl}...`;
+      renderApp();
+
+      try {
+        const resp = await fetch(downloadUrl);
+        if (!resp.ok) {
+          throw new Error(`HTTP ${resp.status} while fetching ${label || downloadUrl}`);
+        }
+        const rawJson = await resp.json();
+        const mod = validateAndNormalizeModule(rawJson);
+        state.modulesById[mod.id] = mod;
+        ensureSession(mod.id);
+        if (!state.activeModuleId) state.activeModuleId = mod.id;
+        saveModules();
+        savePrefs();
+        reconcileCompletedBadges();
+        state.repoBrowser.loading = false;
+        state.repoBrowser.status = `✓ Loaded "${mod.title}" (${mod.chunk_count} chunks, ${mod.question_count} questions).`;
+      } catch (err) {
+        state.repoBrowser.loading = false;
+        state.repoBrowser.error = `Failed to load ${label || 'module'}: ${err.message || err}`;
+        state.repoBrowser.status = '';
+      }
+      renderApp();
+    }
+
+    async function loadAllGitHubFiles() {
+      const files = state.repoBrowser.files || [];
+      if (files.length === 0) return;
+
+      state.repoBrowser.loading = true;
+      state.repoBrowser.error = '';
+      let loadedCount = 0;
+      const errors = [];
+
+      for (let i = 0; i < files.length; i++) {
+        const f = files[i];
+        state.repoBrowser.status = `Loading (${i + 1}/${files.length}): ${f.name}...`;
+        renderApp();
+        try {
+          const resp = await fetch(f.download_url);
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          const rawJson = await resp.json();
+          const mod = validateAndNormalizeModule(rawJson);
+          state.modulesById[mod.id] = mod;
+          ensureSession(mod.id);
+          if (!state.activeModuleId) state.activeModuleId = mod.id;
+          loadedCount++;
+        } catch (err) {
+          errors.push(`${f.name}: ${err.message || err}`);
+        }
+      }
+
+      saveModules();
+      savePrefs();
+      reconcileCompletedBadges();
+      state.repoBrowser.loading = false;
+      state.repoBrowser.status = `✓ Loaded ${loadedCount} of ${files.length} module file(s).`;
+      state.repoBrowser.error = errors.length > 0 ? `Skipped non-module/invalid files: ${errors.join('; ')}` : '';
+      renderApp();
+    }
+
+    async function loadRawUrlInput() {
+      const input = document.getElementById('rawModuleUrlInput');
+      if (!input || !input.value.trim()) return;
+      let url = input.value.trim();
+      // Convert github.com/.../blob/... to raw.githubusercontent.com automatically
+      const blobMatch = url.match(/^https?:\/\/github\.com\/([^/]+\/[^/]+)\/blob\/(.+)$/i);
+      if (blobMatch) {
+        url = `https://raw.githubusercontent.com/${blobMatch[1]}/${blobMatch[2]}`;
+      }
+      await fetchAndCacheModuleUrl(url, url.split('/').pop());
+    }
+
+    async function handleLocalFilesSelected(fileList) {
+      if (!fileList || fileList.length === 0) return;
+      let loaded = 0;
+      const errors = [];
+      for (let i = 0; i < fileList.length; i++) {
+        const file = fileList[i];
+        try {
+          const text = await file.text();
+          const raw = JSON.parse(text);
+          const mod = validateAndNormalizeModule(raw);
+          state.modulesById[mod.id] = mod;
+          ensureSession(mod.id);
+          if (!state.activeModuleId) state.activeModuleId = mod.id;
+          loaded++;
+        } catch (err) {
+          errors.push(`${file.name}: ${err.message || err}`);
+        }
+      }
+      saveModules();
+      savePrefs();
+      reconcileCompletedBadges();
+      state.repoBrowser.status = loaded > 0 ? `✓ Imported ${loaded} local module file(s) into device cache.` : '';
+      state.repoBrowser.error = errors.length > 0 ? errors.join(' | ') : '';
+      renderApp();
+    }
+
+    function renderLibraryTab(container) {
+      const rb = state.repoBrowser;
+      const cachedMods = Object.values(state.modulesById);
+
+      const filesHtml = (rb.files && rb.files.length > 0)
+        ? `
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px">
+            <span style="font-size:0.8rem;color:var(--text-muted);font-weight:700">
+              ${rb.files.length} JSON File(s) in Repository
+            </span>
+            <button type="button" class="btn-sm btn-primary" ${rb.loading ? 'disabled' : ''} onclick="loadAllGitHubFiles()">
+              ⬇️ Load All (${rb.files.length})
+            </button>
+          </div>
+          <div class="repo-file-list">
+            ${rb.files.map(f => {
+              const sizeKb = f.size ? `${Math.round(f.size / 1024)} KB` : 'JSON';
+              const safeUrl = escapeHtml(f.download_url).replace(/'/g, "\\'");
+              const safeName = escapeHtml(f.name).replace(/'/g, "\\'");
+              return `
+                <div class="repo-file-item">
+                  <div class="repo-file-meta">
+                    <div class="repo-file-name">${escapeHtml(f.name)}</div>
+                    <div class="repo-file-sub">${escapeHtml(f.path)} · ${sizeKb}</div>
+                  </div>
+                  <button type="button" class="btn-sm btn-blue" ${rb.loading ? 'disabled' : ''} onclick="fetchAndCacheModuleUrl('${safeUrl}', '${safeName}')">
+                    Load
+                  </button>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `
+        : '';
+
+      container.innerHTML = `
+        <section class="panel-card">
+          <div class="section-heading">
+            <h2>📦 Load from Public GitHub Repo</h2>
+          </div>
+          <p style="margin:0 0 12px;font-size:0.84rem;color:var(--text-muted)">
+            Point to any public GitHub repository containing Knowledge Knights <code>.json</code> modules. Loaded modules are cached on your device for offline play.
+          </p>
+
+          <div class="field-group">
+            <label for="ghOwnerRepoInput">GitHub Repository (owner/repo or URL)</label>
+            <input type="text" id="ghOwnerRepoInput" placeholder="e.g. username/knowledge-knights-modules" value="${escapeHtml(state.repoConfig.ownerRepo)}">
+          </div>
+
+          <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px">
+            <div class="field-group">
+              <label for="ghPathInput">Folder Path (optional)</label>
+              <input type="text" id="ghPathInput" placeholder="e.g. modules" value="${escapeHtml(state.repoConfig.path)}">
+            </div>
+            <div class="field-group">
+              <label for="ghBranchInput">Branch</label>
+              <input type="text" id="ghBranchInput" placeholder="main" value="${escapeHtml(state.repoConfig.branch)}">
+            </div>
+          </div>
+
+          <button type="button" class="btn-primary btn-block" ${rb.loading ? 'disabled' : ''} onclick="browseGitHubRepo()">
+            ${rb.loading ? '⏳ Fetching...' : '🔍 Browse Repository Modules'}
+          </button>
+
+          ${rb.status ? `<div class="status-toast ok">${escapeHtml(rb.status)}</div>` : ''}
+          ${rb.error ? `<div class="status-toast err">${escapeHtml(rb.error)}</div>` : ''}
+          ${filesHtml}
+        </section>
+
+        <section class="panel-card">
+          <div class="section-heading">
+            <h2>📂 Load from Device File or Raw URL</h2>
+          </div>
+          <div class="field-group">
+            <label>Select Local .json Module File(s)</label>
+            <input type="file" accept=".json,application/json" multiple onchange="handleLocalFilesSelected(this.files)"
+              style="padding:10px;background:var(--bg-panel);border:1px dashed var(--border);border-radius:9px;color:var(--text-muted)">
+          </div>
+
+          <div class="field-group" style="margin-top:12px;margin-bottom:8px">
+            <label for="rawModuleUrlInput">Or Direct Module JSON URL</label>
+            <div style="display:flex;gap:8px">
+              <input type="url" id="rawModuleUrlInput" placeholder="https://raw.githubusercontent.com/.../module.json">
+              <button type="button" class="btn-blue" onclick="loadRawUrlInput()">Fetch</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel-card">
+          <div class="section-heading">
+            <h2>💾 Cached on This Device</h2>
+            <span>${cachedMods.length} Module(s)</span>
+          </div>
+          ${cachedMods.length === 0
+            ? `<p style="margin:0;font-size:0.84rem;color:var(--text-muted)">No modules cached yet.</p>`
+            : `<div class="repo-file-list">
+                 ${cachedMods.map(m => {
+                   const safeId = escapeHtml(m.id).replace(/'/g, "\\'");
+                   return `
+                     <div class="repo-file-item">
+                       <div class="repo-file-meta">
+                         <div class="repo-file-name">${escapeHtml(m.title)}</div>
+                         <div class="repo-file-sub">${escapeHtml(m.tag_path_key)} · ${m.chunk_count} chunks</div>
+                       </div>
+                       <div style="display:flex;gap:6px">
+                         <button type="button" class="btn-sm btn-primary" onclick="openModuleQuest('${safeId}')">Play</button>
+                         <button type="button" class="btn-sm" onclick="removeCachedModule('${safeId}')">🗑️</button>
+                       </div>
+                     </div>
+                   `;
+                 }).join('')}
+               </div>`
+          }
+        </section>
+      `;
+    }
+
+    // =========================================================================
+    // 9. TAB 4: SYNC / CUT-AND-PASTE CROSS-DEVICE STATE TRANSFER
+    // =========================================================================
+    function utf8ToBase64(str) {
+      const bytes = new TextEncoder().encode(str);
+      let bin = '';
+      for (let i = 0; i < bytes.length; i++) {
+        bin += String.fromCharCode(bytes[i]);
+      }
+      return btoa(bin);
+    }
+
+    function base64ToUtf8(b64) {
+      const bin = atob(b64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) {
+        bytes[i] = bin.charCodeAt(i);
+      }
+      return new TextDecoder().decode(bytes);
+    }
+
+    function buildExportPayloadObject() {
+      return {
+        version: 1,
+        exported_at: new Date().toISOString(),
+        repo_config: state.repoConfig,
+        hide_mastered: state.hideMastered,
+        profile: state.profile,
+        sessions: state.sessions,
+      };
+    }
+
+    function generateTransferString(asRawJson) {
+      const payload = buildExportPayloadObject();
+      if (asRawJson) {
+        return JSON.stringify(payload, null, 2);
+      }
+      return 'KK1:' + utf8ToBase64(JSON.stringify(payload));
+    }
+
+    function parseTransferString(rawInput) {
+      const trimmed = String(rawInput || '').trim();
+      if (!trimmed) {
+        throw new Error('Please paste a transfer code or JSON snapshot first.');
+      }
+      let jsonStr = trimmed;
+      if (trimmed.startsWith('KK1:')) {
+        const b64Part = trimmed.slice(4).replace(/\s+/g, '');
+        try {
+          jsonStr = base64ToUtf8(b64Part);
+        } catch (_e) {
+          throw new Error('Invalid KK1 Base64 transfer code. Ensure the entire code was copied.');
+        }
+      } else if (!trimmed.startsWith('{')) {
+        try {
+          jsonStr = base64ToUtf8(trimmed.replace(/\s+/g, ''));
+        } catch (_e) {
+          throw new Error('Unrecognized transfer format. Paste a KK1:... code or JSON object.');
+        }
+      }
+
+      let data;
+      try {
+        data = JSON.parse(jsonStr);
+      } catch (_e) {
+        throw new Error('Transfer payload is not valid JSON.');
+      }
+      if (!data || typeof data !== 'object') {
+        throw new Error('Transfer payload must be an object.');
+      }
+      return data;
+    }
+
+    // Progress rank comparison for Smart Merge
+    function sessionProgressScore(s) {
+      if (!s || typeof s !== 'object') return [0, 0, 0];
+      if (s.phase === PHASE_COMPLETED) {
+        return [3, s.exam_mastered_count || 100, s.exam_total_attempts || 0];
+      }
+      if (s.phase === PHASE_FINAL_EXAM) {
+        return [2, s.exam_mastered_count || 0, s.exam_total_attempts || 0];
+      }
+      const answeredLen = Array.isArray(s.answered_in_chunk) ? s.answered_in_chunk.length : 0;
+      return [1, s.current_chunk_index || 0, answeredLen];
+    }
+
+    function isSessionFurtherAhead(candidate, current) {
+      if (!current) return true;
+      if (!candidate) return false;
+      const a = sessionProgressScore(candidate);
+      const b = sessionProgressScore(current);
+      for (let i = 0; i < a.length; i++) {
+        if (a[i] !== b[i]) return a[i] > b[i];
+      }
+      return false;
+    }
+
+    function applyImportedPayload(data, mode) {
+      const incomingBadges = (data.profile && Array.isArray(data.profile.badges))
+        ? data.profile.badges
+        : [];
+      const incomingSessions = (data.sessions && typeof data.sessions === 'object')
+        ? data.sessions
+        : {};
+
+      if (mode === 'replace') {
+        state.profile = { badges: incomingBadges };
+        state.sessions = incomingSessions;
+        if (data.repo_config && typeof data.repo_config === 'object') {
+          state.repoConfig = {
+            ownerRepo: String(data.repo_config.ownerRepo || ''),
+            path: String(data.repo_config.path || ''),
+            branch: String(data.repo_config.branch || 'main'),
+          };
+        }
+        if (typeof data.hide_mastered === 'boolean') {
+          state.hideMastered = data.hide_mastered;
+        }
+      } else {
+        // Smart Merge: union badges by module_id (keeping earliest awarded_at)
+        const mergedBadgesById = {};
+        (state.profile.badges || []).forEach(b => {
+          if (b && b.module_id) mergedBadgesById[b.module_id] = { ...b };
+        });
+        incomingBadges.forEach(b => {
+          if (!b || !b.module_id) return;
+          const existing = mergedBadgesById[b.module_id];
+          if (!existing) {
+            mergedBadgesById[b.module_id] = {
+              module_id: String(b.module_id),
+              module_title: String(b.module_title || b.module_id),
+              tag_path: normalizeTagPath(b.tag_path),
+              awarded_at: String(b.awarded_at || new Date().toISOString()),
+            };
+          } else if (b.awarded_at && (!existing.awarded_at || b.awarded_at < existing.awarded_at)) {
+            existing.awarded_at = b.awarded_at;
+          }
+        });
+        state.profile.badges = Object.values(mergedBadgesById);
+
+        // Smart Merge sessions: keep whichever session per module has progressed further
+        Object.entries(incomingSessions).forEach(([modId, incSess]) => {
+          if (!incSess || typeof incSess !== 'object') return;
+          const localSess = state.sessions[modId];
+          if (isSessionFurtherAhead(incSess, localSess)) {
+            state.sessions[modId] = incSess;
+          }
+        });
+
+        if (!state.repoConfig.ownerRepo && data.repo_config && data.repo_config.ownerRepo) {
+          state.repoConfig = {
+            ownerRepo: String(data.repo_config.ownerRepo || ''),
+            path: String(data.repo_config.path || ''),
+            branch: String(data.repo_config.branch || 'main'),
+          };
+        }
+      }
+
+      reconcileCompletedBadges();
+      saveProfile();
+      saveSessions();
+      saveRepoConfig();
+      savePrefs();
+    }
+
+    async function copyExportTransferCode() {
+      const box = document.getElementById('exportCodeBox');
+      if (!box) return;
+      const text = box.value;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          box.focus();
+          box.select();
+          document.execCommand('copy');
+        }
+        state.syncView.status = '✓ Transfer code copied to clipboard!';
+        state.syncView.statusKind = 'ok';
+      } catch (_e) {
+        box.focus();
+        box.select();
+        state.syncView.status = 'Selected transfer code — use Copy on your device.';
+        state.syncView.statusKind = 'info';
+      }
+      renderApp();
+    }
+
+    function handleImportTransferCode() {
+      const box = document.getElementById('importCodeBox');
+      const raw = box ? box.value : '';
+      try {
+        const data = parseTransferString(raw);
+        applyImportedPayload(data, state.syncView.importMode);
+        const badgeCount = (state.profile.badges || []).length;
+        const sessCount = Object.keys(state.sessions || {}).length;
+        state.syncView.status = `✓ Imported successfully (${state.syncView.importMode === 'merge' ? 'Smart Merge' : 'Replace All'}): ${badgeCount} Badge(s), ${sessCount} Module Session(s).`;
+        state.syncView.statusKind = 'ok';
+      } catch (err) {
+        state.syncView.status = `✗ Import failed: ${err.message || err}`;
+        state.syncView.statusKind = 'err';
+      }
+      renderApp();
+    }
+
+    function renderSyncTab(container) {
+      const exportStr = generateTransferString(state.syncView.showRawJson);
+      const badgeCount = (state.profile.badges || []).length;
+      const sessCount = Object.keys(state.sessions || {}).length;
+
+      container.innerHTML = `
+        <section class="panel-card">
+          <div class="section-heading">
+            <h2>📤 Export Progress from This Device</h2>
+            <span>${badgeCount} Badge(s) · ${sessCount} Session(s)</span>
+          </div>
+          <p style="margin:0 0 10px;font-size:0.84rem;color:var(--text-muted)">
+            Copy this single-line transfer code to migrate your earned Merit Badges, in-progress quests, and repository settings to another phone, tablet, or browser.
+          </p>
+
+          <div class="field-group">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <label for="exportCodeBox">Transfer Payload (${state.syncView.showRawJson ? 'Formatted JSON' : 'Compact Base64'})</label>
+              <label class="toggle-label" style="font-size:0.75rem">
+                <input type="checkbox" ${state.syncView.showRawJson ? 'checked' : ''}
+                  onchange="state.syncView.showRawJson = this.checked; renderApp();">
+                <span>Show Raw JSON</span>
+              </label>
+            </div>
+            <textarea id="exportCodeBox" rows="${state.syncView.showRawJson ? 7 : 3}" readonly onclick="this.select()">${escapeHtml(exportStr)}</textarea>
+          </div>
+
+          <button type="button" class="btn-primary btn-block" onclick="copyExportTransferCode()">
+            📋 Copy Transfer Code
+          </button>
+        </section>
+
+        <section class="panel-card">
+          <div class="section-heading">
+            <h2>📥 Import Progress onto This Device</h2>
+          </div>
+          <p style="margin:0 0 10px;font-size:0.84rem;color:var(--text-muted)">
+            Paste a <code>KK1:...</code> transfer code (or raw JSON snapshot) from another device below.
+          </p>
+
+          <div class="radio-cards">
+            <div class="radio-card ${state.syncView.importMode === 'merge' ? 'active' : ''}"
+                 onclick="state.syncView.importMode = 'merge'; renderApp();">
+              <div class="radio-card-title">✓ Smart Merge</div>
+              <div class="radio-card-desc">Union of earned badges + keeps furthest progress per module.</div>
+            </div>
+            <div class="radio-card ${state.syncView.importMode === 'replace' ? 'active' : ''}"
+                 onclick="state.syncView.importMode = 'replace'; renderApp();">
+              <div class="radio-card-title">⇄ Replace All</div>
+              <div class="radio-card-desc">Overwrite local badges and sessions with pasted snapshot.</div>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label for="importCodeBox">Paste Transfer Code or JSON</label>
+            <textarea id="importCodeBox" rows="4" placeholder="Paste KK1:... transfer code here"></textarea>
+          </div>
+
+          <button type="button" class="btn-blue btn-block" onclick="handleImportTransferCode()">
+            📥 Apply Imported State (${state.syncView.importMode === 'merge' ? 'Smart Merge' : 'Replace All'})
+          </button>
+
+          ${state.syncView.status
+            ? `<div class="status-toast ${state.syncView.statusKind}">${escapeHtml(state.syncView.status)}</div>`
+            : ''}
+        </section>
+      `;
+    }
+
+    // =========================================================================
+    // 10. INITIALIZATION
+    // =========================================================================
+    window.addEventListener('DOMContentLoaded', () => {
+      loadLocalState();
+      renderApp();
+    });
+  </script>
+</body>
+</html>
