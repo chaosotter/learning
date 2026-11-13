@@ -1,0 +1,1685 @@
+{
+  "id": "pli_programming_language_part_1",
+  "title": "The PL/I Programming Language I: System/360, Free-Form Syntax \u0026 Unified Data (1957–1966)",
+  "summary": "Part 1 of the PL/I Programming Language series: a relaxed, generalist-friendly 100-question journey from the late-1950s divide between scientific FORTRAN and business COBOL through IBM's five-billion-dollar System/360 gamble and the 1963 3x3 Committee that created PL/I. With zero assumed computer-science jargon, learners explore how PL/I shattered the 80-column punch-card cage with free-form block structure, banished reserved keywords, unified binary floating-point and exact penny-accurate decimal math, and pioneered pointers, asynchronous ON-condition error handling, multitasking, and compile-time macros—concluding at the 1966 high-water mark of universal-language optimism.",
+  "topic_prompt": "Teach Part I of a two-part series on the programming language PL/I for an educated generalist with zero prior computer-science or programming jargon. Cover the historical and technical forces that gave rise to PL/I and its core architectural features across 10 conversational sections: (1) the late-1950s split between scientific computing (FORTRAN, SHARE user group, fast binary floating-point math on the IBM 7090) and business data processing (COBOL, GUIDE user group, character files and exact decimal currency on the IBM 1401/7080); (2) why binary floating-point rounding errors make bankers furious about missing pennies, and how hardware incompatibility forced companies to maintain two separate computing staffs; (3) IBM's $5 billion System/360 gamble (1964) to unify scientific and commercial hardware, and the 1963 SHARE/GUIDE 3x3 committee's rush to design 'NPL' (New Programming Language, renamed PL/I); (4) breaking free of 80-column punch-card cages with free-form stream syntax, ALGOL-inspired block structure ('PROCEDURE', 'BEGIN...END'), local variable scope, and recursion; (5) PL/I's radical 'no reserved keywords' rule (where 'IF IF = THEN THEN THEN = ELSE;' is legal code) and how context-sensitive parsing worked; (6) unifying numbers for rocket scientists and accountants under one roof via binary floating-point, 'FIXED DECIMAL' arithmetic, and COBOL-style 'PICTURE' formatting masks; (7) rich composite data: hierarchical record structures ('DECLARE 1 CUSTOMER...'), whole-array math, array cross-section slicing, 'VARYING' character strings, and bit strings; (8) memory management and the four storage classes ('STATIC', 'AUTOMATIC' stack allocation, 'CONTROLLED', and 'BASED' pointer variables that brought dynamic linked lists to business and scientific code); (9) runtime resilience through asynchronous 'ON' condition handling ('ON ZERODIVIDE', 'ON ENDFILE', 'ON OVERFLOW') and early 'TASK'/'EVENT' multitasking; and (10) the compile-time macro preprocessor ('%DECLARE', '%DO') and the high-water mark of 1966 optimism that PL/I would soon replace both FORTRAN and COBOL.",
+  "tag_path": [
+    "History",
+    "History of Technology",
+    "Data \u0026 Computing Technology"
+  ],
+  "vetting_summary": "Reviewed all 50 chunks and 100 multiple-choice questions across section_01.json through section_10.json from the perspective of a college-freshman generalist with zero prior computer-science jargon. Clarified plain-English definitions on first appearance for low-level terms (processor scratchpad slots/registers, subroutines, operations research, 4-bit sign nibbles in packed decimal, raw memory dumps, and tape read parity/corruption errors) and balanced multiple-choice options and correct_index distributions (0, 1, 2, 3) across all 10 sections.",
+  "created_at": "2026-11-13T00:30:55Z",
+  "sections": [
+    {
+      "id": "sec_01",
+      "title": "1. Two Worlds of Computing: Scientific FORTRAN vs. Commercial COBOL (1957–1962)",
+      "summary": "Step into a late-1950s corporate computing center to see why early electronic mainframes were split into two rival tribes. Learners first meet a compiler—a translator that turns human-readable instructions into hardware machine codes—and then compare the scientific tribe (aerospace and physics labs using FORTRAN and the SHARE user group on fast IBM 7090 machines) with the commercial tribe (banks and insurers using English-like COBOL and the GUIDE user group to process millions of customer text records on IBM 1401 and 7080 systems).",
+      "introduced_terms": [
+        "compiler (high-level source-to-machine translator)",
+        "scientific computing (FORTRAN and SHARE)",
+        "business data processing (COBOL and GUIDE)"
+      ],
+      "chunks": [
+        {
+          "id": "ch_001",
+          "title": "A Tale of Two Glass-Walled Rooms",
+          "content_markdown": "Imagine walking through the headquarters of a giant aerospace manufacturer in 1960. Down one corridor sits a chilled, glass-walled room where trajectory physicists calculate rocket orbits on an **IBM 7090 mainframe**—a room-sized electronic computer. Down another hallway sits a second glass-walled room where payroll clerks and accountants print thirty thousand weekly paychecks and track warehouse parts on an **IBM 7080** and an **IBM 1401**.\n\nTo an outside visitor, both rooms look almost identical: spinning magnetic tape reels, flashing operator consoles, and trays of stiff paper punch cards. Yet if a physicist carried a stack of rocket-trajectory cards down the hall and fed them into the payroll computer, the machine would halt in utter confusion.\n\nWhy did a single corporation in 1960 need two completely separate breeds of computers, two separate programming languages, and two separate staffs who barely spoke the same technical dialect? The answer lies in how early computing split into two rival tribes: **scientific computing** and **business data processing**.",
+          "questions": [
+            {
+              "id": "q_001",
+              "prompt": "What would happen in 1960 if an aerospace physicist tried to run an IBM 7090 rocket-trajectory card deck directly on the company's commercial IBM 7080 payroll mainframe?",
+              "choices": [
+                "The payroll mainframe would halt or reject the deck because the two machines used incompatible hardware and languages.",
+                "The payroll mainframe would run the trajectory math at half speed while formatting the output as accounting ledgers.",
+                "The payroll mainframe would execute the rocket equations normally because all 1960 IBM models shared one instruction set.",
+                "The payroll mainframe would pause only until an operator flipped a console switch from commercial mode to scientific mode."
+              ],
+              "correct_index": 0,
+              "explanation": "In 1960, scientific mainframes (like the IBM 7090) and commercial mainframes (like the IBM 7080 and 1401) had fundamentally different internal designs and programming languages, so programs written for one could not run on the other."
+            },
+            {
+              "id": "q_002",
+              "prompt": "Which two distinct computing tribes coexisted inside large corporations and government agencies at the end of the 1950s?",
+              "choices": [
+                "Analog differential-analyzer mechanics and digital relay-switchboard operators.",
+                "University pure-mathematics theorists and commercial desktop-calculator clerks.",
+                "Scientific computing specialists and commercial business data processing teams.",
+                "Military cryptography analysts and real-time telecommunications engineers."
+              ],
+              "correct_index": 2,
+              "explanation": "Late-1950s computing was sharply divided between scientific computing (engineering, physics, trajectory calculations) and business data processing (payroll, billing, inventory, and accounting)."
+            }
+          ]
+        },
+        {
+          "id": "ch_002",
+          "title": "What Is a Compiler?",
+          "content_markdown": "Before we meet those two tribes, we need to understand how human beings talk to a machine made of switches and wires. Down at the metal level, a computer's central processor only understands **machine code**: raw patterns of numbers that command basic hardware actions like \"copy the value in memory cell 402 into scratchpad slot A.\"\n\nIn the early 1950s, programmers had to write out those numeric steps by hand—a slow, error-prone chore. By the late 1950s, pioneers invented **high-level programming languages** that let humans write instructions using familiar algebraic formulas or English words.\n\nOf course, hardware switches still cannot read algebra or English directly. The bridge between human and hardware is a special translator program called a **compiler**. You feed your human-readable program—called **source code**—into the compiler, and the compiler translates the entire recipe into a fast, ready-to-run package of machine code tailored for that specific computer model.",
+          "questions": [
+            {
+              "id": "q_003",
+              "prompt": "What is the primary role of a compiler in computer programming?",
+              "choices": [
+                "It schedules batch jobs so high-priority scientific runs execute before overnight accounting jobs.",
+                "It translates human-readable source code written in a high-level language into hardware-specific machine code.",
+                "It sorts paper punch cards into numerical sequence before they enter the mechanical reading hoppers.",
+                "It checks magnetic tape reels for physical wear and copies data onto fresh backup reels."
+              ],
+              "correct_index": 1,
+              "explanation": "A compiler is a translator program that takes high-level source code (written using algebra-like formulas or English phrases) and converts it into the low-level machine code instructions a specific processor can execute."
+            },
+            {
+              "id": "q_004",
+              "prompt": "Why could a computer processor in the late 1950s not execute high-level source code directly without a translation step?",
+              "choices": [
+                "High-level source code used alphabetical characters that magnetic tape drives could not store.",
+                "High-level source code omitted arithmetic operators and relied on human operators to supply them.",
+                "High-level source code could only be stored on paper cards rather than in electronic memory.",
+                "Hardware processors only execute low-level numeric machine instructions wired into their circuitry."
+              ],
+              "correct_index": 3,
+              "explanation": "A processor's electronic circuits are wired to recognize and execute specific numeric machine-code instructions, so human-readable algebraic or English source code must first be translated by a compiler."
+            }
+          ]
+        },
+        {
+          "id": "ch_003",
+          "title": "The Scientific Tribe: FORTRAN and SHARE",
+          "content_markdown": "The first tribe to embrace high-level compilers was **scientific computing**. Physicists, nuclear engineers, and aerodynamicists typically read a modest batch of measurement numbers into memory, performed millions of intense mathematical calculations—sines, cosines, square roots, and matrix equations—and printed out a short table of results.\n\nIn 1957, an IBM team led by John Backus released **FORTRAN** (short for *Formula Translation*). FORTRAN let scientists write compact algebraic statements that looked like textbook math:\n\n`DIST = VEL * TIME + 0.5 * ACCEL * TIME ** 2`\n\nHere `*` meant multiply and `**` meant raise to a power. Two years earlier, in 1955, scientific IBM customers had founded **SHARE**, the first influential computer user group. Through SHARE, aerospace labs, universities, and defense agencies pooled their reusable code recipes (**subroutines**), demanded faster math hardware on machines like the IBM 704, 709, and transistorized 7090, and fiercely defended FORTRAN's mathematical style.",
+          "questions": [
+            {
+              "id": "q_005",
+              "prompt": "What kind of workload was a typical late-1950s FORTRAN program designed to handle?",
+              "choices": [
+                "Reading a relatively small set of numeric inputs and performing millions of intensive mathematical calculations.",
+                "Scanning millions of customer street addresses to print monthly utility bills with minimal arithmetic.",
+                "Sorting large corporate personnel directories alphabetically by employee last name and department.",
+                "Updating thousands of bank checking balances from daily deposit slips and withdrawal records."
+              ],
+              "correct_index": 0,
+              "explanation": "Scientific computing workloads centered on heavy mathematical computation (trajectories, physics simulations, engineering equations) over relatively compact numeric datasets, which FORTRAN's formula-based syntax expressed naturally."
+            },
+            {
+              "id": "q_006",
+              "prompt": "What was SHARE, founded in 1955 by scientific IBM mainframe installations?",
+              "choices": [
+                "A federal standards committee that restricted high-speed mainframes to defense contractors.",
+                "A time-rental brokerage that leased unused overnight computer hours to local retail stores.",
+                "A collaborative user group where scientific computing labs exchanged software routines and shaped IBM hardware priorities.",
+                "A joint university consortium that built open-source replacements for IBM magnetic tape drives."
+              ],
+              "correct_index": 2,
+              "explanation": "SHARE was the user organization formed in 1955 by scientific customers of large IBM mainframes (such as the 704, 709, and 7090) to share code libraries and influence IBM's scientific hardware and FORTRAN development."
+            }
+          ]
+        },
+        {
+          "id": "ch_004",
+          "title": "The Commercial Tribe: COBOL and GUIDE",
+          "content_markdown": "Walk across the hall to the **business data processing** department, and the workload flipped completely upside down. A bank or insurance company rarely needed square roots or trigonometry. Instead, commercial mainframes read *millions* of customer records from magnetic tape, performed simple addition, subtraction, and percentage multiplication on each account, and printed endless stacks of invoices, tax forms, and checks.\n\nTo serve this world, a committee backed by the U.S. Department of Defense and heavily influenced by Grace Hopper's earlier work created **COBOL** (*Common Business-Oriented Language*) in 1959–1960. Rather than compact algebra, COBOL used verbose, self-documenting English sentences so corporate managers and auditors could read the logic:\n\n`MULTIPLY HOURS-WORKED BY HOURLY-RATE GIVING GROSS-PAY.`\n\nIn 1956, commercial IBM customers formed their own user organization, **GUIDE**. While SHARE championed scientific number-crunching on the IBM 7090, GUIDE championed character-handling, file processing, and exact decimal accounting on machines like the IBM 7080 and the wildly popular **IBM 1401**.",
+          "questions": [
+            {
+              "id": "q_007",
+              "prompt": "How did typical business data processing workloads in 1960 differ from scientific computing workloads?",
+              "choices": [
+                "Business workloads solved differential calculus equations on tiny datasets with minimal file input or output.",
+                "Business workloads processed massive volumes of text and financial records using simple arithmetic per record.",
+                "Business workloads computed three-dimensional aerodynamic simulations before printing short summary tables.",
+                "Business workloads required high-precision trigonometric libraries rather than magnetic tape file storage."
+              ],
+              "correct_index": 1,
+              "explanation": "Commercial computing was input/output-heavy: it moved millions of customer records (names, addresses, account balances) through simple arithmetic operations (addition, subtraction, tax percentages) and formatted printed reports."
+            },
+            {
+              "id": "q_008",
+              "prompt": "Why was COBOL designed around English-like sentences such as `ADD OVERTIME TO BASE-PAY GIVING TOTAL-PAY`?",
+              "choices": [
+                "Early commercial compilers could not parse mathematical symbols like plus signs or equals signs on punch cards.",
+                "English sentences took up fewer punch cards than algebraic formulas, saving card stock in large banks.",
+                "Hardware processors on the IBM 1401 executed English verbs directly without needing a compiler step.",
+                "Designers wanted business programs to be readable and auditable by commercial managers and accountants."
+              ],
+              "correct_index": 3,
+              "explanation": "COBOL was intentionally verbose and English-like so business analysts, managers, and financial auditors could read and verify commercial program logic without needing training in algebraic notation."
+            }
+          ]
+        },
+        {
+          "id": "ch_005",
+          "title": "When Two Tribes Start Stepping on Each Other's Toes",
+          "content_markdown": "As long as physicists stuck to rocket trajectories and accountants stuck to payroll, the wall between FORTRAN/SHARE and COBOL/GUIDE seemed natural. By 1962, however, that neat boundary was crumbling from both sides.\n\nScientific engineers increasingly needed to manage huge equipment inventories, format readable project reports, and sort alphanumeric part catalogs—tasks where FORTRAN was clumsy and painful. Meanwhile, commercial businesses were discovering **operations research** (using mathematical models to guide business decisions): airlines wanted linear-programming math to optimize flight schedules, and oil companies wanted statistical models to blend refinery crudes—tasks where COBOL's wordy arithmetic was agonizingly slow.\n\nYet neither language could comfortably do the other's job, and the underlying IBM machines could not even read the numbers the same way. In the next section, we will look inside the hardware to see why a simple ten-cent coin caused a war between binary floating-point scientists and decimal bankers.",
+          "questions": [
+            {
+              "id": "q_009",
+              "prompt": "Why did the strict division between FORTRAN and COBOL become increasingly frustrating for organizations by 1962?",
+              "choices": [
+                "Both FORTRAN and COBOL lost support for magnetic tape storage when transistorized mainframes arrived.",
+                "Commercial banks abandoned decimal currency calculations in favor of pure trigonometric modeling.",
+                "Scientists increasingly needed text-report and file handling, while businesses increasingly needed statistical and optimization math.",
+                "Aerospace laboratories stopped performing numerical calculations and switched entirely to payroll processing."
+              ],
+              "correct_index": 2,
+              "explanation": "Real-world problems began crossing the boundary: scientific labs needed commercial-style file sorting and formatted reports, while businesses needed scientific-style math for operations research and forecasting."
+            },
+            {
+              "id": "q_010",
+              "prompt": "Which pairing accurately matches each late-1950s computing tribe with its primary language, IBM user group, and flagship hardware?",
+              "choices": [
+                "Scientific: COBOL, GUIDE, IBM 1401; Commercial: FORTRAN, SHARE, IBM 7090.",
+                "Scientific: FORTRAN, SHARE, IBM 7090; Commercial: COBOL, GUIDE, IBM 1401 and 7080.",
+                "Scientific: COBOL, SHARE, IBM 7080; Commercial: FORTRAN, GUIDE, IBM 7090.",
+                "Scientific: FORTRAN, GUIDE, IBM 1401; Commercial: COBOL, SHARE, IBM 7080."
+              ],
+              "correct_index": 1,
+              "explanation": "The scientific tribe rallied around FORTRAN, the SHARE user group, and binary machines like the IBM 7090, while the commercial tribe rallied around COBOL, the GUIDE user group, and decimal/character machines like the IBM 1401 and 7080."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_02",
+      "title": "2. Missing Pennies and Divided Machine Rooms: Binary Floating-Point vs. Decimal Currency",
+      "summary": "Unpack the everyday math and hardware reasons why scientists and accountants could not easily share a single computer or language around 1960. Just as $$\\frac{1}{3}$$ becomes an endless repeating decimal ($$0.3333\\ldots$$) in base 10, ordinary ten-cent coins ($$\\frac{1}{10}$$ of a dollar) become endless repeating fractions in base-2 binary floating-point math, creating phantom penny discrepancies that infuriated bank auditors. Meanwhile, incompatible hardware designs forced big corporations to fund two separate machine rooms, two training pipelines, and two maintenance staffs.",
+      "introduced_terms": [
+        "binary floating-point representation",
+        "decimal rounding error (inexact base-2 fractions)",
+        "architectural incompatibility (scientific vs. commercial mainframes)"
+      ],
+      "chunks": [
+        {
+          "id": "ch_006",
+          "title": "The Case of the Vanishing Penny",
+          "content_markdown": "Suppose a corporate controller in 1961 asks a young FORTRAN programmer to test the scientific mainframe by adding up ten thousand customer deposits of ten cents each ($$0.10$$ dollars). Any schoolchild knows that $$10{,}000 \\times 0.10$$ equals exactly $$1{,}000.00$$ dollars.\n\nYet when the scientific mainframe prints the total, the paper sheet reads $$999.99$$ dollars—or perhaps $$1{,}000.0002$$ dollars! To a rocket physicist calculating the thrust of a booster engine, an error of two ten-thousandths of a unit is utterly meaningless noise, smaller than a gust of wind on the launchpad.\n\nTo a bank auditor, however, a single missing or phantom penny is a five-alarm emergency. In accounting, every column of numbers must balance to the exact cent, and a discrepancy of one penny can trigger days of manual ledger hunting to rule out fraud or embezzlement. Why did the world's fastest scientific computer stumble over a simple dime?",
+          "questions": [
+            {
+              "id": "q_011",
+              "prompt": "Why did a tiny fraction-of-a-cent discrepancy matter so much to a 1960s bank auditor when a rocket physicist could safely ignore it?",
+              "choices": [
+                "Rocket physicists only used whole numbers and never calculated fractions or decimals in trajectory equations.",
+                "Financial accounting requires exact cent-for-cent ledger balance, whereas physical measurements always contain small tolerances.",
+                "Scientific mainframes automatically corrected their own rounding errors whenever numbers exceeded one million.",
+                "Commercial banking regulations required all interest calculations to be truncated to whole dollar amounts."
+              ],
+              "correct_index": 1,
+              "explanation": "Physical engineering measurements naturally have small tolerances, so tiny rounding residuals do not affect a rocket's path; in financial books, however, accounts must balance to the exact penny."
+            },
+            {
+              "id": "q_012",
+              "prompt": "What surprising result could occur when a 1960s scientific computer repeatedly added ten-cent ($$0.10$$) amounts thousands of times?",
+              "choices": [
+                "The accumulated total could drift off by a fraction of a cent or a whole penny due to internal rounding.",
+                "The processor would halt with an arithmetic overflow error as soon as the sum reached one hundred dollars.",
+                "The compiler would automatically convert the dimes into whole integer cents before compiling the loop.",
+                "The calculation would run ten times slower than multiplying two large scientific numbers together."
+              ],
+              "correct_index": 0,
+              "explanation": "Because ten cents ($$0.10$$) cannot be stored exactly in standard base-2 binary fractions, adding it thousands of times caused tiny rounding errors to accumulate into visible penny discrepancies."
+            }
+          ]
+        },
+        {
+          "id": "ch_007",
+          "title": "How Scientists Pack Giant and Tiny Numbers: Binary Floating-Point",
+          "content_markdown": "To understand where that penny went, let's look at how scientific computers store numbers. Physicists work with values spanning colossal ranges—from the distance between galaxies down to the mass of an electron. Writing out twenty-five zeros by hand is clumsy, so scientists use **scientific notation**, splitting a number into significant digits (the **mantissa** or significand) and a power-of-ten scale factor (the **exponent**), such as $$6.02 \\times 10^{23}$$.\n\nScientific mainframes like the IBM 7090 built this same idea directly into base-2 (binary) hardware using **binary floating-point representation**. Inside each fixed 36-bit memory word, the machine used 1 bit for the plus/minus sign, 8 bits for the exponent (scaling by powers of $$2$$), and 27 bits for the binary mantissa.\n\nBecause the radix point \"floats\" according to the exponent, binary floating-point hardware can multiply or divide astronomical and microscopic numbers at blazing electronic speeds.",
+          "questions": [
+            {
+              "id": "q_013",
+              "prompt": "What are the two main numerical parts that allow floating-point representation to handle both astronomical and microscopic values?",
+              "choices": [
+                "A fixed whole-dollar integer field and a fixed two-digit fractional cent field.",
+                "An 80-column card sequence number and a 6-bit alphabetical character code.",
+                "A numerator integer and an explicit prime-factored denominator integer.",
+                "A set of significant digits (mantissa) and a scale factor (exponent) that shifts the radix point."
+              ],
+              "correct_index": 3,
+              "explanation": "Like scientific notation, floating-point representation stores a number's significant digits (the mantissa) alongside an exponent that scales the value by powers of the base, letting the radix point 'float.'"
+            },
+            {
+              "id": "q_014",
+              "prompt": "Why did scientific mainframes like the IBM 7090 favor binary floating-point hardware?",
+              "choices": [
+                "It allowed rapid multiplication and division across vast numeric ranges within fixed-size 36-bit memory words.",
+                "It guaranteed that every base-10 fraction like one-tenth could be stored with zero rounding error.",
+                "It stored variable-length customer names and street addresses more compactly than character machines.",
+                "It eliminated the need for electronic memory by storing numbers on mechanical decimal gear wheels."
+              ],
+              "correct_index": 0,
+              "explanation": "Binary floating-point packed a wide dynamic range of numbers into fixed 36-bit words and let electronic circuits perform scientific arithmetic at high speed."
+            }
+          ]
+        },
+        {
+          "id": "ch_008",
+          "title": "Why One-Tenth Repeats Forever in Binary",
+          "content_markdown": "Why does binary floating-point botch a simple ten-cent dime? Think about ordinary base-10 decimals first. In base 10, the number $$10$$ factors into $$2 \\times 5$$, so fractions like $$\\frac{1}{2} = 0.5$$ and $$\\frac{1}{5} = 0.2$$ stop cleanly. But try writing $$\\frac{1}{3}$$ as a decimal: you get $$0.333333\\ldots$$ repeating forever! If your calculator only holds six digits, $$\\frac{1}{3}$$ gets chopped off to $$0.333333$$, and adding three of them gives $$0.999999$$ instead of $$1.000000$$.\n\nNow switch to **base 2 (binary)**, where place values are halves ($$\\frac{1}{2}$$), quarters ($$\\frac{1}{4}$$), eighths ($$\\frac{1}{8}$$), and sixteenths ($$\\frac{1}{16}$$). Because $$2$$ is the only prime factor of the base, any fraction whose denominator has a factor of $$5$$—including one-tenth, $$\\frac{1}{10}$$—*cannot stop cleanly in binary*! In base 2, $$\\frac{1}{10}$$ is an infinite repeating fraction:\n\n$$\\frac{1}{10}_{\\text{ten}} = 0.00011001100110011\\ldots_{\\text{two}}$$\n\nChopping that endless pattern to fit inside a 27-bit hardware mantissa creates a tiny **decimal rounding error** on every single dime.",
+          "questions": [
+            {
+              "id": "q_015",
+              "prompt": "Why cannot the decimal fraction $$0.10$$ ($$\\frac{1}{10}$$) be represented-exactly in finite base-2 binary floating-point?",
+              "choices": [
+                "Because the number ten is an even integer, and binary mantissas can only represent odd denominators.",
+                "Because the denominator $$10$$ contains a prime factor of $$5$$, turning $$\\frac{1}{10}$$ into an infinite repeating binary fraction.",
+                "Because 36-bit memory words reserve all 27 mantissa bits for whole integers greater than one.",
+                "Because binary floating-point exponents can only shift the radix point to the left, never to the right."
+              ],
+              "correct_index": 1,
+              "explanation": "Just as $$\\frac{1}{3}$$ repeats forever in base 10 because $$3$$ does not divide $$10$$, $$\\frac{1}{10}$$ repeats forever in base 2 ($$0.000110011\\ldots_2$$) because its factor of $$5$$ cannot be built from finite powers of $$\\frac{1}{2}$$."
+            },
+            {
+              "id": "q_016",
+              "prompt": "Which of the following fractions CAN be represented with complete exactness in a finite base-2 binary fraction?",
+              "choices": [
+                "One-tenth ($$\\frac{1}{10}$$), because ten is the base of the decimal system.",
+                "One-third ($$\\frac{1}{3}$$), because three is an odd prime number.",
+                "Three-eighths ($$\\frac{3}{8}$$), because the denominator $$8$$ is an exact power of two.",
+                "One-fifth ($$\\frac{1}{5}$$), because five is half of ten."
+              ],
+              "correct_index": 2,
+              "explanation": "In base 2, fractional place values are $$\\frac{1}{2}, \\frac{1}{4}, \\frac{1}{8}, \\frac{1}{16}, \\ldots$$, so any fraction whose denominator is a power of two—such as $$\\frac{3}{8} = 0.011_2$$—terminates cleanly with zero rounding error."
+            }
+          ]
+        },
+        {
+          "id": "ch_009",
+          "title": "How Business Machines Kept Every Penny: Variable-Length Decimal Memory",
+          "content_markdown": "To avoid binary rounding errors altogether, commercial computers like the **IBM 1401** and **IBM 7080** were built on a completely different hardware philosophy. Instead of packing numbers into fixed 36-bit binary floating-point words, these business machines stored data **character by character** in base-10 decimal form.\n\nEach individual decimal digit (`0` through `9`) or letter (`A` through `Z`) occupied its own 6-bit character cell in memory (plus a check bit and a special marker bit called a *word mark* that showed where a field of any length began or ended). When an IBM 1401 added $$0.10$$ to $$0.10$$, its circuitry performed genuine base-10 digit-by-digit addition—just like a human clerk working with pencil and ledger paper.\n\nThere was zero binary conversion and zero repeating-fraction truncation. Ten thousand dimes added up to $$1{,}000.00$$ dollars every single time, and a street address of 23 characters sat right next to a 7-digit account balance without wasting memory.",
+          "questions": [
+            {
+              "id": "q_017",
+              "prompt": "How did commercial computers like the IBM 1401 avoid the penny rounding errors of binary floating-point machines?",
+              "choices": [
+                "They used 128-bit binary floating-point words so the repeating binary fraction remained hidden.",
+                "They rounded every arithmetic result after each step using a hardware random-number table.",
+                "They stored digits in base-10 character form and performed exact digit-by-digit decimal arithmetic in hardware.",
+                "They restricted all banking software to whole-dollar amounts and ignored fractional cents."
+              ],
+              "correct_index": 2,
+              "explanation": "Commercial machines like the IBM 1401 and 7080 represented numbers as base-10 decimal digits in character cells and executed hardware decimal arithmetic, preserving exact penny accuracy."
+            },
+            {
+              "id": "q_018",
+              "prompt": "Why was variable-length character memory on the IBM 1401 so well suited for commercial record processing?",
+              "choices": [
+                "It compressed every customer name and street address into a single 36-bit binary floating-point word.",
+                "It required every numeric and text field to occupy exactly 80 characters to match a punch card.",
+                "It executed trigonometric matrix inversions ten times faster than the scientific IBM 7090.",
+                "It allowed text fields like names and addresses of varying lengths to sit compactly alongside exact decimal numbers."
+              ],
+              "correct_index": 3,
+              "explanation": "By using marker bits (word marks) to define field boundaries of any length, character-oriented commercial machines handled variable-length names, street addresses, and decimal currency fields smoothly."
+            }
+          ]
+        },
+        {
+          "id": "ch_010",
+          "title": "The High Cost of Architectural Incompatibility",
+          "content_markdown": "By 1962, the consequences of this hardware split—known as **architectural incompatibility**—were giving both corporate executives and IBM itself a massive headache. Because scientific mainframes (fixed-word binary) and commercial mainframes (variable-field decimal character) differed down to their memory cells, peripheral cables, and instruction sets, a customer who needed both kinds of work had to lease two separate computer systems.\n\nWorse still, inside IBM itself, the company was fragmenting into rival engineering fiefdoms. By 1961, IBM was designing and maintaining half a dozen incompatible product lines (the 1400 series, 7070/7080 series, 7090/7094 series, and 1620 series), each needing its own separate compilers, tape drives, field-service technicians, and sales manuals.\n\nSomething had to give. In Section 3, we will watch IBM bet the entire company on a revolutionary new computer family that merged scientific and commercial hardware—and sparked an urgent race to invent a single unified programming language.",
+          "questions": [
+            {
+              "id": "q_019",
+              "prompt": "What did 'architectural incompatibility' mean for a large company that needed both scientific engineering and commercial accounting in 1962?",
+              "choices": [
+                "The company had to lease separate computer models, maintain separate programming staffs, and manage incompatible peripherals.",
+                "The company could run COBOL and FORTRAN on the same processor, but only by rebooting between jobs.",
+                "The company had to convert all customer names into binary floating-point numbers before printing checks.",
+                "The company could share tape drives and compilers across all machines, but had to buy two different styles of punch cards."
+              ],
+              "correct_index": 0,
+              "explanation": "Because scientific and commercial machines had incompatible memory layouts, instruction sets, and languages, enterprises had to pay for duplicate hardware rooms, duplicate peripherals, and separate specialist teams."
+            },
+            {
+              "id": "q_020",
+              "prompt": "How did maintaining multiple incompatible computer lines affect IBM internally by the early 1960s?",
+              "choices": [
+                "It lowered IBM's software costs because one compiler worked identically across all six product lines.",
+                "It splintered IBM's engineering and software budgets across half a dozen competing, non-interchangeable product families.",
+                "It allowed IBM to standardize on a single magnetic tape drive and card reader for every customer.",
+                "It convinced IBM executives to phase out commercial mainframes and focus strictly on aerospace labs."
+              ],
+              "correct_index": 1,
+              "explanation": "IBM's proliferation of incompatible product lines (1401, 7080, 7090, 1620, 7070) stretched its hardware engineers, compiler writers, and maintenance crews dangerously thin across separate ecosystems."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_03",
+      "title": "3. IBM's System/360 Gamble and the 3x3 Committee: From NPL to PL/I (1963–1964)",
+      "summary": "Follow IBM's historic five-billion-dollar bet on the System/360 (announced in April 1964), a single family of computers engineered to run both high-speed scientific math and penny-exact commercial record-keeping on the same hardware. To give this unified machine a unified voice, IBM and its SHARE and GUIDE user groups formed the six-person '3x3 Committee' in late 1963, working at breakneck speed in hotel rooms to design 'NPL' (New Programming Language)—soon renamed PL/I (Programming Language One) after the UK's National Physical Laboratory objected to the initials.",
+      "introduced_terms": [
+        "IBM System/360 (unified mainframe family)",
+        "SHARE/GUIDE 3x3 Committee",
+        "NPL and PL/I (Programming Language One)"
+      ],
+      "chunks": [
+        {
+          "id": "ch_011",
+          "title": "A Five-Billion-Dollar Bet on All 360 Degrees",
+          "content_markdown": "In April 1964, IBM Chairman Thomas J. Watson Jr. unveiled the boldest gamble in corporate history: the **IBM System/360**. Fortune magazine memorably dubbed it \"IBM's five-billion-dollar gamble\"—a price tag exceeding the wartime Manhattan Project and more than twice IBM's total annual revenue.\n\nWhy the name *360*? Like the $$360^\\circ$$ of a complete compass circle, System/360 was engineered to cover every direction of computing—scientific, commercial, engineering, and real-time communications—within a single compatible family of mainframes.\n\nFor the first time, a single processor contained *both* high-speed binary floating-point circuitry for rocket scientists *and* exact hardware decimal arithmetic and 8-bit character bytes for bank accountants. Better still, a customer could start with a modest Model 30 and upgrade to a powerhouse Model 65 or Model 75 without rewriting existing machine-level programs. Hardware had finally been unified under one roof.",
+          "questions": [
+            {
+              "id": "q_021",
+              "prompt": "Why did IBM name its revolutionary 1964 mainframe family the 'System/360'?",
+              "choices": [
+                "Each processor used a 360-bit memory word to store ten 36-bit scientific numbers at once.",
+                "Like the 360 degrees of a full circle, one compatible hardware family served the entire spectrum of scientific and commercial computing.",
+                "The architecture combined the model numbers of the commercial IBM 1401 and scientific IBM 7090.",
+                "The system executed 360 thousand floating-point instructions per second on every model."
+              ],
+              "correct_index": 1,
+              "explanation": "The name '360' evoked the 360 degrees of a complete circle, signaling that a single compatible family of machines could handle every type of workload—both scientific and commercial."
+            },
+            {
+              "id": "q_022",
+              "prompt": "How did the IBM System/360 hardware resolve the numeric conflict between scientific physicists and commercial accountants?",
+              "choices": [
+                "It built both high-speed binary floating-point circuits and exact decimal character arithmetic into the same processor architecture.",
+                "It replaced binary floating-point completely with 64-digit variable-length decimal arithmetic for all scientific programs.",
+                "It required customers to install two separate central processor cabinets connected by a shared magnetic tape drive.",
+                "It converted all commercial currency figures into 36-bit binary words and rounded results at the line printer."
+              ],
+              "correct_index": 0,
+              "explanation": "System/360 processors included instruction sets and hardware circuitry for both fast binary floating-point math and exact base-10 decimal and 8-bit character operations."
+            }
+          ]
+        },
+        {
+          "id": "ch_012",
+          "title": "One Machine, Still Two Languages? Enter the 3x3 Committee",
+          "content_markdown": "Unifying the hardware solved only half the puzzle. Even on a shiny new System/360, if physicists kept writing in FORTRAN and accountants kept writing in COBOL, a company's programmers would still live in two separate worlds—and nobody could easily write a single program that combined complex scientific math with rich business file handling.\n\nAt first, IBM and the scientific **SHARE** user group hoped simply to stretch FORTRAN into a hypothetical \"FORTRAN VI\" by bolting on commercial text and decimal features. When they inspected FORTRAN's rigid 1950s skeleton, however, they realized that pasting business features onto FORTRAN was like welding a flatbed delivery truck onto a Formula One race car.\n\nSo in October 1963, IBM and SHARE formed the famous **Advanced Language Development Committee**—universally nicknamed the **3x3 Committee** because it paired **three IBM language designers** (led by George Radin and Bruce Rosenblatt) with **three SHARE customer representatives** (later joined by observers from the commercial **GUIDE** user group) to design a clean, unified successor from scratch.",
+          "questions": [
+            {
+              "id": "q_023",
+              "prompt": "Why was the group chartered in October 1963 to design a unified programming language nicknamed the '3x3 Committee'?",
+              "choices": [
+                "They were given exactly three months to merge three existing compilers into one software package.",
+                "They designed the language around three numeric types and three character string formats.",
+                "The core working group paired three representatives from IBM with three customer representatives from the SHARE user group.",
+                "They divided the language specification into three scientific chapters and three commercial chapters."
+              ],
+              "correct_index": 2,
+              "explanation": "The committee originally consisted of three IBM employees and three representatives from the SHARE user organization (with GUIDE representatives soon participating as well), earning it the shorthand '3x3 Committee.'"
+            },
+            {
+              "id": "q_024",
+              "prompt": "What was the initial plan before the 3x3 Committee decided to design an entirely new programming language?",
+              "choices": [
+                "To require all scientific programmers on the System/360 to write orbital equations in extended COBOL.",
+                "To translate all existing FORTRAN and COBOL programs directly into System/360 machine code without a high-level language.",
+                "To adopt European ALGOL 60 unchanged as the sole commercial and scientific language for System/360.",
+                "To expand FORTRAN into a 'FORTRAN VI' by adding commercial character and decimal capabilities."
+              ],
+              "correct_index": 3,
+              "explanation": "IBM and SHARE initially set out to define 'FORTRAN VI' with business and character extensions, but quickly concluded that FORTRAN's rigid card-column syntax could not cleanly support modern block structure and commercial data types."
+            }
+          ]
+        },
+        {
+          "id": "ch_013",
+          "title": "Motel-Room Marathons and the Birth of 'NPL'",
+          "content_markdown": "Imagine trying to design an ambitious, all-purpose programming language while the five-billion-dollar System/360 announcement date is hurtling toward you like an express train. Between October 1963 and February 1964, the 3x3 Committee worked at a breathless, almost frantic pace, holding marathon weekend sessions in New York and California hotel and motel rooms because IBM's secret System/360 labs were tightly compartmentalized.\n\nInstead of favoring one tribe over the other, the committee drew inspiration from three sources at once:\n1. From **FORTRAN**, they took compact algebraic formulas and fast scientific floating-point arrays.\n2. From **COBOL**, they took hierarchical business records, exact decimal currency math, and report-formatting masks.\n3. From **ALGOL 60**—an elegant European algorithmic language created in 1960—they took free-form layout and structured program blocks.\n\nBy March 1964, they presented their specification to SHARE under the working title **NPL**, short for **New Programming Language**.",
+          "questions": [
+            {
+              "id": "q_025",
+              "prompt": "Which three existing programming languages provided the primary design pillars for the 3x3 Committee's new language?",
+              "choices": [
+                "FORTRAN for scientific math, COBOL for business records and decimal data, and ALGOL 60 for block structure and free-form syntax.",
+                "FORTRAN for English business sentences, COBOL for recursion and block structure, and ALGOL 60 for decimal currency masks.",
+                "COMTRAN for scientific matrix algebra, FACT for floating-point hardware, and RPG for recursive block structure.",
+                "FLOW-MATIC for binary floating-point, LISP for 80-column card layouts, and AUTOCODER for block scoping."
+              ],
+              "correct_index": 0,
+              "explanation": "The 3x3 Committee synthesized the strengths of FORTRAN (scientific computation), COBOL (business data records, decimal arithmetic, and formatting), and ALGOL 60 (free-form stream syntax, block structure, and recursion)."
+            },
+            {
+              "id": "q_026",
+              "prompt": "What did the initials 'NPL' stand for when the 3x3 Committee unveiled its first language report in early 1964?",
+              "choices": [
+                "National Physics Language.",
+                "Numeric Processing Logic.",
+                "New Programming Language.",
+                "Networked Procedure Library."
+              ],
+              "correct_index": 2,
+              "explanation": "The 3x3 Committee initially named its creation 'NPL,' standing simply for 'New Programming Language.'"
+            }
+          ]
+        },
+        {
+          "id": "ch_014",
+          "title": "Why 'NPL' Became 'PL/I': A Polite Letter from England",
+          "content_markdown": "How did **NPL** become **PL/I**? The twist came from across the Atlantic Ocean. IBM assigned its major compiler development effort for the new language to its British laboratory in **Hursley, England**, near Winchester.\n\nWait a moment, said British scientists when they saw IBM brochures talking about \"NPL.\" In the United Kingdom, the initials **NPL** already belonged to one of the country's most famous scientific institutions: the **National Physical Laboratory** in Teddington (where computing pioneer Alan Turing had designed the ACE computer after World War II!). Having IBM's flagship software share the exact initials of Britain's national standards lab was a recipe for endless confusion.\n\nAfter briefly flirting with the name *MPPL* (*Multi-Purpose Programming Language*), IBM settled in late 1964 on **PL/I**—pronounced \"P-L-one\" and standing for **Programming Language One**, written with a Roman numeral `I` to match the grand, authoritative style of System/360.",
+          "questions": [
+            {
+              "id": "q_027",
+              "prompt": "Why did IBM abandon the original name 'NPL' in late 1964 and rename the language 'PL/I'?",
+              "choices": [
+                "The U.S. Department of Defense claimed exclusive military ownership of the acronym 'NPL.'",
+                "The initials 'NPL' were already famously used in the UK by the National Physical Laboratory, causing confusion near IBM's Hursley lab.",
+                "Commercial GUIDE members objected that 'NPL' sounded too similar to scientific 'FORTRAN.'",
+                "System/360 line printers lacked the slash character unless a Roman numeral followed it."
+              ],
+              "correct_index": 1,
+              "explanation": "Because IBM's Hursley laboratory in England was leading the compiler effort and 'NPL' already stood for Britain's renowned National Physical Laboratory, IBM changed the name to PL/I (Programming Language One)."
+            },
+            {
+              "id": "q_028",
+              "prompt": "How is the name 'PL/I' properly pronounced and what does it stand for?",
+              "choices": [
+                "Pronounced 'P-L-eye,' standing for 'Processor Logic Index.'",
+                "Pronounced 'pliable,' standing for 'Parallel Linear Interpreter.'",
+                "Pronounced 'P-L-slash-L,' standing for 'Procedural Language Level.'",
+                "Pronounced 'P-L-one,' standing for 'Programming Language One.'"
+              ],
+              "correct_index": 3,
+              "explanation": "The 'I' in PL/I is the Roman numeral one: the name is pronounced 'P-L-one' and stands for 'Programming Language One.'"
+            }
+          ]
+        },
+        {
+          "id": "ch_015",
+          "title": "A Bold Promise: Freedom Without Intimidation",
+          "content_markdown": "Combining the best of FORTRAN, COBOL, and ALGOL into a single language sounds wonderful on paper, but it raised an immediate practical worry. If PL/I contained every tool a rocket scientist, an insurance actuary, and a systems programmer could ever want, wouldn't the manual be so thick that a beginner could never write a simple ten-line program?\n\nTo solve this, the 3x3 Committee established a core design philosophy called **modularity and default freedom**. A novice programmer should be able to learn just the small corner of PL/I needed for today's task—never even knowing that advanced features existed—while the compiler quietly supplied sensible **default settings** for everything left unsaid.\n\nThe very first place programmers felt this new freedom was right on the paper punch card itself. In Section 4, we will see how PL/I smashed the rigid 80-column card cage that had trapped FORTRAN and COBOL programmers for years.",
+          "questions": [
+            {
+              "id": "q_029",
+              "prompt": "How did PL/I's designers intend to keep such a feature-rich universal language approachable for beginners?",
+              "choices": [
+                "By letting programmers write only the subset they needed while the compiler automatically supplied sensible defaults for omitted details.",
+                "By splitting the compiler into three separate products that forbade mixing scientific and commercial features.",
+                "By requiring every variable and procedure to specify all twelve data and storage attributes explicitly.",
+                "By restricting novice programmers to fixed-column punch cards until they enabled free-form mode."
+              ],
+              "correct_index": 0,
+              "explanation": "PL/I's designers emphasized rich system defaults so a programmer could use a small, familiar subset of the language without having to specify or even know about advanced options."
+            },
+            {
+              "id": "q_030",
+              "prompt": "Where did IBM locate the primary software engineering laboratory responsible for building the flagship PL/I production compilers?",
+              "choices": [
+                "Poughkeepsie, New York.",
+                "San Jose, California.",
+                "Hursley, England.",
+                "Böblingen, Germany."
+              ],
+              "correct_index": 2,
+              "explanation": "IBM assigned responsibility for the PL/I language and its flagship F-level compiler to the IBM United Kingdom Laboratory at Hursley House near Winchester, England."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_04",
+      "title": "4. Breaking the 80-Column Card Cage: Free-Form Syntax, Block Structure, and Recursion",
+      "summary": "See how PL/I liberated programmers from the rigid column rules of 80-column punch cards, where starting a FORTRAN instruction in column 6 instead of column 7 ruined a run. Inspired by the European language ALGOL 60, PL/I treated code as a continuous stream of text in which statements could span lines freely and ended with a simple semicolon (`;`). It also organized programs into nested, self-contained rooms (`PROCEDURE` and `BEGIN...END` blocks) with private local variables and allowed procedures to call themselves recursively.",
+      "introduced_terms": [
+        "free-form stream syntax (semicolon-terminated statements)",
+        "block structure and lexical scope (PROCEDURE and BEGIN...END)",
+        "recursion (self-calling procedures)"
+      ],
+      "chunks": [
+        {
+          "id": "ch_016",
+          "title": "The Tyranny of Column 7",
+          "content_markdown": "Picture a tired programmer in 1962 sitting at a noisy mechanical keypunch machine, typing a FORTRAN program onto stiff paper cards divided into **80 numbered vertical columns**. The programmer wants to type a simple calculation: `TOTAL = PRICE + TAX`. By accident, their finger hits the `T` of `TOTAL` in **column 6** instead of **column 7**.\n\nHours later, when the batch printout comes back from the computer room, the entire run has failed! Why? Because FORTRAN and COBOL were prisoners of **fixed-column punch-card layouts**. In FORTRAN, columns 1 to 5 were strictly reserved for statement numbers, column 6 was a special marker meaning \"continue the previous card,\" columns 7 to 72 held the instruction, and columns 73 to 80 were ignored by the compiler as card-sorting sequence numbers.\n\nTyping one character a single millimeter to the left turned the letter `T` into a continuation marker and wrecked the program.",
+          "questions": [
+            {
+              "id": "q_031",
+              "prompt": "Why would a 1962 FORTRAN program fail if a programmer accidentally started typing a new instruction in column 6 instead of column 7 of a punch card?",
+              "choices": [
+                "Column 6 was rigidly reserved as a continuation marker for the previous card, while normal statements had to start in column 7 or beyond.",
+                "Columns 1 through 6 were ignored as card-sorting sequence numbers, so the first letter of the variable name was dropped.",
+                "Column 6 was reserved exclusively for the letter `C` to mark the entire card as an explanatory comment.",
+                "The FORTRAN compiler treated any character in column 6 as a command to halt compilation immediately."
+              ],
+              "correct_index": 0,
+              "explanation": "FORTRAN used a rigid fixed-column card layout: columns 1–5 held statement labels, column 6 indicated that the card continued the preceding line, and executable statements had to sit in columns 7–72."
+            },
+            {
+              "id": "q_032",
+              "prompt": "What did a FORTRAN compiler do with characters punched into columns 73 through 80 at the far right edge of a standard 80-column card?",
+              "choices": [
+                "It treated them as continuation markers linking the line to the next card in the deck.",
+                "It ignored them as optional card-deck sequence numbers used to re-sort dropped decks.",
+                "It compiled them as numeric precision attributes for the variables on that line.",
+                "It used them as statement label numbers for `GO TO` jumps within the subroutine."
+              ],
+              "correct_index": 1,
+              "explanation": "Columns 73–80 were reserved for sequence numbers (so a dropped deck of cards could be mechanically sorted back into order) and were completely ignored by the compiler as program logic."
+            }
+          ]
+        },
+        {
+          "id": "ch_017",
+          "title": "Free-Form Stream Syntax and the Mighty Semicolon",
+          "content_markdown": "Looking toward a future of magnetic tapes, disk files, and interactive typewriter terminals, the 3x3 Committee asked a liberating question: *Why should a programming language care where the edge of a paper card is?*\n\nBorrowing from Europe's ALGOL 60, PL/I introduced **free-form stream syntax** to mainstream IBM computing. To the PL/I compiler, your program is not a stack of rigid horizontal stripes; it is a single, continuous stream of characters—just like prose in a novel.\n\nInstead of using the physical end of a card to finish an instruction, PL/I ends every statement with an explicit punctuation mark: the **semicolon (`;`)**. You can pack three short statements onto a single line:\n\n`A = 1; B = 2; C = A + B;`\n\nOr you can spread one long, complex statement across four lines, indenting freely with spaces to make the logic crystal-clear to human eyes. Even comments could float anywhere inside `/* ... */` markers!",
+          "questions": [
+            {
+              "id": "q_033",
+              "prompt": "How does a PL/I compiler know where one instruction ends and the next instruction begins?",
+              "choices": [
+                "Every statement must occupy one card and stop before column 72 unless column 6 is punched.",
+                "Every statement must begin in column 8 and end with a period (`.`) at the right margin.",
+                "Every statement ends with an explicit semicolon (`;`), regardless of line breaks or column positions.",
+                "Every statement is separated from the next by a mandatory blank line or comment card."
+              ],
+              "correct_index": 2,
+              "explanation": "In PL/I's free-form stream syntax, statements are terminated by a semicolon (`;`), allowing multiple statements on one line or a single statement spread across several lines."
+            },
+            {
+              "id": "q_034",
+              "prompt": "How are explanatory human notes (comments) written inside a PL/I program?",
+              "choices": [
+                "By punching the letter `C` or an asterisk `*` strictly in column 1 of a dedicated comment card.",
+                "By prefixing the note with a percent sign (`%`) and ending it with a semicolon.",
+                "By placing the note exclusively inside columns 73 through 80 on any statement card.",
+                "By enclosing the note between `/*` and `*/` delimiters anywhere a blank space is allowed."
+              ],
+              "correct_index": 3,
+              "explanation": "PL/I introduced bracketed `/* ... */` comments that could be placed anywhere whitespace was permitted—a syntax later adopted by C, C++, Java, JavaScript, and CSS."
+            }
+          ]
+        },
+        {
+          "id": "ch_018",
+          "title": "Building Rooms Within Rooms: Block Structure",
+          "content_markdown": "Free-form syntax didn't just make single statements prettier; it let programmers organize giant programs into clean, self-contained architectural rooms—an idea called **block structure**.\n\nIn early COBOL, all data variables had to be listed in one giant global catalog (`DATA DIVISION`) at the top of the program. If fifty programmers worked on a huge payroll system and two of them accidentally named a temporary counter `TEMP-COUNT`, they would silently overwrite each other's numbers!\n\nPL/I solved this with two kinds of nestable blocks: **`PROCEDURE ... END;`** (a named subroutine you can call from elsewhere) and **`BEGIN ... END;`** (an inline block nested right inside a flow of steps). Using a `DECLARE` statement inside a block creates a private variable whose **lexical scope** (visibility) is locked inside that room. Once execution leaves the block, that private `TEMP_COUNT` never collides with a variable of the same name down the hall.",
+          "questions": [
+            {
+              "id": "q_035",
+              "prompt": "What problem in large team projects did PL/I's block structure and local variable scope (`PROCEDURE` and `BEGIN...END`) solve?",
+              "choices": [
+                "It allowed procedures to share a single global `DATA DIVISION` without needing `DECLARE` statements.",
+                "It prevented programmers working on different sections from accidentally overwriting each other's identically named local variables.",
+                "It ensured that every variable in the program retained its value permanently in `STATIC` memory.",
+                "It eliminated the need for semicolons inside nested subroutines and loop bodies."
+              ],
+              "correct_index": 1,
+              "explanation": "By scoping variables locally inside a `PROCEDURE` or `BEGIN...END` block, two programmers could each declare a local helper variable (like `I` or `TEMP`) without interfering with variables of the same name outside their block."
+            },
+            {
+              "id": "q_036",
+              "prompt": "In PL/I, what is the visibility rule (lexical scope) when an inner block sits nested inside an outer `PROCEDURE` block?",
+              "choices": [
+                "The inner block can define its own private variables and can also see outer variables unless an inner variable reuses the same name.",
+                "The outer block can read all private variables created inside the inner block, while the inner block cannot see outer variables.",
+                "Variables declared in the outer block are invisible inside the inner block unless passed as explicit arguments.",
+                "Nesting one block inside another merges all variables from both blocks into a single global namespace."
+              ],
+              "correct_index": 0,
+              "explanation": "Following ALGOL 60's lexical scoping rules, an inner block in PL/I has private access to its own declared variables while also inheriting visibility of variables in enclosing outer blocks (unless shadowed by a local declaration of the same name)."
+            }
+          ]
+        },
+        {
+          "id": "ch_019",
+          "title": "A Procedure That Calls Itself: Recursion",
+          "content_markdown": "What happens if a `PROCEDURE` is midway through its job and calls *itself* to solve a smaller piece of the exact same puzzle? In computer science, a self-calling procedure is known as **recursion**.\n\nImagine calculating the total weight of a corporate shipping crate that contains smaller boxes, which in turn contain even smaller boxes. The cleanest recipe says: *To weigh a container, add the weight of its outer shell plus the weight of each container inside it (using this exact same recipe!), stopping when you reach a plain item.*\n\nIn 1960s FORTRAN and COBOL, recursion was **strictly illegal**! Why? Because FORTRAN gave each subroutine only one fixed slot in memory for its variables and return address; if a subroutine called itself, it would trample right over its own unfinished work. In PL/I, adding the keyword **`RECURSIVE`** (`CALC: PROCEDURE(N) RECURSIVE;`) instructed the compiler to create a fresh, independent workspace on a push-down stack every time the procedure called itself.",
+          "questions": [
+            {
+              "id": "q_037",
+              "prompt": "Why could standard 1960s FORTRAN subroutines not call themselves recursively?",
+              "choices": [
+                "FORTRAN syntax lacked a `CALL` statement and required all code to sit in a single main block.",
+                "FORTRAN subroutines could not accept numeric parameters or return computed values to a caller.",
+                "Each FORTRAN subroutine had only a single fixed memory area for its variables and return address, so a self-call would overwrite its own in-progress data.",
+                "Binary floating-point hardware registers reset to zero whenever a subroutine branched backward."
+              ],
+              "correct_index": 2,
+              "explanation": "Because standard FORTRAN allocated variables and return locations statically (one fixed box per subroutine), a recursive call would overwrite the caller's own active variables and return address."
+            },
+            {
+              "id": "q_038",
+              "prompt": "How does a PL/I programmer enable a procedure to call itself safely to solve nested, self-similar problems?",
+              "choices": [
+                "By declaring all of the procedure's local variables with the `STATIC` storage class attribute.",
+                "By enclosing the procedure call inside an `ON OVERFLOW` exception handler block.",
+                "By prefixing the `CALL` statement with a percent sign (`%CALL`) to unroll it at compile time.",
+                "By marking the procedure header with the `RECURSIVE` option so each active call gets its own fresh workspace."
+              ],
+              "correct_index": 3,
+              "explanation": "Adding the `RECURSIVE` attribute to a `PROCEDURE` statement tells the PL/I compiler to allocate a fresh activation frame of local variables on each recursive invocation."
+            }
+          ]
+        },
+        {
+          "id": "ch_020",
+          "title": "The Freedom of Modern Program Structure",
+          "content_markdown": "Step back for a moment and look at what PL/I accomplished in a single leap. A programmer moving from 1962 FORTRAN or COBOL into 1964 PL/I felt as if heavy iron chains had been unlocked:\n\n- No more counting across punch-card columns to see if a statement started in column 7 or crossed column 72.\n- No more terrified tiptoeing around one giant global variable list where a single duplicate name could corrupt an entire payroll run.\n- Structured loops (`DO I = 1 TO 10; ... END;`) and clean `IF ... THEN ... ELSE` branches that nested naturally to any depth.\n\nYet when programmers opened the PL/I manual to look up the list of \"forbidden reserved words\" that they weren't allowed to use as variable names, they found a blank page! In Section 5, we will explore PL/I's wildest grammatical rule: a language with **zero reserved keywords**.",
+          "questions": [
+            {
+              "id": "q_039",
+              "prompt": "Which combination of structural features did PL/I adapt from ALGOL 60 and bring into mainstream commercial and scientific computing?",
+              "choices": [
+                "Fixed 80-column card margins, one global data division, and static-only subroutines.",
+                "Free-form semicolon-terminated stream syntax, nested `PROCEDURE`/`BEGIN` blocks with local scope, and `RECURSIVE` procedures.",
+                "Level-numbered hierarchical data records, `PICTURE` currency masks, and English-sentence arithmetic verbs.",
+                "Implicit `I`–`N` integer variable naming, column-6 continuation markers, and numeric statement labels."
+              ],
+              "correct_index": 1,
+              "explanation": "PL/I brought ALGOL 60's free-form stream syntax (with `;` terminators), nested lexical block structure (`PROCEDURE` and `BEGIN...END`), and recursion into industrial IBM mainframe programming."
+            },
+            {
+              "id": "q_040",
+              "prompt": "In PL/I, how are multiple statements grouped together so they execute as a single unit inside an `IF ... THEN` branch or a loop?",
+              "choices": [
+                "By wrapping the statements between `DO;` and `END;` (or `BEGIN;` and `END;`).",
+                "By placing all of the grouped statements on a single punch card separated by commas.",
+                "By indenting the statements four spaces to the right without any closing keyword.",
+                "By ending only the final statement in the group with a period instead of a semicolon."
+              ],
+              "correct_index": 0,
+              "explanation": "Because PL/I is free-form and ignores line breaks and indentation, multiple statements are grouped into a compound block using `DO; ... END;` (or a `BEGIN; ... END;` block with its own local scope)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_05",
+      "title": "5. 'IF IF = THEN THEN...': No Reserved Keywords and Context-Sensitive Parsing",
+      "summary": "Explore one of PL/I's boldest and most surprising design choices: the complete elimination of reserved keywords. Because COBOL reserved hundreds of English words—and any future language update might suddenly outlaw a variable name a programmer had already used—PL/I decreed that words like `IF`, `THEN`, `ELSE`, and `DO` were never off-limits as variable names. Learners trace how a context-sensitive parser reads sentence structure to decode legal brain-teasers like `IF IF = THEN THEN THEN = ELSE;` cleanly.",
+      "introduced_terms": [
+        "reserved keyword vs. unreserved identifier",
+        "context-sensitive parsing",
+        "forward-compatibility guarantee (protecting user variable names)"
+      ],
+      "chunks": [
+        {
+          "id": "ch_021",
+          "title": "The Hidden Trap of Hundreds of 'Forbidden Words'",
+          "content_markdown": "Imagine writing a commercial COBOL program in 1962 to track warehouse shipments. Naturally, you decide to name one of your variables `REPORT`, `FINAL`, or `DETAIL`. You feed your card deck into the computer—and the compiler angrily rejects your program!\n\nWhy? Because most programming languages treat their command words as **reserved keywords**: off-limits vocabulary that only the language itself may use, never a programmer naming a variable (an **identifier**). By the early 1960s, COBOL had accumulated **more than 300 reserved English words**. A programmer practically needed a dictionary pinned to the wall just to avoid picking an outlawed variable name.\n\nSince PL/I combined scientific, commercial, and systems programming into one language, its total vocabulary of command words, options, and attributes was even larger than COBOL's. If PL/I made all of those words off-limits, how could a beginner ever pick a safe variable name?",
+          "questions": [
+            {
+              "id": "q_041",
+              "prompt": "In most programming languages, what is a 'reserved keyword'?",
+              "choices": [
+                "A word with a built-in language meaning that programmers are forbidden from using as a variable or procedure name.",
+                "A variable name that has been declared `STATIC` so its memory slot remains reserved for the entire run.",
+                "A procedure name that can only be called by the operating system during hardware interrupt handling.",
+                "A shared data structure stored in a central `%INCLUDE` library that individual programmers cannot edit."
+              ],
+              "correct_index": 0,
+              "explanation": "A reserved keyword is a word claimed exclusively by the programming language's grammar (such as `IF` or `MOVE` in many languages), making it illegal for a programmer to use as a variable identifier."
+            },
+            {
+              "id": "q_042",
+              "prompt": "Why did COBOL's list of more than 300 reserved words frustrate everyday programmers in the early 1960s?",
+              "choices": [
+                "COBOL required every program to declare all 300 reserved words in its `DATA DIVISION` header.",
+                "Programmers constantly had to check a long list of forbidden words to avoid naming a variable after an obscure language keyword.",
+                "Reserved words could only be punched in columns 1 through 6, whereas variable names started in column 7.",
+                "COBOL compilers charged extra processing time whenever a program used more than twenty reserved words."
+              ],
+              "correct_index": 1,
+              "explanation": "Because COBOL reserved hundreds of everyday English business nouns and verbs, programmers frequently triggered compiler errors by accidentally choosing a reserved word as a variable name—even for features they never used."
+            }
+          ]
+        },
+        {
+          "id": "ch_022",
+          "title": "Protecting Tomorrow's Programs: Forward Compatibility",
+          "content_markdown": "There was an even deeper problem with reserved keywords—one that haunted corporate managers who expected their programs to run for ten or twenty years. Suppose a bank writes a working program in 1965 and names a variable `TASK` or `DEFAULT`. Five years later, in 1970, the language committee releases an updated compiler that adds a brand-new feature using the keyword `TASK`.\n\nIf keywords are reserved, the bank's working 1965 program **suddenly breaks** the day the new 1970 compiler is installed, simply because an old variable name collided with a newly invented command word!\n\nTo prevent both problems at once, PL/I's designers made a radical declaration: **PL/I has zero reserved keywords.** Every single word in the PL/I language—even `DECLARE`, `IF`, `THEN`, `ELSE`, and `DO`—remains an **unreserved identifier** that a programmer may legally use as a variable name, guaranteeing strict **forward compatibility** as new keywords are added in future decades.",
+          "questions": [
+            {
+              "id": "q_043",
+              "prompt": "How does banishing reserved keywords provide a 'forward-compatibility guarantee' when a programming language evolves over time?",
+              "choices": [
+                "Programs written for an older mainframe model will run without recompilation on incompatible processor architectures.",
+                "Variables declared without precision attributes will automatically double their digit capacity in newer compilers.",
+                "Adding new keywords to a future version of the language will never outlaw variable names already used in existing working programs.",
+                "Compilers can automatically translate legacy FORTRAN and COBOL decks into PL/I without human intervention."
+              ],
+              "correct_index": 2,
+              "explanation": "When keywords are not reserved, introducing new language keywords in future compiler releases never invalidates existing user programs that happened to use those words as variable names."
+            },
+            {
+              "id": "q_044",
+              "prompt": "How many reserved keywords does the standard PL/I language have?",
+              "choices": [
+                "Exactly eight—only the core control words `IF`, `THEN`, `ELSE`, `DO`, `END`, `CALL`, `GOTO`, and `RETURN`.",
+                "Exactly forty-eight—matching the forty-eight characters of the scientific keypunch character set.",
+                "More than three hundred—combining the core command words of FORTRAN, COBOL, and ALGOL 60.",
+                "Exactly zero—every keyword in PL/I can also be used as a programmer-defined variable name."
+              ],
+              "correct_index": 3,
+              "explanation": "PL/I has zero reserved keywords: any word in the language, including `IF`, `THEN`, `ELSE`, `DO`, and `DECLARE`, may legally serve as a variable name."
+            }
+          ]
+        },
+        {
+          "id": "ch_023",
+          "title": "Decoding the Brain-Teaser: `IF IF = THEN THEN THEN = ELSE;`",
+          "content_markdown": "Wait a second—if no words are reserved, how can a compiler possibly tell whether a word is a command or a variable? It uses **context-sensitive parsing**: just as you understand the English sentence *\"Police police police\"* (meaning law-enforcement officers supervise other officers) by looking at where each word sits in the sentence structure, the PL/I compiler looks at grammatical position.\n\nSuppose a mischievous programmer declares three numeric variables named `IF`, `THEN`, and `ELSE`, and writes:\n\n`IF IF = THEN THEN THEN = ELSE;`\n\nLet's walk through it left to right with the PL/I parser:\n1. The first **`IF`** starts the statement, so it *must* be the conditional command keyword.\n2. Next comes a condition: **`IF = THEN`**. Here `=` is a comparison test (\"is equal to?\"), so the second `IF` and first `THEN` *must* be variables being compared!\n3. Right after the condition comes the second **`THEN`**, which in that slot *must* be the keyword introducing the action.\n4. Finally comes the action: **`THEN = ELSE;`**. Here `=` is an assignment command (\"store the value of variable `ELSE` into variable `THEN`\").",
+          "questions": [
+            {
+              "id": "q_045",
+              "prompt": "In the legal PL/I statement `IF IF = THEN THEN THEN = ELSE;`, what role do the second `IF` and the first `THEN` play?",
+              "choices": [
+                "They are two variables whose stored values are being compared for equality inside the `IF` condition.",
+                "They are compound command keywords that start a nested conditional block inside the outer `IF`.",
+                "They are compile-time macro variables that the preprocessor strips out before compilation.",
+                "They are target labels for a conditional branch that jumps to the end of the procedure."
+              ],
+              "correct_index": 0,
+              "explanation": "After the opening `IF` keyword, the parser expects a boolean condition expression; in `IF = THEN`, the `=` is the equality comparison operator comparing the variable named `IF` with the variable named `THEN`."
+            },
+            {
+              "id": "q_046",
+              "prompt": "In the statement `IF IF = THEN THEN THEN = ELSE;`, why does the equals sign (`=`) appear twice with two different meanings?",
+              "choices": [
+                "The first `=` assigns a value to `IF`, while the second `=` tests whether `THEN` and `ELSE` are equal.",
+                "The first `=` tests whether two values are equal in the condition, while the second `=` assigns a new value to a variable in the action.",
+                "The first `=` compares numeric values, while the second `=` concatenates character strings.",
+                "Both `=` signs perform value assignment, copying `ELSE` into `THEN` and then into `IF`."
+              ],
+              "correct_index": 1,
+              "explanation": "PL/I uses the same `=` symbol for both equality comparison (inside expressions like `IF A = B`) and value assignment (at the start of an assignment statement like `B = C;`), distinguishing them by grammatical context."
+            }
+          ]
+        },
+        {
+          "id": "ch_024",
+          "title": "The Compiler Writer's Headache: Looking Ahead Around the Corner",
+          "content_markdown": "If context-sensitive parsing is so clever, why didn't every later programming language copy PL/I's \"no reserved keywords\" rule? Because while it makes life easy for the programmer, it gives the poor engineers writing the **compiler** a monumental headache!\n\nConsider what happens when a PL/I compiler reads the start of this line:\n\n`DECLARE (A, B, C) ...`\n\nIs this a **declaration statement** creating three new variables named `A`, `B`, and `C`? Usually, yes! *Unless* the programmer previously created a three-dimensional array (a 3D grid of numbers) named `DECLARE` and is now writing an assignment statement:\n\n`DECLARE (A, B, C) = 0;`\n\nTo know whether `DECLARE` is a keyword or an array variable, the compiler cannot decide on the first word; it has to **look ahead** past the closing parenthesis `)` to see whether the next character is an equals sign `=` or a data attribute like `FIXED`! That extra look-ahead machinery made PL/I compilers much larger and trickier to build than compilers for languages with reserved words.",
+          "questions": [
+            {
+              "id": "q_047",
+              "prompt": "Why cannot a PL/I compiler immediately tell whether `DECLARE (A, B, C)` at the start of a statement is a variable declaration or an array assignment?",
+              "choices": [
+                "Because PL/I allows array assignments to appear inside `DECLARE` statements without an equals sign.",
+                "Because parentheses in PL/I can denote either a list of procedure arguments or a comment block.",
+                "Because `DECLARE` could be the name of a user-defined 3D array if an `=` sign appears after the closing parenthesis.",
+                "Because all variable declarations in PL/I must be processed by the `%` macro preprocessor first."
+              ],
+              "correct_index": 2,
+              "explanation": "Since `DECLARE` is not a reserved word, `DECLARE(A, B, C) = 0;` is a legal assignment setting element `(A,B,C)` of an array named `DECLARE` to zero; the parser must look ahead past `)` to see if an `=` follows."
+            },
+            {
+              "id": "q_048",
+              "prompt": "What was the main engineering trade-off of PL/I's decision to eliminate all reserved keywords?",
+              "choices": [
+                "It simplified the compiler's parser into a single pass, but forced programmers to memorize 300 forbidden words.",
+                "It sped up compile times on small mainframes, but prevented programmers from using short variable names.",
+                "It eliminated the need for semicolons at the end of statements, but required fixed punch-card columns.",
+                "It protected programmers from keyword collisions, but made the compiler's parser much more complex and memory-hungry."
+              ],
+              "correct_index": 3,
+              "explanation": "Unreserved keywords spared programmers from memorizing forbidden words and protected forward compatibility, at the cost of requiring complex multi-token look-ahead inside the PL/I compiler."
+            }
+          ]
+        },
+        {
+          "id": "ch_025",
+          "title": "Abbreviations Without Fear",
+          "content_markdown": "Once the 3x3 Committee realized that context-sensitive parsing freed them from worrying about reserved-word collisions, they unlocked a delightful bonus for everyday programmers: **official keyword abbreviations**.\n\nNo one enjoys typing `DECLARE`, `PROCEDURE`, `DECIMAL`, `BINARY`, or `CHARACTER` hundreds of times on a stiff mechanical keyboard. In a language with reserved keywords, adding short abbreviations like `DCL`, `PROC`, `DEC`, `BIN`, and `CHAR` is dangerous, because short three- and four-letter words are the very names programmers love to pick for their own variables!\n\nIn PL/I, however, adding abbreviations was completely harmless. Whether you wrote the full formal statement:\n\n`DECLARE TOTAL FIXED DECIMAL(7,2);`\n\nor the brisk shorthand:\n\n`DCL TOTAL FIXED DEC(7,2);`\n\nthe compiler understood both—and still let you name a variable `DEC` (perhaps for the month of December!) whenever you pleased. Speaking of `FIXED DECIMAL(7,2)`, how exactly did PL/I unify scientific and financial numbers? Let's find out in Section 6.",
+          "questions": [
+            {
+              "id": "q_049",
+              "prompt": "Why could PL/I safely provide short built-in keyword abbreviations like `DCL` (for `DECLARE`), `PROC` (for `PROCEDURE`), and `DEC` (for `DECIMAL`)?",
+              "choices": [
+                "Because keywords are not reserved, so a programmer could still use `DEC` as a variable name without conflict.",
+                "Because PL/I required all user-defined variable names to be at least six characters long.",
+                "Because abbreviated keywords were expanded by the keypunch machine before cards reached the compiler.",
+                "Because `DCL`, `PROC`, and `DEC` were only valid when preceded by a `%` preprocessor symbol."
+              ],
+              "correct_index": 0,
+              "explanation": "In a reserved-word language, reserving short words like `DEC` or `CHAR` would steal common variable names from users; in PL/I, context-sensitive parsing allowed both official abbreviations and variables named `DEC`."
+            },
+            {
+              "id": "q_050",
+              "prompt": "Which pair of PL/I statements is treated as completely identical by the PL/I compiler?",
+              "choices": [
+                "`DECLARE X FLOAT BINARY;` and `DECLARE X FIXED BINARY;`",
+                "`DECLARE X FLOAT BINARY;` and `DCL X FLOAT BIN;`",
+                "`PROCEDURE MAIN;` and `BEGIN MAIN;`\n",
+                "`IF A = B THEN C = D;` and `ON A = B C = D;`"
+              ],
+              "correct_index": 1,
+              "explanation": "`DCL` is PL/I's official abbreviation for `DECLARE`, and `BIN` is the official abbreviation for `BINARY`, so both statements declare `X` with identical numeric attributes."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_06",
+      "title": "6. Numbers for Rocket Scientists and Accountants: FLOAT BINARY, FIXED DECIMAL, and PICTURE",
+      "summary": "Discover how PL/I brought scientific and financial math under one roof by letting programmers choose exact numeric attributes in a `DECLARE` statement. An orbital physicist could request `FLOAT BINARY` for rapid scientific notation across huge ranges, while a payroll clerk in the very next line could specify `FIXED DECIMAL(7,2)` for exact dollars-and-cents arithmetic with zero binary rounding drift, or apply a COBOL-style `PICTURE 'Z,ZZ9V.99'` mask to format numbers automatically with commas, decimal points, and suppressed leading zeros.",
+      "introduced_terms": [
+        "numeric data attributes (BASE, SCALE, MODE, and PRECISION)",
+        "FIXED DECIMAL (exact scaled decimal arithmetic)",
+        "PICTURE specification (character-masked numeric formatting)"
+      ],
+      "chunks": [
+        {
+          "id": "ch_026",
+          "title": "One Program, Two Kinds of Math",
+          "content_markdown": "Suppose an electric utility company in 1965 is building a single master program on its new IBM System/360. In the first half of the program, engineers calculate high-voltage alternating-current power losses across hundreds of miles of transmission lines—work that cries out for fast scientific floating-point numbers. In the second half of the *exact same program*, the billing logic multiplies each household's kilowatt-hours by a tariff rate to print monthly electric bills—work that demands penny-exact decimal currency.\n\nIn 1960, those two jobs required two different languages and often two different computers. In PL/I, both calculations can sit side by side inside the same `PROCEDURE`.\n\nInstead of forcing one rigid numeric representation on everyone, PL/I let programmers describe *how* each number should behave using a rich menu of **numeric data attributes** inside a `DECLARE` statement.",
+          "questions": [
+            {
+              "id": "q_051",
+              "prompt": "Why would a 1965 electric utility company benefit from PL/I's unified numeric system?",
+              "choices": [
+                "A single PL/I program could run both floating-point power-grid physics and penny-exact decimal customer billing.",
+                "A single PL/I program could convert all customer billing ledgers into approximate binary floating-point fractions.",
+                "PL/I eliminated the need to declare numeric types by storing all numbers as 80-character text strings.",
+                "PL/I restricted utility companies to whole-dollar integer math so fractional kilowatt-hours were ignored."
+              ],
+              "correct_index": 0,
+              "explanation": "PL/I let engineers use fast binary floating-point for physical grid modeling and exact fixed-point decimal arithmetic for customer billing within the very same program."
+            },
+            {
+              "id": "q_052",
+              "prompt": "How does a PL/I programmer specify whether a variable should behave like a scientific number or a financial currency number?",
+              "choices": [
+                "By placing scientific variables in a separate `DATA DIVISION` file outside the main procedure.",
+                "By attaching explicit numeric data attributes to the variable in a `DECLARE` statement.",
+                "By writing scientific variable names in uppercase letters and financial names in lowercase.",
+                "By starting all financial statements in column 7 and all scientific statements in column 12."
+              ],
+              "correct_index": 1,
+              "explanation": "In PL/I, the `DECLARE` (`DCL`) statement assigns explicit data attributes (such as `FLOAT BINARY` or `FIXED DECIMAL`) to each variable."
+            }
+          ]
+        },
+        {
+          "id": "ch_027",
+          "title": "The Four Dials of a PL/I Number: Base, Scale, Mode, and Precision",
+          "content_markdown": "When you declare a number in PL/I, you can adjust four independent dials—known as its **numeric data attributes**:\n\n1. **BASE (`BINARY` or `DECIMAL`)**: Should the computer store the value in base-2 binary bits or base-10 decimal digits?\n2. **SCALE (`FLOAT` or `FIXED`)**: Should the radix point float across huge scientific ranges (`FLOAT`), or stay locked at a fixed number of fractional places (`FIXED`)?\n3. **MODE (`REAL` or `COMPLEX`)**: Is it an ordinary single number (`REAL`), or a two-part complex number with an imaginary $$\\sqrt{-1}$$ component (`COMPLEX`) used in electrical and quantum engineering?\n4. **PRECISION (`(p)` or `(p,q)`)**: How many total significant digits or bits $$p$$ should it hold, and (for `FIXED` numbers) how many of those digits $$q$$ sit to the right of the radix point?\n\nThus, a rocket physicist writes `DCL VELOCITY FLOAT BINARY(27);`, while an electrical engineer analyzing alternating-current impedance can even write `DCL IMPEDANCE FLOAT BINARY COMPLEX;`!",
+          "questions": [
+            {
+              "id": "q_053",
+              "prompt": "Which four independent numeric data attributes can a programmer choose when declaring an arithmetic variable in PL/I?",
+              "choices": [
+                "Length (`SHORT`/`LONG`), Sign (`SIGNED`/`UNSIGNED`), Alignment (`BYTE`/`WORD`), and Scope (`LOCAL`/`GLOBAL`).",
+                "Format (`CARD`/`TAPE`), Radix (`OCTAL`/`HEX`), Rounding (`UP`/`DOWN`), and Bounds (`MIN`/`MAX`).",
+                "Base (`BINARY`/`DECIMAL`), Scale (`FLOAT`/`FIXED`), Mode (`REAL`/`COMPLEX`), and Precision (`(p)` or `(p,q)`).",
+                "Storage (`STATIC`/`BASED`), Class (`TEXT`/`NUMERIC`), Level (`1`/`2`), and Mask (`Z`/`9`)."
+              ],
+              "correct_index": 2,
+              "explanation": "Every arithmetic variable in PL/I is characterized by four orthogonal attributes: Base (binary vs. decimal), Scale (floating-point vs. fixed-point), Mode (real vs. complex), and Precision (total digits/bits and fractional digits/bits)."
+            },
+            {
+              "id": "q_054",
+              "prompt": "Why did PL/I include a `COMPLEX` mode attribute alongside `REAL`?",
+              "choices": [
+                "To group mixed customer fields such as names, street addresses, and balances into a single record.",
+                "To link multiple procedures together when a program was too large to fit in 64 kilobytes of memory.",
+                "To format multi-column financial balance sheets with automatic debit and credit symbols.",
+                "To support engineering and physics calculations that use complex numbers with real and imaginary components."
+              ],
+              "correct_index": 3,
+              "explanation": "`COMPLEX` mode let scientists and electrical engineers perform arithmetic directly on complex numbers (of the form $$a + bi$$, where $$i = \\sqrt{-1}$$) without having to split real and imaginary parts manually."
+            }
+          ]
+        },
+        {
+          "id": "ch_028",
+          "title": "The Accountant's Best Friend: `FIXED DECIMAL(p,q)`",
+          "content_markdown": "Now let's see how PL/I rescues the bank auditor from the missing-penny nightmare of Section 2. Suppose an accountant writes:\n\n`DECLARE BALANCE FIXED DECIMAL(7,2);`\n\nWhat does `FIXED DECIMAL(7,2)` command the System/360 hardware to do?\n- **`DECIMAL`** tells the processor to store the number in true base-10 decimal digits (using System/360's built-in *packed decimal* hardware, which packs two base-10 digits into each 8-bit byte, plus a 4-bit half-byte at the end for the plus or minus sign).\n- **`FIXED`** locks the decimal point in place rather than letting it float.\n- **`(7,2)`** specifies the precision: store **7 total decimal digits**, with **2 of those digits strictly after the decimal point** (leaving 5 digits before the decimal point, covering values from `-99999.99` to `+99999.99`).\n\nWhen you add `0.10` ten thousand times into `BALANCE`, the System/360 executes exact base-10 decimal hardware instructions. Not a single binary fraction is ever used, and the sum is `1000.00` to the exact penny!",
+          "questions": [
+            {
+              "id": "q_055",
+              "prompt": "In the PL/I declaration `DECLARE PRICE FIXED DECIMAL(5,2);`, what do the precision numbers `(5,2)` mean?",
+              "choices": [
+                "The variable holds 5 total decimal digits, with 2 of those digits located to the right of the decimal point.",
+                "The variable holds 5 digits to the left of the decimal point and 2 digits to the right, for 7 digits total.",
+                "The variable stores numbers in base 5 using 2 bytes of magnetic-core memory.",
+                "The variable reserves 5 array elements, each initialized to a starting value of 2."
+              ],
+              "correct_index": 0,
+              "explanation": "In PL/I `FIXED DECIMAL(p,q)`, the first number `p` is the total number of decimal digits stored (here 5), and the second number `q` is the scale factor—how many of those `p` digits sit after the decimal point (here 2, leaving 3 integer digits: `999.99`)."
+            },
+            {
+              "id": "q_056",
+              "prompt": "Why does `FIXED DECIMAL(7,2)` completely avoid the penny-rounding drift seen in `FLOAT BINARY`?",
+              "choices": [
+                "It uses 64-bit binary mantissas so base-2 rounding errors stay smaller than one-millionth of a cent.",
+                "It stores exact base-10 digits and uses the processor's decimal arithmetic circuitry rather than base-2 approximations.",
+                "It converts all fractional amounts into whole integers by multiplying every input card by one thousand.",
+                "It defers all addition until the end of the program and prints the raw unadded numbers on paper."
+              ],
+              "correct_index": 1,
+              "explanation": "`FIXED DECIMAL` stores numbers in base 10 (packed decimal on System/360) and performs true base-10 arithmetic, so decimal fractions like $$0.10$$ are represented with complete exactness."
+            }
+          ]
+        },
+        {
+          "id": "ch_029",
+          "title": "Dressing Numbers for the Printer: `PICTURE` Formatting Masks",
+          "content_markdown": "Keeping numbers exact inside memory is essential, but business computing has a second demand: when you print thirty thousand paychecks or utility bills, nobody wants to see raw computer numbers like `00042.50`. Customers expect human-friendly formatting with commas, decimal points, suppressed leading zeros (`   42.50`), or debit/credit signs (`CR`).\n\nBorrowed straight from COBOL, PL/I's **`PICTURE`** attribute (abbreviated **`PIC`**) lets you define a character-by-character formatting mask right in your variable declaration:\n\n`DECLARE NET_PAY PICTURE 'ZZ,ZZ9V.99';`\n\nHere each character in the mask acts like a tiny stencil:\n- **`9`** means \"always print a digit here (even if it is `0`).\"\n- **`Z`** means \"print the digit, or replace a leading `0` with a blank space.\"\n- **`V`** marks where the internal algebraic decimal point lives for math.\n- **`,` and `.`** insert an actual comma and decimal point into the printed characters!\n\nRemarkably, PL/I lets you do *both* arithmetic (`NET_PAY = GROSS - TAX;`) and instant formatted printing on a `PICTURE` variable.",
+          "questions": [
+            {
+              "id": "q_057",
+              "prompt": "What is the role of the `Z` character inside a PL/I `PICTURE` mask such as `PICTURE 'ZZ,ZZ9V.99'`?",
+              "choices": [
+                "It forces the variable to reset to zero whenever an arithmetic overflow occurs.",
+                "It marks the position where the algebraic decimal point sits for internal scaling.",
+                "It suppresses leading zeros by replacing them with blank spaces so `00042.50` prints as `   42.50`.",
+                "It truncates fractional cents so only whole-dollar digits are printed on checks."
+              ],
+              "correct_index": 2,
+              "explanation": "In a `PICTURE` specification, `Z` stands for 'zero suppression': if a leading digit position holds zero, it is replaced by a blank space (and any comma to its left is also suppressed)."
+            },
+            {
+              "id": "q_058",
+              "prompt": "What is the difference between `V` and `.` inside the PL/I mask `PICTURE 'ZZ,ZZ9V.99'`?",
+              "choices": [
+                "`V` suppresses trailing zeros after the decimal point, while `.` suppresses leading zeros before it.",
+                "`V` converts the number to binary floating-point, while `.` keeps the number in fixed decimal.",
+                "Both characters insert literal period characters, producing a double decimal point on the page.",
+                "`V` marks the logical decimal point for arithmetic scaling, while `.` inserts a literal printed period."
+              ],
+              "correct_index": 3,
+              "explanation": "`V` indicates the logical position of the decimal point for arithmetic alignment without taking up a character slot, whereas `.` is an insertion character that places an actual visible period into the formatted string."
+            }
+          ]
+        },
+        {
+          "id": "ch_030",
+          "title": "A Clever Bridge (and a Subtle Surprise) in PL/I Defaults",
+          "content_markdown": "What happens if a programmer doesn't bother typing `FIXED DECIMAL` or `FLOAT BINARY`—or doesn't even write a `DECLARE` statement for a variable at all?\n\nTo make migrating FORTRAN programmers feel right at home, the 3x3 Committee kept a famous FORTRAN shortcut called **implicit typing by first letter**:\n- Any undeclared variable whose name begins with the letters **`I` through `N`** (the first two letters of the word *IN*teger, such as `INDEX`, `J_LOOP`, or `MAX_COUNT`) defaults automatically to a whole-number binary integer: **`FIXED BINARY(15,0)`**.\n- Any undeclared variable starting with any other letter (**`A`–`H`** or **`O`–`Z`**, such as `TOTAL` or `VELOCITY`) defaults to **`FLOAT DECIMAL(6)`**.\n\nNotice the subtle twist: if you write `DECLARE AMOUNT FIXED;` and mention `FIXED` *without* specifying `BINARY` or `DECIMAL` or a precision, PL/I's partial-attribute default rules give you **`FIXED DECIMAL(5,0)`**—an integer with **zero fractional places** that silently drops your pennies! Next, in Section 7, we'll see how PL/I grouped individual numbers and text into rich structures and arrays.",
+          "questions": [
+            {
+              "id": "q_059",
+              "prompt": "If a PL/I programmer uses two variables named `ITEM_COUNT` and `TOTAL_COST` without declaring either one, what default types does PL/I assign?",
+              "choices": [
+                "`ITEM_COUNT` defaults to `FIXED BINARY` integer, while `TOTAL_COST` defaults to `FLOAT DECIMAL`.",
+                "Both variables default to 80-character text strings matching standard punch-card width.",
+                "`ITEM_COUNT` defaults to `FLOAT BINARY`, while `TOTAL_COST` defaults to `FIXED DECIMAL(7,2)`.",
+                "The compiler rejects the program because PL/I requires an explicit `DECLARE` for every variable."
+              ],
+              "correct_index": 0,
+              "explanation": "Inherited from FORTRAN's `I`–`N` integer convention, undeclared PL/I variables starting with letters `I` through `N` default to `FIXED BINARY(15,0)` integers, while those starting with `A`–`H` or `O`–`Z` default to `FLOAT DECIMAL(6)`."
+            },
+            {
+              "id": "q_060",
+              "prompt": "What subtle surprise awaits a programmer who writes `DECLARE AMOUNT FIXED;` in PL/I without specifying `DECIMAL`, `BINARY`, or a precision?",
+              "choices": [
+                "PL/I locks the variable as a read-only constant whose value can never be changed.",
+                "PL/I supplies the default attributes `FIXED DECIMAL(5,0)`, which has zero fractional places and truncates cents.",
+                "PL/I assigns `FLOAT BINARY(53)` instead, reintroducing binary floating-point rounding errors.",
+                "PL/I treats `FIXED` as a variable name rather than an attribute and ignores `AMOUNT`."
+              ],
+              "correct_index": 1,
+              "explanation": "In PL/I, specifying `FIXED` alone defaults the base to `DECIMAL` and the precision to `(5,0)`—meaning five integer digits and zero fractional digits, so any cents assigned to `AMOUNT` are truncated."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_07",
+      "title": "7. Rich Composite Data: Hierarchical Structures, Array Cross-Sections, and Varying Strings",
+      "summary": "Tour the rich data containers that emerged when PL/I merged business record layouts with scientific matrix math. From COBOL came numbered hierarchical structures (`DECLARE 1 CUSTOMER, 2 NAME, 3 FIRST, 3 LAST...`) that grouped mixed customer fields into a single logical folder; from scientific computing came whole-array arithmetic (`A = B + C;`) and asterisk cross-section slicing (`TABLE(*, 3)`) that pulled an entire column out of a grid in one stroke—joined by flexible `VARYING` text strings and compact bit strings.",
+      "introduced_terms": [
+        "hierarchical structure (level-numbered DECLARE records)",
+        "whole-array expressions and asterisk cross-section slicing",
+        "VARYING character and bit strings"
+      ],
+      "chunks": [
+        {
+          "id": "ch_031",
+          "title": "Grids of Numbers vs. Folders of Mixed Information",
+          "content_markdown": "Single numbers are useful, but real-world computing organizes data into larger containers. Once again, the scientific and commercial tribes of 1960 used completely different containers.\n\nScientists loved **arrays** (grids or tables where every box holds the *exact same kind of number*, such as a $$100 \\times 100$$ grid of wind-tunnel air pressures). FORTRAN handled numeric arrays well, but if you wanted to bundle together items of *different* types—say, a customer's text name, integer birth year, and decimal account balance—FORTRAN had no clean way to group them.\n\nBusiness programmers in COBOL had the exact opposite strength: they organized mixed customer data into **records** (like a paper folder holding a name slip, an address card, and a ledger sheet), while array matrix math in COBOL was painful. PL/I asked: *Why not give every programmer both—and allow structures of arrays and arrays of structures?*",
+          "questions": [
+            {
+              "id": "q_061",
+              "prompt": "How does a record 'structure' differ fundamentally from a mathematical 'array'?",
+              "choices": [
+                "An array holds a grid of elements of the same data type, whereas a structure groups named fields of different data types.",
+                "An array can only be one-dimensional, whereas a structure must always have at least three dimensions.",
+                "An array stores only character strings, whereas a structure stores only binary floating-point numbers.",
+                "An array is allocated in magnetic-core memory, whereas a structure can only exist on external magnetic tape."
+              ],
+              "correct_index": 0,
+              "explanation": "An array is a homogeneous collection (every element shares the same data attributes, accessed by numeric subscripts), whereas a structure is a heterogeneous collection grouping named fields of mixed types (text, integers, decimal currency) into a single logical record."
+            },
+            {
+              "id": "q_062",
+              "prompt": "Why was FORTRAN's array-only container model awkward for commercial customer files in 1960?",
+              "choices": [
+                "FORTRAN arrays were limited by compiler rules to a maximum of ten elements per program.",
+                "A customer record mixes text names, dates, and decimal dollar balances, which do not share a single uniform numeric type.",
+                "Customer files required complex numbers with imaginary components that FORTRAN arrays could not store.",
+                "FORTRAN arrays could not be read from punch cards or written to line printers."
+              ],
+              "correct_index": 1,
+              "explanation": "Because all elements in a single FORTRAN array had to share one uniform data type, grouping mixed commercial fields (strings, dates, currency) into a single unit was unnatural in early FORTRAN."
+            }
+          ]
+        },
+        {
+          "id": "ch_032",
+          "title": "Filing Cabinets in Code: Level-Numbered Hierarchical Structures",
+          "content_markdown": "To group mixed data into a neat tree of folders and sub-folders, PL/I adapted COBOL's **hierarchical structure**, using **level numbers** (`1`, `2`, `3`, ...) inside a `DECLARE` statement:\n\n`DECLARE 1 CUSTOMER,`\n`          2 NAME,`\n`            3 FIRST CHAR(15),`\n`            3 LAST  CHAR(20),`\n`          2 BALANCE FIXED DEC(9,2);`\n\nThink of level `1` (`CUSTOMER`) as the outer manila folder. Inside it sit two level-`2` items: a sub-folder called `NAME` (which itself contains two level-`3` text slips, `FIRST` and `LAST`) and a single currency number called `BALANCE`.\n\nYou can refer to an individual slip using a dot (**qualified name**), such as `CUSTOMER.NAME.LAST` (or simply `LAST` if no other structure in scope has a `LAST`). Even better, if you declare a second identical folder `BACKUP_CUST`, you can copy every single sub-folder and field in one stroke by writing `BACKUP_CUST = CUSTOMER;`!",
+          "questions": [
+            {
+              "id": "q_063",
+              "prompt": "In a PL/I structure declaration like `DECLARE 1 EMP, 2 PAY, 3 SALARY FIXED DEC(8,2), 3 BONUS FIXED DEC(7,2);`, what do the numbers `1`, `2`, and `3` indicate?",
+              "choices": [
+                "They specify how many array copies of each variable should be allocated in memory.",
+                "They specify the exact punch-card column numbers where each field must be punched.",
+                "They specify the nesting hierarchy from top-level record `EMP` down to sub-group `PAY` and leaf fields `SALARY` and `BONUS`.",
+                "They initialize the numeric values of `EMP`, `PAY`, and `SALARY` to 1, 2, and 3 at startup."
+              ],
+              "correct_index": 2,
+              "explanation": "Level numbers in a PL/I `DECLARE` statement define the tree-like containment hierarchy of a composite record structure, from the level-1 root container down to the elementary leaf fields."
+            },
+            {
+              "id": "q_064",
+              "prompt": "How does a PL/I programmer reference the `LAST` field specifically inside the `CUSTOMER` structure when another structure in the program also has a field named `LAST`?",
+              "choices": [
+                "By enclosing the field name in parentheses after the level number, such as `3(LAST)`.",
+                "By joining the names with a hyphen, such as `CUSTOMER-NAME-LAST`.",
+                "By prefixing the field name with a percent sign, such as `%CUSTOMER_LAST`.",
+                "By writing a dot-qualified name such as `CUSTOMER.NAME.LAST` or `CUSTOMER.LAST`."
+              ],
+              "correct_index": 3,
+              "explanation": "PL/I uses dot qualification (`CUSTOMER.NAME.LAST`, or partial qualification `CUSTOMER.LAST` so long as it is unambiguous) to identify a specific field within a hierarchical structure."
+            }
+          ]
+        },
+        {
+          "id": "ch_033",
+          "title": "Whole-Array Math and Asterisk Cross-Section Slicing",
+          "content_markdown": "While business programmers cheered for hierarchical structures, scientific programmers were dazzled by what PL/I could do with **arrays**. In FORTRAN, if you had two 100-element arrays `B` and `C` and wanted to add them together into array `A` (or set every element of `A` to zero), you had to write an explicit loop stepping through index `1` to `100`.\n\nIn PL/I, you can write **whole-array expressions** without a single loop keyword:\n\n`A = 0;` *(sets every element of array `A` to zero!)*\n`A = B + C;` *(adds every corresponding element of `B` and `C` into `A`!)*\n\nWhat if you have a two-dimensional table `SALES(12, 5)`—12 months by 5 regions—and want to zero out *only Region 3 across all 12 months*, or copy *only Month 6 across all 5 regions*? PL/I introduced **asterisk cross-section slicing**: replacing a subscript with `*` selects that entire row or column:\n\n`SALES(*, 3) = 0;` *(zeros out all 12 months of column 3!)*",
+          "questions": [
+            {
+              "id": "q_065",
+              "prompt": "If `A`, `B`, and `C` are declared as 50-element numeric arrays in PL/I, what does the single statement `A = B + C;` accomplish?",
+              "choices": [
+                "It adds each element of `B` to the corresponding element of `C` and stores all 50 sums into `A`.",
+                "It adds only the first elements `B(1)` and `C(1)` together and leaves the rest of `A` unchanged.",
+                "It concatenates `B` and `C` end-to-end to turn `A` into a 100-element array.",
+                "It triggers a compile-time error because PL/I arrays cannot be used without explicit subscripts."
+              ],
+              "correct_index": 0,
+              "explanation": "PL/I supports whole-array operations: writing `A = B + C;` automatically loops over all matching indices and performs element-by-element addition."
+            },
+            {
+              "id": "q_066",
+              "prompt": "Given a two-dimensional PL/I array `GRID(10, 20)` (10 rows by 20 columns), what does the cross-section expression `GRID(4, *)` represent?",
+              "choices": [
+                "The single element at row 4, column 4, multiplied by all 20 columns.",
+                "The entire 4th row of `GRID` across all 20 columns, treated as a one-dimensional slice.",
+                "The first 4 rows of `GRID` summed together into a single scalar number.",
+                "The entire 4th column of `GRID` across all 10 rows, treated as a vertical slice."
+              ],
+              "correct_index": 1,
+              "explanation": "An asterisk (`*`) in a subscript position specifies an array cross-section across every index in that dimension, so `GRID(4, *)` selects all 20 columns of row 4."
+            }
+          ]
+        },
+        {
+          "id": "ch_034",
+          "title": "Strings That Grow and Shrink: `VARYING` Character and Bit Strings",
+          "content_markdown": "Early FORTRAN barely acknowledged text at all, and COBOL forced every text field to have a rigid, fixed character length—so storing `'JOE'` inside a 25-character name field padded it with 22 trailing blank spaces.\n\nPL/I treated text as a first-class citizen by offering both fixed-length `CHARACTER(n)` strings and flexible **`CHARACTER(n) VARYING`** strings:\n\n`DECLARE CITY CHAR(30) VARYING;`\n\nWhen you assign `CITY = 'BOSTON';`, the string's current length is genuinely `6` (up to its maximum capacity of `30`), tracked automatically by a hidden 2-byte length prefix in memory! Joining two strings together (**concatenation**) uses the double vertical bar operator (`||`), so `'NEW ' || 'YORK'` produces `'NEW YORK'` without 20 unwanted spaces in the middle.\n\nAnd right beside `CHARACTER` strings, PL/I added **`BIT(n)`** strings—sequences of raw `0` and `1` bits like `'10110'B` that let systems programmers and commercial coders pack compact true/false status flags into a single byte.",
+          "questions": [
+            {
+              "id": "q_067",
+              "prompt": "How does a `CHARACTER(30) VARYING` variable in PL/I behave differently from a fixed-length `CHARACTER(30)` variable when assigned the 4-letter string `'ROME'`?",
+              "choices": [
+                "The `VARYING` variable repeats `'ROME'` to fill 30 characters, whereas the fixed-length variable stores only 4 characters.",
+                "The `VARYING` variable pads `'ROME'` with 26 leading zeros, whereas the fixed-length variable pads with 26 trailing spaces.",
+                "The `VARYING` variable tracks a current active length of 4, whereas the fixed-length variable pads `'ROME'` with 26 trailing spaces.",
+                "The `VARYING` variable permanently shrinks its maximum capacity to 4, whereas the fixed-length variable stays at 30."
+              ],
+              "correct_index": 2,
+              "explanation": "A fixed-length `CHAR(30)` variable is always 30 characters long (padding shorter strings on the right with blanks), whereas `CHAR(30) VARYING` tracks its actual current length dynamically from 0 up to 30."
+            },
+            {
+              "id": "q_068",
+              "prompt": "What are `BIT` strings (such as `DECLARE FLAGS BIT(8);`) used for in PL/I?",
+              "choices": [
+                "Formatting currency numbers with automatic commas and suppressed leading zeros.",
+                "Storing base-10 packed decimal currency figures with two digits per byte.",
+                "Representing complex numbers with separate real and imaginary floating-point parts.",
+                "Storing and manipulating sequences of binary `0` and `1` values, such as compact true/false status flags."
+              ],
+              "correct_index": 3,
+              "explanation": "PL/I's `BIT` data type represents strings of binary digits (`'0'B` and `'1'B`) and supports boolean operations (`\u0026` for AND, `|` for OR, `~` for NOT), making it ideal for boolean variables and compact hardware or account status flags."
+            }
+          ]
+        },
+        {
+          "id": "ch_035",
+          "title": "Built-In String Slicing: The Versatile `SUBSTR` Function",
+          "content_markdown": "To make working with text and bit strings effortless, PL/I included a Swiss-Army-knife built-in function called **`SUBSTR`** (short for *substring*). Give `SUBSTR(string, start, length)` a string, a starting character position, and a length, and it extracts that exact piece of text:\n\n`AREA_CODE = SUBSTR(PHONE_NUM, 1, 3);` *(pulls out the first 3 characters)*\n\nHere comes a quintessential PL/I twist: `SUBSTR` can *also* sit on the **left-hand side** of an equals sign! In PL/I, a function used on the left side of `=` to modify a target is called a **pseudo-variable**. If `PHONE_NUM` currently holds `'212-555-0199'` and you write:\n\n`SUBSTR(PHONE_NUM, 1, 3) = '415';`\n\nPL/I surgically overwrites just characters 1 through 3 in place, turning `PHONE_NUM` into `'415-555-0199'` without disturbing the rest of the string!\n\nNow that we have rich numbers, structures, arrays, and strings, where do all these containers live inside the computer's precious magnetic-core memory? In Section 8, we will meet PL/I's four storage classes.",
+          "questions": [
+            {
+              "id": "q_069",
+              "prompt": "If the PL/I variable `CODE` holds the string `'ABCDEFGH'`, what value is returned by the expression `SUBSTR(CODE, 3, 4)`?",
+              "choices": [
+                "`'CDEF'`, starting at the 3rd character and extracting 4 characters.",
+                "`'CD'`, extracting the characters from position 3 through position 4.",
+                "`'ABCD'`, taking the first 4 characters and shifting them 3 places.",
+                "`'DEFG'`, skipping the first 3 characters and extracting the next 4."
+              ],
+              "correct_index": 0,
+              "explanation": "`SUBSTR(string, start, length)` begins at 1-based position `start` (character 3, `'C'`) and extracts `length` characters (4 characters: `'CDEF'`)."
+            },
+            {
+              "id": "q_070",
+              "prompt": "What happens in PL/I when `SUBSTR` is used as a 'pseudo-variable' on the left-hand side of an assignment, such as `SUBSTR(WORD, 2, 2) = 'XY';`?",
+              "choices": [
+                "It triggers a syntax error because function names cannot appear to the left of an equals sign.",
+                "It replaces characters 2 and 3 of `WORD` in place with `'XY'`, leaving all other characters of `WORD` unchanged.",
+                "It inserts `'XY'` before character 2 and lengthens `WORD` by two characters.",
+                "It redefines the built-in `SUBSTR` function so it always returns `'XY'` for the rest of the block."
+              ],
+              "correct_index": 1,
+              "explanation": "As a PL/I pseudo-variable, `SUBSTR(WORD, 2, 2)` on the left side of `=` designates a target slice—starting at character 2 for length 2—to be overwritten in place."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_08",
+      "title": "8. Mastering Memory: STATIC, AUTOMATIC, CONTROLLED, and BASED Pointer Storage",
+      "summary": "Examine how PL/I gave mainstream programmers unprecedented control over scarce 1960s computer memory through four distinct storage classes. Beyond permanent `STATIC` variables (like FORTRAN) and `AUTOMATIC` variables created and erased as blocks started and finished (like ALGOL), PL/I introduced `CONTROLLED` push-down storage and `BASED` variables paired with `POINTER` addresses—bringing dynamic memory allocation (`ALLOCATE` and `FREE`) and linked-list data structures into everyday commercial and scientific programming.",
+      "introduced_terms": [
+        "STATIC vs. AUTOMATIC (stack-allocated) storage classes",
+        "CONTROLLED storage (explicit ALLOCATE and FREE stacks)",
+        "BASED storage and POINTER variables (dynamic memory addressing)"
+      ],
+      "chunks": [
+        {
+          "id": "ch_036",
+          "title": "Why 64 Kilobytes Forced Programmers to Care About Memory Lifetimes",
+          "content_markdown": "Today, even a cheap wristwatch has millions of bytes of memory. In 1965, however, main memory was built from tiny iron doughnuts called **magnetic cores** woven by hand onto grids of fine copper wire. A mid-sized IBM System/360 might have only **64 kilobytes** (65,536 bytes) of core memory to hold the operating system, the running program, and all of its data combined!\n\nIn FORTRAN and COBOL, every single variable and array in your program was **permanently reserved** in memory from the moment the program started until the moment it finished. If Subroutine A needed a 20,000-byte array only during the first ten seconds of a job, and Subroutine B needed a different 20,000-byte array during the last ten seconds, both arrays sat hogging 40,000 bytes for the entire run.\n\nTo break this bottleneck, PL/I gave programmers four distinct **storage classes** that controlled *when* a variable claimed memory and *when* it gave that memory back.",
+          "questions": [
+            {
+              "id": "q_071",
+              "prompt": "Why was memory management such an urgent practical concern on mid-1960s IBM System/360 mainframes?",
+              "choices": [
+                "Magnetic-core memory was hand-wired and expensive, so an entire machine often had only 32 to 256 kilobytes of main memory.",
+                "System/360 processors could only address a hardware maximum of 1,024 bytes of memory regardless of budget.",
+                "Magnetic-core memory lost its contents whenever a procedure returned, requiring data to be re-read from punch cards.",
+                "The operating system prohibited any single program from declaring more than twelve variables at a time."
+              ],
+              "correct_index": 0,
+              "explanation": "1960s magnetic-core memory was physically bulky and costly, meaning mainframes often operated with only tens of kilobytes of core memory and needed ways to reuse memory across different phases of a program."
+            },
+            {
+              "id": "q_072",
+              "prompt": "How did traditional 1960s FORTRAN and COBOL allocate memory for variables and arrays during a program run?",
+              "choices": [
+                "Every variable was allocated on a dynamic push-down stack when a subroutine started and freed when it returned.",
+                "Every variable occupied a permanent, fixed slot in memory from the start of the job until the entire program finished.",
+                "Every variable required an explicit `ALLOCATE` statement before its first use and a `FREE` statement afterward.",
+                "Variables were kept on external magnetic tape and never held in central magnetic-core memory."
+              ],
+              "correct_index": 1,
+              "explanation": "Both FORTRAN and COBOL used static allocation by default, keeping memory reserved for every variable throughout the entire run even when a subroutine was inactive."
+            }
+          ]
+        },
+        {
+          "id": "ch_037",
+          "title": "`STATIC` vs. `AUTOMATIC`: Permanent Desks vs. Hotel Rooms",
+          "content_markdown": "PL/I's first two storage classes correspond to the difference between owning a permanent office desk and checking into a hotel room for the night:\n\n1. **`STATIC` storage**: If you write `DECLARE COUNT FIXED BIN STATIC INIT(0);`, PL/I reserves a permanent memory slot before the program starts. Just like a permanent office desk, `COUNT` stays in place for the whole run; if a procedure adds `1` to `COUNT` and exits, that new value is still sitting on the desk the next time the procedure is called.\n2. **`AUTOMATIC` storage (the PL/I default!)**: If you don't specify a storage class, local variables are `AUTOMATIC`. Like checking into a hotel room, PL/I allocates memory for `AUTOMATIC` variables on a hardware **stack** the instant your program enters their `PROCEDURE` or `BEGIN` block, and **automatically frees that memory** the instant the block ends!\n\nThanks to `AUTOMATIC` storage, ten big procedures that run one after another can share and recycle the exact same pool of scarce memory.",
+          "questions": [
+            {
+              "id": "q_073",
+              "prompt": "What is the default storage class for ordinary local variables declared inside a PL/I `PROCEDURE` or `BEGIN` block?",
+              "choices": [
+                "`STATIC`, meaning memory is reserved permanently before the program starts and kept until termination.",
+                "`CONTROLLED`, meaning memory is allocated only when the programmer executes an explicit `ALLOCATE` statement.",
+                "`AUTOMATIC`, meaning memory is allocated when the block is entered and automatically released when the block exits.",
+                "`BASED`, meaning the variable holds no memory of its own until aimed at an address by a pointer."
+              ],
+              "correct_index": 2,
+              "explanation": "In PL/I, local variables default to `AUTOMATIC`, meaning they are allocated dynamically on the runtime stack upon block entry and freed upon block exit."
+            },
+            {
+              "id": "q_074",
+              "prompt": "When should a PL/I programmer explicitly declare a local variable inside a procedure as `STATIC` rather than leaving it `AUTOMATIC`?",
+              "choices": [
+                "When the procedure is `RECURSIVE` and needs a separate copy of the variable for each active call.",
+                "When the variable holds an array whose dimensions change dynamically on every entry to the block.",
+                "When the programmer wants the variable's memory to be reclaimed immediately upon leaving the procedure.",
+                "When the procedure needs the variable to remember its stored value from one call to the next."
+              ],
+              "correct_index": 3,
+              "explanation": "Because `AUTOMATIC` variables are created fresh on block entry and destroyed on exit, a variable that must retain its value across separate calls to a procedure (like a call counter) must be declared `STATIC`."
+            }
+          ]
+        },
+        {
+          "id": "ch_038",
+          "title": "Taking the Steering Wheel: `CONTROLLED` Storage",
+          "content_markdown": "What if entering and leaving a block isn't flexible enough? Suppose you don't even know whether you'll need a giant 5,000-element table—or how big it should be—until halfway through reading a customer tape, and you want it to survive even after the current subroutine finishes.\n\nFor that, PL/I created **`CONTROLLED`** storage:\n\n`DECLARE MATRIX(N, N) FLOAT BIN CONTROLLED;`\n\nSimply declaring a `CONTROLLED` variable reserves **zero memory** at first. Instead, *you* take the steering wheel using two explicit commands:\n- **`ALLOCATE MATRIX;`** grabs a fresh block of memory right then and there (using the current value of `N`!).\n- **`FREE MATRIX;`** hands that memory right back to the system whenever you are done with it.\n\nHere's a neat twist: if you run `ALLOCATE MATRIX;` a *second* time without freeing the first one, PL/I doesn't lose the first copy—it pushes the old `MATRIX` down onto a hidden stack! When you later say `FREE MATRIX;`, the top copy disappears and the previous generation pops right back into view.",
+          "questions": [
+            {
+              "id": "q_075",
+              "prompt": "How does a PL/I programmer create and release memory for a variable declared with the `CONTROLLED` storage class?",
+              "choices": [
+                "By executing explicit `ALLOCATE` and `FREE` statements at any desired point during the program's execution.",
+                "By entering and exiting a `BEGIN...END` block, which automatically allocates and frees `CONTROLLED` variables.",
+                "By setting a `POINTER` variable to zero when the memory is no longer needed.",
+                "By enabling the `(STORAGE):` condition prefix at the top of the main procedure."
+              ],
+              "correct_index": 0,
+              "explanation": "`CONTROLLED` variables exist only when explicitly allocated by an `ALLOCATE` statement and remain alive across block boundaries until explicitly released by a `FREE` statement."
+            },
+            {
+              "id": "q_076",
+              "prompt": "What happens in PL/I if a program executes `ALLOCATE X;` twice in a row for a `CONTROLLED` variable `X` without an intervening `FREE X;`?",
+              "choices": [
+                "The program aborts immediately with a duplicate-allocation runtime condition.",
+                "PL/I stacks the allocations: the new copy of `X` becomes active on top, and a later `FREE X;` uncovers the earlier copy.",
+                "The first copy of `X` is permanently overwritten and its previous values are lost.",
+                "The second `ALLOCATE X;` statement is ignored and `X` keeps its original values."
+              ],
+              "correct_index": 1,
+              "explanation": "`CONTROLLED` storage acts as a push-down stack of generations for that variable name: each `ALLOCATE` pushes a new instance on top, and each `FREE` pops the most recent instance off, restoring the prior one."
+            }
+          ]
+        },
+        {
+          "id": "ch_039",
+          "title": "Bringing Pointers to the Mainstream: `BASED` Storage and `POINTER` Variables",
+          "content_markdown": "What if you want to build a chain of fifty customer orders in memory—a **linked list** or a family tree—where you can jump directly to *any* item in the chain at any time, not just the top item of a stack?\n\nTo make that possible, PL/I introduced **`BASED`** storage paired with **`POINTER`** variables—one of the earliest and most influential appearances of explicit memory pointers in any mainstream high-level language!\n\nA **`POINTER`** variable (`DECLARE P POINTER;`) does not hold a number or a name; it holds a **memory address**—an electronic street address pointing to a location in RAM. A **`BASED`** declaration (`DECLARE 1 NODE BASED(P), 2 VAL FIXED BIN, 2 NEXT POINTER;`) acts like a transparent stencil or template. Wherever pointer `P` is aimed, `NODE` lets you read or write the fields at that address—or use the arrow operator **`P -\u003e VAL`** (`P` points to `VAL`) to inspect any node in a dynamic chain!",
+          "questions": [
+            {
+              "id": "q_077",
+              "prompt": "What does a `POINTER` variable store in PL/I?",
+              "choices": [
+                "The character name of a external magnetic tape file on the System/360.",
+                "The integer subscript index of an element inside a one-dimensional FORTRAN array.",
+                "The memory address (location) of a data item or dynamically allocated structure in memory.",
+                "The number of decimal digits to the right of the radix point in a `FIXED DECIMAL` variable."
+              ],
+              "correct_index": 2,
+              "explanation": "A `POINTER` (`PTR`) variable holds a machine memory address that can aim at any dynamically allocated `BASED` variable or existing data item (via the `ADDR` built-in function)."
+            },
+            {
+              "id": "q_078",
+              "prompt": "In the PL/I expression `HEAD_PTR -\u003e ORDER_TOTAL`, what does the arrow operator (`-\u003e`) mean?",
+              "choices": [
+                "Subtract `ORDER_TOTAL` from `HEAD_PTR` and test whether the difference is positive.",
+                "Copy the value of `HEAD_PTR` into `ORDER_TOTAL` and reset `HEAD_PTR` to zero.",
+                "Convert `HEAD_PTR` from binary floating-point into the `PICTURE` format of `ORDER_TOTAL`.",
+                "Follow the memory address stored in `HEAD_PTR` to access the `ORDER_TOTAL` field of the `BASED` structure located there."
+              ],
+              "correct_index": 3,
+              "explanation": "PL/I's locator-qualification arrow (`-\u003e`) dereferences the pointer on the left (`HEAD_PTR`) to overlay and access the `BASED` variable or structure field on the right (`ORDER_TOTAL`)—syntax that directly inspired C's `-\u003e` operator."
+            }
+          ]
+        },
+        {
+          "id": "ch_040",
+          "title": "Great Power, New Responsibility: The Four Storage Classes Together",
+          "content_markdown": "Look at the spectrum of memory tools PL/I handed to 1960s programmers:\n\n- **`STATIC`**: Permanent memory for the whole program run (FORTRAN's world).\n- **`AUTOMATIC`**: Stack memory created and freed automatically with every block entry and exit (ALGOL's world).\n- **`CONTROLLED`**: Programmer-managed push-down stacks using `ALLOCATE` and `FREE`.\n- **`BASED` + `POINTER`**: True dynamic heap structures (linked lists, trees, and zero-copy buffer overlays using `READ ... SET(P);`) navigated with `-\u003e` arrows.\n\nNotice the double-edged sword of `BASED` pointers: if you point `P` at an area of memory that you already freed (a **dangling pointer**) or set `P = ADDR(X)` and overlay the wrong data template on top of `X`, the compiler cannot stop you from reading gibberish! What happens when a running program *does* hit an unexpected crisis—like dividing by zero or reaching the end of a tape? In Section 9, we will meet PL/I's runtime safety net.",
+          "questions": [
+            {
+              "id": "q_079",
+              "prompt": "Which of PL/I's four storage classes is best suited for building a dynamic tree or linked list where nodes are connected by memory addresses?",
+              "choices": [
+                "`BASED` storage paired with `POINTER` variables and the `-\u003e` locator operator.",
+                "`STATIC` storage paired with fixed-size integer arrays declared in the main procedure.",
+                "`AUTOMATIC` storage without any pointer variables or `ALLOCATE` statements.",
+                "`CONTROLLED` storage using implicit `I`–`N` first-letter variable typing."
+              ],
+              "correct_index": 0,
+              "explanation": "`BASED` structures allocated dynamically (`ALLOCATE NODE SET(P);`) and linked via `POINTER` fields (`P -\u003e NEXT`) allow programmers to construct arbitrary linked lists, trees, and graphs."
+            },
+            {
+              "id": "q_080",
+              "prompt": "What risk accompanies the flexibility of `BASED` storage and `POINTER` variables if a programmer makes a mistake?",
+              "choices": [
+                "Declaring a `POINTER` variable disables all `FIXED DECIMAL` arithmetic inside the same procedure.",
+                "A pointer aimed at freed memory or the wrong data type can read or overwrite unintended memory locations.",
+                "Pointers can only address the first 64 bytes of a structure and truncate any remaining fields.",
+                "Using the `-\u003e` operator automatically forces all local variables in the program to become `STATIC`."
+              ],
+              "correct_index": 1,
+              "explanation": "Because a `POINTER` in PL/I is an untyped machine address that can be aimed at any `BASED` template or freed memory block, careless pointer manipulation can cause dangling-pointer bugs or memory corruption."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_09",
+      "title": "9. Runtime Resilience: Asynchronous ON-Conditions and Early TASK/EVENT Multitasking",
+      "summary": "Learn how PL/I kept long-running mainframe jobs from crashing outright when unexpected trouble struck at 2:00 a.m. Using `ON` condition handlers (`ON ZERODIVIDE`, `ON OVERFLOW`, `ON ENDFILE`), a program could register standing emergency instructions that woke up automatically whenever hardware or input/output faults occurred, logged or repaired the problem, and kept running. PL/I also pioneered built-in `TASK` and `EVENT` keywords so a single program could launch concurrent background operations and synchronize with their completion.",
+      "introduced_terms": [
+        "ON-condition and ON-unit (asynchronous exception handler)",
+        "hardware and I/O interrupts (ZERODIVIDE, OVERFLOW, and ENDFILE)",
+        "TASK and EVENT multitasking (concurrent procedure execution)"
+      ],
+      "chunks": [
+        {
+          "id": "ch_041",
+          "title": "The 2:00 A.M. Payroll Crash",
+          "content_markdown": "Picture an overnight batch run at a giant insurance company in 1963. For four hours, the mainframe has been humming through 200,000 policyholder records on magnetic tape. At 2:14 a.m., on record #189,402, a clerk's keypunch typo has left a policy's `MONTHS_ACTIVE` field as `0`. The program tries to calculate an average monthly claim by dividing by `MONTHS_ACTIVE`—**dividing by zero**!\n\nIn a standard 1960s FORTRAN program, the hardware arithmetic circuit immediately triggers a fatal fault, the operating system aborts the entire job, and the printer spits out fifty pages of cryptic raw memory numbers (a **memory dump**). The night shift is ruined.\n\nOf course, the programmer *could* write an `IF MONTHS_ACTIVE = 0` check before every single division sign in a 10,000-line program, cluttering the business logic endlessly. The 3x3 Committee asked: *What if you could post a standing fire-drill rule once at the top of a block, and let the hardware wake it up only if an emergency actually strikes?*",
+          "questions": [
+            {
+              "id": "q_081",
+              "prompt": "What typically happened in an early-1960s mainframe batch job when a program encountered an unexpected hardware fault like dividing by zero?",
+              "choices": [
+                "The operating system immediately terminated the entire job and printed a raw memory dump.",
+                "The processor automatically substituted zero for the quotient and continued without warning.",
+                "The card reader paused the current record and skipped ahead to the next procedure block.",
+                "The compiler rewrote the division statement at runtime to divide by one instead of zero."
+              ],
+              "correct_index": 0,
+              "explanation": "Without built-in exception handling, an unhandled hardware interrupt like division by zero caused the operating system to abort the batch job and print a diagnostic storage dump."
+            },
+            {
+              "id": "q_082",
+              "prompt": "Why was placing manual `IF` tests before every single arithmetic operation an unsatisfying way to guard against runtime faults?",
+              "choices": [
+                "PL/I allowed at most three `IF` statements inside any single `PROCEDURE` block.",
+                "It cluttered the program's main logic with repetitive error checks and still could not catch every hardware overflow or I/O fault.",
+                "Using an `IF` statement before division automatically converted `FIXED DECIMAL` numbers into `FLOAT BINARY`.",
+                "Manual `IF` statements could only test character strings and could not compare numeric variables to zero."
+              ],
+              "correct_index": 1,
+              "explanation": "Scattering manual `IF` checks before every division, multiplication, or input statement buried the real algorithm under defensive boilerplate and still could not easily intercept intermediate arithmetic overflows."
+            }
+          ]
+        },
+        {
+          "id": "ch_042",
+          "title": "Standing Fire Drills: The `ON` Statement and `ON`-Units",
+          "content_markdown": "PL/I solved the 2:00 a.m. crash by inventing structured **exception handling** through the **`ON` statement**—the direct ancestor of `EXCEPTION WHEN` in Ada and SQL and `try / catch` in modern languages like Java, C++, and Python!\n\nAt the start of a block, a programmer registers a standing emergency rule:\n\n`ON ZERODIVIDE BEGIN;`\n`   PUT SKIP LIST('BAD ZERO DIVISOR IN RECORD:', CUST_ID);`\n`   AVG_CLAIM = 0;`\n`   GO TO NEXT_RECORD;`\n`END;`\n\nLet's unpack the two parts of this statement:\n- **`ZERODIVIDE`** is the **ON-condition**: the named emergency event you are watching for.\n- The `BEGIN ... END;` block (or single statement) is the **ON-unit**: a small standby handler that **does not run right now** when the `ON` statement is passed! Instead, it waits quietly in the background. If a division by zero happens *anywhere* inside that procedure—or even inside a deeply nested subroutine it calls—the hardware interrupt immediately triggers your `ON`-unit!",
+          "questions": [
+            {
+              "id": "q_083",
+              "prompt": "When a PL/I program executes the statement `ON ZERODIVIDE CALL LOG_ERROR;`, when does `CALL LOG_ERROR;` actually run?",
+              "choices": [
+                "Immediately at the moment the `ON` statement is reached, before any division is attempted.",
+                "Once at the very end of the procedure block as part of normal cleanup.",
+                "Only if and when a division by zero actually occurs while that `ON` handler is active.",
+                "During the compile-time preprocessor pass before machine code is generated."
+              ],
+              "correct_index": 2,
+              "explanation": "Executing an `ON` statement does not run its attached `ON`-unit right away; it establishes a dynamic handler that triggers asynchronously if the named condition is raised later during execution."
+            },
+            {
+              "id": "q_084",
+              "prompt": "What happens if Procedure A establishes an `ON ZERODIVIDE` handler and then calls Subroutine B, which divides by zero without having its own handler?",
+              "choices": [
+                "Subroutine B aborts the job because `ON` handlers cannot apply across `CALL` boundaries.",
+                "The compiler refuses to compile Subroutine B unless it repeats the exact same `ON` statement.",
+                "The division by zero is ignored and Subroutine B returns an uninitialized pointer.",
+                "PL/I searches backward through the active call chain and invokes Procedure A's `ON ZERODIVIDE` handler."
+              ],
+              "correct_index": 3,
+              "explanation": "PL/I `ON`-units are dynamically scoped along the call stack: if a called subroutine raises a condition it does not handle locally, PL/I unwinds up the active call chain to find the most recently established handler."
+            }
+          ]
+        },
+        {
+          "id": "ch_043",
+          "title": "A Whole Catalog of Conditions: Hardware, Files, and Custom Signals",
+          "content_markdown": "PL/I didn't stop at division by zero. It gave programmers a comprehensive catalog of built-in **ON-conditions** covering nearly everything that could happen inside a computer:\n\n- **Arithmetic hardware interrupts**: `ZERODIVIDE`, `OVERFLOW` (a floating-point number grew larger than the hardware exponent limit), `UNDERFLOW` (a number shrank too close to zero), and `FIXEDOVERFLOW` (a fixed-point sum overflowed its declared digit count).\n- **Input/Output events**: `ENDFILE(TAPE1)` (reached the end of a magnetic tape or card deck—turning normal end-of-file loop termination into a clean event!), `TRANSMIT` (a damaged spot on a magnetic tape caused a corrupted-character read error), and `ENDPAGE(PRT)` (the line printer reached the bottom margin of a paper sheet, so your `ON ENDPAGE` handler could automatically print a fresh page header and page number!).\n- **Debugging and custom conditions**: Programmers could even invent their own named condition (`ON CONDITION(BAD_AUDIT) ...`) and trigger it deliberately from anywhere using **`SIGNAL CONDITION(BAD_AUDIT);`**!",
+          "questions": [
+            {
+              "id": "q_085",
+              "prompt": "How did business programmers commonly use the `ON ENDPAGE(PRINTER)` condition in PL/I report programs?",
+              "choices": [
+                "To automatically print a page title, column headings, and an incremented page number whenever a report filled a sheet of paper.",
+                "To close all magnetic tape files and terminate the program as soon as the first page finished printing.",
+                "To detect when a punch-card reader hopper ran out of input cards during a batch job.",
+                "To suppress leading zeros inside `PICTURE` currency fields on the final line of a ledger."
+              ],
+              "correct_index": 0,
+              "explanation": "Whenever output reached the bottom line of a page, PL/I automatically raised `ENDPAGE`, allowing an `ON ENDPAGE` handler to start a new page with formatted headers and return smoothly to wherever printing had paused."
+            },
+            {
+              "id": "q_086",
+              "prompt": "Which PL/I statement lets a programmer intentionally trigger an `ON`-condition (either built-in or user-defined) for testing or custom error handling?",
+              "choices": [
+                "`ALLOCATE` (for example, `ALLOCATE ZERODIVIDE;`).",
+                "`SIGNAL` (for example, `SIGNAL ZERODIVIDE;` or `SIGNAL CONDITION(BAD_AUDIT);`).",
+                "`RETURN` (for example, `RETURN CONDITION(BAD_AUDIT);`).",
+                "`DECLARE` (for example, `DECLARE ZERODIVIDE AUTOMATIC;`)."
+              ],
+              "correct_index": 1,
+              "explanation": "The `SIGNAL` statement raises a specified condition in software just as if the condition had occurred naturally, firing whatever `ON`-unit is currently established for it."
+            }
+          ]
+        },
+        {
+          "id": "ch_044",
+          "title": "Checking Whether Arrays Stay in Bounds: Condition Prefixes",
+          "content_markdown": "What about bugs that hardware doesn't catch automatically—like an array declared with 10 slots (`DECLARE SCORES(10);`) where a buggy loop tries to write into slot `SCORES(11)`? In FORTRAN, writing past the end of an array silently clobbered whatever poor variable happened to sit next in memory!\n\nPL/I introduced the **`SUBSCRIPTRANGE`** condition (abbreviated `SUBRG`) to catch out-of-bounds array subscripts red-handed, along with **`STRINGRANGE`** (for bad `SUBSTR` positions) and **`SIZE`** (when assigning a big number into a smaller variable chops off high-order digits).\n\nBecause checking every single array subscript takes extra processor cycles, PL/I let programmers switch individual checks **on or off** for any block or statement using a parenthesized **condition prefix** before a colon:\n\n`(SUBSCRIPTRANGE): CALC: PROCEDURE;`\n\nDuring testing, you turned `(SUBSCRIPTRANGE):` on to catch every stray subscript; once debugged, you could turn `(NOSUBSCRIPTRANGE):` off in inner loops for maximum speed!",
+          "questions": [
+            {
+              "id": "q_087",
+              "prompt": "What bug does enabling the `(SUBSCRIPTRANGE):` condition prefix on a PL/I procedure catch at runtime?",
+              "choices": [
+                "Any attempt to use a PL/I command keyword like `IF` or `DO` as an array name.",
+                "Any attempt to type an array declaration past column 72 on an 80-column card.",
+                "Any attempt to read or write an array element using an index outside the array's declared lower and upper bounds.",
+                "Any attempt to allocate a `CONTROLLED` array more than once without freeing it first."
+              ],
+              "correct_index": 2,
+              "explanation": "When `SUBSCRIPTRANGE` is enabled, the compiler inserts runtime bounds checks on array references and raises the `SUBSCRIPTRANGE` condition if an index falls outside the declared bounds."
+            },
+            {
+              "id": "q_088",
+              "prompt": "Why did PL/I allow programmers to enable or disable conditions like `(SUBSCRIPTRANGE):` and `(NOSUBSCRIPTRANGE):` on specific blocks?",
+              "choices": [
+                "Because enabling `SUBSCRIPTRANGE` disabled all `ON ZERODIVIDE` and `ON ENDFILE` handlers in that block.",
+                "Because the System/360 hardware could only check bounds on one-dimensional arrays, not two-dimensional grids.",
+                "Because `SUBSCRIPTRANGE` was only legal inside `BEGIN...END` blocks and forbidden on `PROCEDURE` blocks.",
+                "So programmers could enable thorough safety checks while debugging and disable expensive checks in speed-critical production loops."
+              ],
+              "correct_index": 3,
+              "explanation": "Condition prefixes let programmers balance safety and performance: enabling `SUBSCRIPTRANGE` caught subtle memory-corrupting bugs during testing, while `NOSUBSCRIPTRANGE` avoided runtime checking overhead where speed was critical."
+            }
+          ]
+        },
+        {
+          "id": "ch_045",
+          "title": "Ahead of Its Time: Built-In `TASK` and `EVENT` Multitasking",
+          "content_markdown": "Even while handling asynchronous faults, a single System/360 processor often spent precious milliseconds waiting for slow mechanical disk arms or tape drives to spin. Why let the fast electronic processor sit idle while a slow disk seeks?\n\nRemarkably for 1964, PL/I built **concurrent multitasking** directly into the programming language itself—decades before mainstream languages like Java or C++ added built-in threads!\n\nWhen calling a procedure in PL/I, you could attach **`TASK`** and **`EVENT`** options:\n\n`CALL FETCH_RECORDS(TAPE_BUF) TASK(BG_WORKER) EVENT(DONE_FLAG);`\n\nInstead of waiting for `FETCH_RECORDS` to finish, the main program **kept running immediately in parallel**, doing useful math while `BG_WORKER` ran concurrently under the System/360 operating system! Later, when the main program actually needed the fetched data, it executed **`WAIT(DONE_FLAG);`**, pausing only until the background task signaled completion. Next, in our final section, we will see how PL/I even let programs write *themselves* before compilation!",
+          "questions": [
+            {
+              "id": "q_089",
+              "prompt": "What happens when a PL/I program calls a procedure with the `EVENT` option, such as `CALL UPDATE_LEDGER(ACCT) EVENT(E1);`?",
+              "choices": [
+                "The procedure launches as a concurrent asynchronous task while the caller continues, synchronizing later via `WAIT(E1);`.",
+                "The procedure is registered as an inactive `ON`-unit that runs only if a hardware error occurs.",
+                "The procedure runs at compile time inside the macro preprocessor before machine code is generated.",
+                "The procedure executes ten times in a loop and stores the elapsed clock time in `E1`."
+              ],
+              "correct_index": 0,
+              "explanation": "Attaching `TASK` or `EVENT` to a `CALL` spawns concurrent execution of the called procedure, allowing the calling program to continue working in parallel until it synchronizes with `WAIT(event_variable);`."
+            },
+            {
+              "id": "q_090",
+              "prompt": "Why was built-in multitasking (`TASK`, `EVENT`, and `WAIT`) especially valuable on a 1960s mainframe?",
+              "choices": [
+                "It eliminated the need to declare storage classes by making all variables `STATIC` automatically.",
+                "It allowed the fast central processor to keep performing calculations while another task waited for slow disk or tape I/O.",
+                "It allowed a program to bypass the operating system and control mechanical card readers without device drivers.",
+                "It doubled the precision of `FLOAT BINARY` variables from 27 bits to 54 bits during parallel calls."
+              ],
+              "correct_index": 1,
+              "explanation": "By overlapping compute-bound tasks with input/output-bound tasks, PL/I multitasking kept the expensive System/360 CPU busy instead of stalling every time a program waited on mechanical disk or tape drives."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_10",
+      "title": "10. The Compile-Time Macro Preprocessor and the 1966 Universal-Language Dream",
+      "summary": "Conclude Part I with PL/I's built-in compile-time macro preprocessor (`%DECLARE`, `%DO`, `%INCLUDE`), a 'program that writes the program' before normal compilation even begins, allowing shops to customize code automatically and share standard data definitions across teams. With the delivery of IBM's production F-level compiler in 1966, optimism reached a peak that PL/I would soon sweep away both FORTRAN and COBOL—setting the stage for Part II's look at compiler engineering hurdles, Multics systems programming, dialects, and PL/I's enduring legacy.",
+      "introduced_terms": [
+        "compile-time preprocessor (%DECLARE, %DO, and %INCLUDE)",
+        "IBM F-level compiler (1966 production release)",
+        "universal programming language paradigm"
+      ],
+      "chunks": [
+        {
+          "id": "ch_046",
+          "title": "One Company, Forty-Eight Slightly Different Programs",
+          "content_markdown": "Imagine a national retail chain in 1966 with branches in forty-eight states. Every state has the same basic payroll structure, so copying and maintaining forty-eight separate payroll programs is a nightmare. Worse still, twenty different programs at headquarters all read the exact same `CUSTOMER` master file; if someone adds a new `ZIP_CODE` field to that file, twenty programmers have to hand-edit twenty separate card decks without making a single typo!\n\nHow can one master program automatically tailor its own source code before the compiler even translates it? To solve this, PL/I built a powerful **compile-time macro preprocessor** right into the language.\n\nInstead of inventing a cryptic, separate macro syntax, PL/I made an intuitive choice: **the preprocessor language is a miniature version of PL/I itself**, marked by a leading percent sign (**`%`**)!",
+          "questions": [
+            {
+              "id": "q_091",
+              "prompt": "What is the role of PL/I's compile-time preprocessor before the main compiler translates a program into machine code?",
+              "choices": [
+                "It scans the source text for `%` commands and automatically inserts, customizes, or generates PL/I source code.",
+                "It allocates `AUTOMATIC` stack frames in magnetic-core memory while the program is running at 2:00 a.m.",
+                "It sorts dropped paper punch cards by reading the sequence numbers in columns 73 through 80.",
+                "It converts `FLOAT BINARY` hardware registers into `FIXED DECIMAL` registers during execution."
+              ],
+              "correct_index": 0,
+              "explanation": "The compile-time preprocessor executes `%`-prefixed directives before main compilation begins, transforming and generating the PL/I source text that the compiler then translates into machine code."
+            },
+            {
+              "id": "q_092",
+              "prompt": "How does a programmer visually distinguish a compile-time preprocessor statement from an ordinary runtime PL/I statement?",
+              "choices": [
+                "Preprocessor statements must be punched strictly in columns 1 through 6 of a card.",
+                "Preprocessor statements begin with a percent sign (`%`), such as `%DECLARE`, `%INCLUDE`, or `%DO`.",
+                "Preprocessor statements end with a colon (`:`) instead of a semicolon (`;`).",
+                "Preprocessor statements are enclosed inside `/*` and `*/` comment delimiters."
+              ],
+              "correct_index": 1,
+              "explanation": "PL/I uses a leading percent sign (`%`) to mark compile-time preprocessor statements (`%DECLARE`, `%INCLUDE`, `%IF`, `%DO`, `%PROCEDURE`), which use familiar PL/I syntax at compile time."
+            }
+          ]
+        },
+        {
+          "id": "ch_047",
+          "title": "Single Source of Truth: `%INCLUDE` and `%DECLARE`",
+          "content_markdown": "The simplest and most beloved preprocessor command in corporate data centers was **`%INCLUDE`**. Instead of retyping the 50-line `DECLARE 1 CUSTOMER ...` structure into twenty different programs, the data administrator stored that structure once in a central disk library under the name `CUSTREC`. Then every programmer simply wrote one line:\n\n`%INCLUDE CUSTREC;`\n\nBefore compilation began, the preprocessor fetched `CUSTREC` from the library and spliced those exact 50 lines right into the program! If `ZIP_CODE` was added later, updating `CUSTREC` once updated every recompiled program automatically.\n\nEven better, using **`%DECLARE`** (or `%DCL`), a programmer could create compile-time variables that acted as find-and-replace templates across the entire program:\n\n`%DECLARE MAX_ITEMS FIXED;`\n`%MAX_ITEMS = 500;`\n`DECLARE INVENTORY(MAX_ITEMS) FIXED DEC(7,2);`\n\nBefore the compiler saw the third line, the preprocessor replaced `MAX_ITEMS` with `500`, handing the compiler `DECLARE INVENTORY(500) FIXED DEC(7,2);`!",
+          "questions": [
+            {
+              "id": "q_093",
+              "prompt": "How did the `%INCLUDE` directive improve software maintenance in large corporate data centers?",
+              "choices": [
+                "It allowed programs to run without declaring variables by inferring all structure fields at runtime.",
+                "It automatically caught out-of-bounds array subscripts without needing `(SUBSCRIPTRANGE):`.",
+                "It let dozens of programs pull a shared record declaration from a single central library file, avoiding duplicate typing and mismatches.",
+                "It translated legacy COBOL source files into FORTRAN subroutines during magnetic tape reads."
+              ],
+              "correct_index": 2,
+              "explanation": "`%INCLUDE` spliced shared source text (such as standard file record layouts) from a central library into any program at compile time, ensuring every program used the exact same definition."
+            },
+            {
+              "id": "q_094",
+              "prompt": "If a PL/I program contains `%DCL TAX_COL CHAR; %TAX_COL = 'STATE_TAX';` followed by `TOTAL = PRICE + TAX_COL;`, what code does the main compiler actually see?",
+              "choices": [
+                "`TOTAL = PRICE + 0;`, because character macro variables evaluate to zero in arithmetic formulas.",
+                "`TOTAL = PRICE + 'TAX_COL';`, with literal single quotes placed around the macro variable name.",
+                "A compile-time error, because `%DCL` variables can only substitute inside `DECLARE` statements.",
+                "`TOTAL = PRICE + STATE_TAX;`, because the preprocessor substitutes `STATE_TAX` for `TAX_COL` before compilation."
+              ],
+              "correct_index": 3,
+              "explanation": "A preprocessor `%DECLARE` variable replaces matching identifiers in the program text during the macro pass, so `TAX_COL` is substituted with `STATE_TAX` before the main compiler parses the statement."
+            }
+          ]
+        },
+        {
+          "id": "ch_048",
+          "title": "A Program That Writes a Program: `%IF`, `%DO`, and `%PROCEDURE`",
+          "content_markdown": "Because PL/I's preprocessor included **`%IF ... %THEN ... %ELSE`**, **`%DO ... %END`**, and even compile-time functions (**`%PROCEDURE`**), a program could literally compute and write its own source code at compile time!\n\nSuppose an aerospace engineer wants a super-fast sequence that adds three array elements without paying the runtime cost of incrementing and checking a loop counter (a technique called **loop unrolling**). Instead of typing repetitive lines by hand, the programmer writes a compile-time `%DO` loop:\n\n`%DO I = 1 %TO 3;`\n`   SUM = SUM + DATA(I);`\n`%END;`\n\nWhen the preprocessor runs, it executes that loop three times and emits three separate plain-text statements for the compiler:\n\n`SUM = SUM + DATA(1);`\n`SUM = SUM + DATA(2);`\n`SUM = SUM + DATA(3);`\n\nAnd with `%IF STATE = 'NY' %THEN ...`, one master deck could customize itself into lean, state-specific payroll programs with zero unused code left behind!",
+          "questions": [
+            {
+              "id": "q_095",
+              "prompt": "What is produced when the PL/I preprocessor executes a compile-time `%DO I = 1 %TO 3; ... %END;` loop wrapping a statement?",
+              "choices": [
+                "It generates three repeated copies of the statement in the source text with `I` replaced by 1, 2, and 3 before main compilation.",
+                "It spawns three concurrent `TASK` threads at runtime that execute the statement simultaneously.",
+                "It allocates three generations of a `CONTROLLED` variable on a push-down stack at runtime.",
+                "It restricts the loop so it can only execute during the first three seconds of a batch job."
+              ],
+              "correct_index": 0,
+              "explanation": "A compile-time `%DO` loop runs inside the preprocessor and stamps out repeated, customized lines of PL/I source text (unrolling the loop before the compiler translates the code)."
+            },
+            {
+              "id": "q_096",
+              "prompt": "Why was using `%IF ... %THEN` at compile time more efficient for multi-state payroll customization than using ordinary runtime `IF ... THEN` statements?",
+              "choices": [
+                "Ordinary runtime `IF` statements could not compare character strings like `'NY'` for equality.",
+                "Only the target state's code was compiled into the finished program, saving scarce System/360 memory and avoiding runtime checks.",
+                "Compile-time `%IF` statements automatically converted all binary variables into `FIXED DECIMAL`.",
+                "Runtime `IF` statements required reserved keywords, whereas `%IF` statements did not."
+              ],
+              "correct_index": 1,
+              "explanation": "Conditional compilation via `%IF` strips out irrelevant branches before compilation, keeping the final machine-code program compact in scarce 64 KB core memory and eliminating repeated runtime branch tests."
+            }
+          ]
+        },
+        {
+          "id": "ch_049",
+          "title": "August 1966: The IBM F-Level Compiler Arrives",
+          "content_markdown": "Turning all ten sections of this grand vision into a working compiler on a 1960s mainframe was a heroic feat of software engineering. On System/360, IBM classified its software by memory tier using letter codes: **D-level** (16 KB min), **E-level** (32 KB), **F-level** (64 KB), and so on.\n\nIn **August 1966**, IBM's Hursley Laboratory in England delivered the landmark **PL/I (F) compiler** for OS/360. How on earth do you squeeze a compiler that understands context-sensitive unreserved keywords, floating-point and `FIXED DECIMAL` math, `PICTURE` masks, hierarchical structures, array cross-sections, `BASED` pointers, `ON`-conditions, multitasking, and a `%` macro preprocessor into **64 kilobytes of magnetic-core memory**?\n\nThe Hursley team designed PL/I (F) as a **multi-phase overlay compiler**: dozens of separate compiler phases lived on disk and swapped into memory one after another like relay runners passing a baton, gradually transforming PL/I source code into System/360 machine code!",
+          "questions": [
+            {
+              "id": "q_097",
+              "prompt": "What did the letter 'F' signify in the name of IBM's landmark 1966 'PL/I (F)' production compiler?",
+              "choices": [
+                "That the compiler was restricted to `FLOAT` scientific numbers and excluded `FIXED DECIMAL`.",
+                "That it was a preliminary field-test prototype rather than an official production release.",
+                "IBM's System/360 memory-size tier for machines with at least 64 kilobytes of main storage.",
+                "That the compiler translated FORTRAN source decks into PL/I source text."
+              ],
+              "correct_index": 2,
+              "explanation": "In IBM System/360 software nomenclature, letter codes indicated the minimum core memory partition required: D = 16 KB, E = 32 KB, F = 64 KB, G = 128 KB, and H = 256 KB."
+            },
+            {
+              "id": "q_098",
+              "prompt": "How did IBM's Hursley engineers fit a full-featured PL/I (F) compiler into a 64-kilobyte System/360 memory space?",
+              "choices": [
+                "They dropped structures, pointers, and `ON`-conditions from the 1966 production release.",
+                "They required programmers to run the macro preprocessor on a separate IBM 1401 machine.",
+                "They limited user programs to a maximum of 100 lines of source code per compilation.",
+                "They structured the compiler as dozens of sequential phases on disk that loaded into memory one after another in overlays."
+              ],
+              "correct_index": 3,
+              "explanation": "Because the full compiler was far larger than 64 KB, PL/I (F) was engineered as tens of separate compilation phases that swapped in from disk storage in succession to analyze, optimize, and generate code."
+            }
+          ]
+        },
+        {
+          "id": "ch_050",
+          "title": "The High-Water Mark of Universal-Language Optimism (and What Lies Ahead)",
+          "content_markdown": "When PL/I (F) shipped in late 1966, optimism across IBM, SHARE, and GUIDE reached a breathtaking high-water mark. Proponents of the **universal programming language paradigm** confidently predicted that within five years, both FORTRAN and COBOL would fade into history museums.\n\nLook at everything we have traced across Part I:\n- **The Problem (Sections 1–3)**: Two incompatible tribes—scientific FORTRAN (`FLOAT BINARY`) and commercial COBOL (`FIXED DECIMAL` and records)—united by IBM's System/360 and the 1963 3x3 Committee.\n- **The Syntax \u0026 Data (Sections 4–7)**: Free-form `;` streams, `PROCEDURE`/`BEGIN` blocks, recursion, zero reserved keywords, unified numbers (`FLOAT BIN`, `FIXED DEC`, `PICTURE`), hierarchical structures, array `*` slices, and `VARYING` strings.\n- **The Power Tools (Sections 8–10)**: Four storage classes (`STATIC`, `AUTOMATIC`, `CONTROLLED`, `BASED` pointers), asynchronous `ON`-conditions, `TASK`/`EVENT` multitasking, and the `%` compile-time preprocessor.\n\nWhy, then, didn't FORTRAN and COBOL surrender quietly after 1966—and how did PL/I go on to power the pioneering **Multics** operating system and shape C, Ada, and modern computing? That dramatic story awaits us in **Part II**!",
+          "questions": [
+            {
+              "id": "q_099",
+              "prompt": "What was the core belief of the 'universal programming language paradigm' championed by PL/I advocates in 1966?",
+              "choices": [
+                "A single richly featured language with sensible defaults could serve scientific, commercial, and systems programmers better than separate specialized languages.",
+                "Every computer manufacturer should hard-wire COBOL English sentences directly into processor silicon.",
+                "Programming languages should eliminate compilers and return to manual machine-code programming.",
+                "Scientific and commercial computing should remain permanently divided across separate hardware lines."
+              ],
+              "correct_index": 0,
+              "explanation": "PL/I embodied the universal language vision: that one coherent, modular language could unify scientific math, commercial data processing, and systems programming on unified hardware like the System/360."
+            },
+            {
+              "id": "q_100",
+              "prompt": "Which group of PL/I architectural milestones from Part I directly anticipated features that became standard in later languages like C, Ada, Java, and SQL?",
+              "choices": [
+                "Mandatory column-7 card margins, 300 reserved English verbs, and static-only subroutine memory.",
+                "Free-form `/*...*/` comments and `;` syntax, block scope and recursion, `-\u003e` pointers, `ON`-condition exception handling, and `%` preprocessing.",
+                "Base-2-only currency rounding, un-nested global variables, and fixed-length-only character strings.",
+                "Implicit `I`–`N` variable typing, column-73 sequence numbers, and hardware word-mark bits."
+              ],
+              "correct_index": 1,
+              "explanation": "PL/I pioneered or popularized industrial use of `/* ... */` comments, semicolon-terminated block structure, `-\u003e` pointer qualification, asynchronous exception handling (`ON`), multitasking (`TASK`/`EVENT`), and compile-time preprocessing (`%`)."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
