@@ -1,0 +1,1685 @@
+{
+  "id": "gif_image_format_part_1",
+  "title": "The GIF Image Format I: Color Palettes, LZW Compression \u0026 the Dial-Up Graphics Revolution (1977–1987)",
+  "summary": "Part 1 of the GIF Image Format series: a relaxed, generalist-friendly 100-question journey from the mid-1980s home-computing graphics Babel and CompuServe's 300-baud dial-up bottleneck to $$8\\text{-bit}$$ Color Lookup Tables, Lempel–Ziv–Welch (LZW) dictionary compression, and GIF87a's Venetian-blind interlacing. With zero assumed computer-science or higher-math jargon, learners trace pixel grids, color quantization, dithering, greedy prefix matching, and the famous $$k\\text{w}k\\text{w}k$$ decoder anomaly—concluding on the eve of GIF89a and Part II.",
+  "topic_prompt": "Part 1 of a 2-part series on the GIF image file format (1977–1987), taught at a relaxed, conversational pace for an educated generalist with zero assumed computer-science or higher-math jargon. Cover: (1) the mid-1980s home-computing graphics Babel—why Apple II, Commodore 64, Atari ST, Amiga, Macintosh, and IBM PC (CGA/EGA/VGA) machines used incompatible bitmap formats; (2) CompuServe's dial-up bandwidth problem at 300 to 1200 baud and Steve Wilhite's May 1987 release of GIF87a; (3) pixel grids and RGB color math—why $$24\\text{-bit}$$ true color requires $$3\\text{ bytes}$$ per pixel ($$2^{24} = 16,777,216$$ colors) and overwhelmed early RAM and phone lines; (4) color quantization, dithering intuition, and the $$8\\text{-bit}$$ Color Lookup Table (CLUT) that maps $$256$$ chosen palette slots ($$2^8 = 256$$) to $$24\\text{-bit}$$ RGB triplets; (5) image redundancy and why simple Run-Length Encoding (RLE) struggles with dithered patterns and recurring textures; (6) Abraham Lempel and Jacob Ziv's 1977–1978 sliding-window (LZ77) and dynamic dictionary (LZ78) insights; (7) Terry Welch's 1984 LZW innovation—pre-populating table indices $$0$$–$$255$$ with single-pixel colors plus Clear ($$256$$) and End-of-Information ($$257$$) control codes so the dictionary never has to be transmitted inside the file; (8) step-by-step hand-tracing of LZW encoding (greedy longest-match prefix $$w$$ plus next pixel $$k$$) and why the decoder can reconstruct every dictionary entry one step behind the encoder; (9) the famous $$k\\text{w}k\\text{w}k$$ decoder anomaly—what happens when the encoder immediately uses a newly minted code before the decoder has seen its final character, and how the first-equals-last character rule resolves it cleanly; and (10) variable-width bit packing from $$9\\text{ bits}$$ up to the $$12\\text{-bit}$$ ceiling ($$2^{12} = 4,096$$ entries), dynamic Clear-code table resets, and GIF87a's four-pass Venetian-blind interlacing over slow modems—handing off cleanly to Part II on the eve of GIF89a.",
+  "tag_path": [
+    "History",
+    "History of Technology",
+    "Data \u0026 Computing Technology"
+  ],
+  "vetting_summary": "Vetted all 50 presentation chunks and 100 multiple-choice questions across section_01.json through section_10.json from the perspective of a college-freshman generalist learner. Expanded acronym definitions on first appearance in Section 1, balanced correct_index distributions across sections, and stripped parenthetical qualifiers from correct choices in Sections 3, 4, 7, and 10 so all four options match closely in length and specificity.",
+  "created_at": "2026-11-13T01:04:05Z",
+  "sections": [
+    {
+      "id": "sec_01",
+      "title": "1. The 1980s Graphics Babel: Incompatible Machines \u0026 Hardware Bitmaps",
+      "summary": "Explore the fragmented mid-1980s home-computing landscape across the Apple II, Commodore 64, Atari ST, Commodore Amiga, Macintosh, and IBM PC (CGA, EGA, and VGA). Unpack why early microcomputers saved raw video-memory dumps tailored to their own display chips—creating a 'Tower of Babel' where a picture drawn on one machine was unreadable gibberish on another.",
+      "introduced_terms": [
+        "raster (bitmap) graphic",
+        "video memory (VRAM) screen dump",
+        "hardware-dependent image format"
+      ],
+      "chunks": [
+        {
+          "id": "ch_001",
+          "title": "A Digital Tower of Babel",
+          "content_markdown": "Imagine walking into a computer club meeting in 1986 holding a floppy disk that contains a digital portrait of your dog. You painted it on your home Commodore 64, and you want to show it off on your friend's brand-new Apple Macintosh or IBM PC. Even if you copy the raw data bytes from one machine to another, your friend's screen displays nothing—or worse, a chaotic snowstorm of jagged stripes and blinking garbage.\n\nIn the mid-1980s, personal computing was a vibrant but fiercely divided archipelago. Enthusiasts used an incompatible mix of machines: the Apple II, the Commodore 64, the Atari 800, the 16-bit Atari ST and Commodore Amiga, the crisp black-and-white Macintosh, and business-oriented IBM PCs equipped with three generations of color display adapters—CGA (Color Graphics Adapter), EGA (Enhanced Graphics Adapter), and VGA (Video Graphics Array).\n\nWhile plain English text had mostly rallied around a shared numerical alphabet code called ASCII (American Standard Code for Information Interchange), digital pictures had no common language at all. Every computer family lived on its own visual island, trapped in a graphics Tower of Babel.",
+          "questions": [
+            {
+              "id": "q_001",
+              "prompt": "What happened in the mid-1980s if a user copied a raw picture file created on a Commodore 64 directly onto an Apple Macintosh or IBM PC?",
+              "choices": [
+                "The receiving computer automatically converted the colors into a universal grayscale preview.",
+                "The receiving computer failed to display the image properly or rendered scrambled visual static.",
+                "The receiving computer displayed the picture at half size because its screen had smaller dots.",
+                "The receiving computer stripped away the image and showed only a text description of the colors."
+              ],
+              "correct_index": 1,
+              "explanation": "In the mid-1980s, each microcomputer brand stored graphics in a layout customized for its own display circuitry, so raw image data from one system appeared as unreadable static or failed to open on another."
+            },
+            {
+              "id": "q_002",
+              "prompt": "How did the state of digital images compare to the state of plain text across different home computers in 1986?",
+              "choices": [
+                "Digital pictures shared a single television broadcast standard, whereas plain text required custom hardware translators.",
+                "Both plain text and digital pictures were completely standardized across all personal computers by the early 1980s.",
+                "Plain text relied on a widely shared character standard, whereas digital pictures lacked any universal file format.",
+                "Neither plain text nor digital pictures could be transferred between different computer brands without retyping."
+              ],
+              "correct_index": 2,
+              "explanation": "While text files could largely be exchanged across brands using the shared ASCII character standard, graphics files remained fragmented into mutually incompatible, machine-specific formats."
+            }
+          ]
+        },
+        {
+          "id": "ch_002",
+          "title": "Raster Graphics and the Video Memory Mirror",
+          "content_markdown": "To understand why 1980s computers could not read one another's pictures, we first need to look at how a screen draws an image. Almost all home computers displayed **raster (bitmap) graphics**—pictures built from a rectangular mosaic of tiny glowing dots, much like a bathroom floor tiled with colored ceramic squares.\n\nInside the computer, a dedicated region of memory chips—called **video memory (VRAM)** or the screen buffer—acted as a live mirror of that mosaic. Whatever numbers were sitting in those memory addresses at any given microsecond told the television tube or monitor which dots to light up and in what colors.\n\nWhen a 1980s paint program offered a 'Save Picture' command, its programmers took the fastest, simplest shortcut imaginable: a **video memory (VRAM) screen dump**. The computer simply scooped up the exact bytes sitting in its video memory chip and wrote them straight onto a floppy disk, bit for bit, without any translation header or universal grid description.",
+          "questions": [
+            {
+              "id": "q_003",
+              "prompt": "What is a raster (bitmap) graphic?",
+              "choices": [
+                "An image represented as a rectangular grid of individual colored dots.",
+                "An image stored as a list of mathematical formulas for geometric curves.",
+                "An image recorded as a continuous analog wave on magnetic audio tape.",
+                "An image etched permanently into a computer's read-only startup chip."
+              ],
+              "correct_index": 0,
+              "explanation": "A raster or bitmap graphic breaks a two-dimensional image into a regular grid of discrete dots, each holding a specific brightness or color value."
+            },
+            {
+              "id": "q_004",
+              "prompt": "Why was saving a picture via a video memory (VRAM) screen dump so fast and simple for early home computers?",
+              "choices": [
+                "It translated every colored dot into plain English words that any disk drive could read.",
+                "It shrunk the picture by discarding nine out of every ten rows before writing to the disk.",
+                "It outsourced the mathematical conversion work to the user's television screen hardware.",
+                "It copied the exact bytes already sitting in the machine's display memory directly to disk."
+              ],
+              "correct_index": 3,
+              "explanation": "A VRAM screen dump required almost no processing power because the computer simply copied the raw byte sequence from its active display buffer straight onto the storage disk."
+            }
+          ]
+        },
+        {
+          "id": "ch_003",
+          "title": "A Tour of Incompatible Video Chips",
+          "content_markdown": "Saving a raw screen dump worked fine as long as you loaded the file back into the exact same model of computer. The trouble was that every manufacturer wired its video memory in a completely different geometry, creating a **hardware-dependent image format** tied to one specific display chip.\n\nConsider three popular machines of the era:\n- **Apple Macintosh (1984):** Used a straightforward 1-bit monochrome layout where $$1$$ bit controlled one crisp black-or-white dot across a $$512 \\times 342$$ grid.\n- **IBM PC with CGA (Color Graphics Adapter):** Split its screen memory into two interleaved banks—putting all the even-numbered scan lines ($$0, 2, 4, \\dots$$) in one block of memory and all the odd-numbered scan lines ($$1, 3, 5, \\dots$$) thousands of bytes away.\n- **Commodore Amiga and Atari ST:** Organized colors into stacked 'bitplanes,' like laying four or five transparent plastic sheets on an overhead projector, where a single dot's color was formed by combining one bit from each separate sheet.\n\nFeeding an Amiga bitplane file into an IBM CGA card meant the PC tried to draw interleaved cyan-and-magenta stripes out of data meant for stacked color layers.",
+          "questions": [
+            {
+              "id": "q_005",
+              "prompt": "How did the IBM PC's Color Graphics Adapter (CGA) organize its video memory compared to the original Apple Macintosh?",
+              "choices": [
+                "CGA stored every dot as a three-page text description of its red and blue brightness.",
+                "CGA separated even and odd horizontal scan lines into two separate memory banks.",
+                "CGA stacked six transparent bitplanes on top of a crisp black-and-white grid.",
+                "CGA arranged pixels in a spiral starting from the center of the monitor outward."
+              ],
+              "correct_index": 1,
+              "explanation": "While the original Macintosh mapped bits sequentially across its black-and-white rows, the IBM CGA card split even-numbered and odd-numbered horizontal lines into separate memory blocks."
+            },
+            {
+              "id": "q_006",
+              "prompt": "In the bitplane graphics architecture used by the Commodore Amiga and Atari ST, how is the color of a single screen dot determined?",
+              "choices": [
+                "By measuring the voltage delay between two adjacent horizontal lines on the monitor.",
+                "By reading a continuous group of three bytes stored side by side in a single linear row.",
+                "By combining one bit from each of several stacked memory layers at that dot's position.",
+                "By alternating black and white dots rapidly along a single horizontal scan line."
+              ],
+              "correct_index": 2,
+              "explanation": "In a bitplane architecture, memory is divided into separate planes (like stacked overhead transparencies), and a pixel's color code is assembled by taking one bit from each plane at that coordinate."
+            }
+          ]
+        },
+        {
+          "id": "ch_004",
+          "title": "The Apple II Color Quirk and Commodore Attribute Cells",
+          "content_markdown": "Even within the 8-bit home computer world, video memory tricks bordered on pure wizardry—and made cross-platform sharing even harder. On Steve Wozniak's Apple II, high-resolution color wasn't stored as simple color numbers at all. Instead, Wozniak exploited a timing quirk of NTSC—the North American analog color television broadcast standard. Depending on whether a lit dot sat in an even or odd column—and whether a special 'high bit' in that byte delayed the signal by half a dot—the TV screen glowed purple, green, blue, or orange.\n\nMeanwhile, the Commodore 64's VIC-II graphics chip divided the screen into $$8 \\times 8$$ dot neighborhoods called 'attribute cells.' To save precious memory, each $$8 \\times 8$$ square could only use a limited handful of colors at once; if you tried to paint a fifth color into that tiny square, every other dot in the $$8 \\times 8$$ block suddenly changed color too—an artifact known as 'attribute clash.'\n\nBecause an Apple II file encoded analog television timing shifts and a Commodore 64 file encoded $$8 \\times 8$$ attribute cells, neither file described an image as a plain, device-neutral grid of colored dots.",
+          "questions": [
+            {
+              "id": "q_007",
+              "prompt": "How did the Apple II generate high-resolution colors without storing explicit color numbers for each dot?",
+              "choices": [
+                "It spun a physical red, green, and blue color wheel inside the monitor synchronized to the floppy disk.",
+                "It assigned a dedicated 24-bit color table to every individual 8-by-8 square of the display grid.",
+                "It relied on the user's monitor to guess appropriate colors based on the brightness of surrounding text.",
+                "It used dot column positions and a half-dot timing shift to trigger analog television color artifacts."
+              ],
+              "correct_index": 3,
+              "explanation": "Steve Wozniak's Apple II design exploited NTSC analog television color bursts, producing purple, green, blue, or orange depending on whether bits sat in even or odd columns and whether a high-bit timing shift was active."
+            },
+            {
+              "id": "q_008",
+              "prompt": "Why did Commodore 64 graphics files organize color data around 8-by-8 dot blocks ('attribute cells')?",
+              "choices": [
+                "Restricting each small square to a few shared colors saved scarce video memory.",
+                "Early television tubes could only focus electron beams in 8-by-8 square clusters.",
+                "Floppy disks of the 1980s could only read and write data in 64-byte square sectors.",
+                "Universal international standards required all home computers to group dots by eights."
+              ],
+              "correct_index": 0,
+              "explanation": "By assigning color attributes to entire 8-by-8 blocks rather than every individual pixel, the Commodore 64 drastically reduced the amount of expensive RAM needed for a colorful screen."
+            }
+          ]
+        },
+        {
+          "id": "ch_005",
+          "title": "From Siloed Paint Programs to the Online Challenge",
+          "content_markdown": "Even when software companies began adding small descriptive headers to their picture files—yielding formats like `.MAC` (MacPaint on the Macintosh), `.PCX` (PC Paintbrush on the IBM PC), `.NEO` (NEOchrome on the Atari ST), and `.IFF` (Deluxe Paint on the Amiga)—most formats still mirrored the quirks of their home platform.\n\nIf you worked alone at your desk printing newsletters on your own printer, this fragmentation was merely a minor annoyance. Converting a picture from an Amiga to an IBM PC required specialized conversion utilities and a deep technical manual.\n\nBy the mid-1980s, however, personal computers were no longer staying isolated on bedroom desks. Thousands of hobbyists and professionals were plugging their computers into telephone lines to join nationwide dial-up networks. Suddenly, a central server needed to host a single weather map, stock chart, or photograph that an Apple II user, a Macintosh artist, an Amiga gamer, and an IBM PC executive could all download and view—setting the stage for a universal graphics revolution.",
+          "questions": [
+            {
+              "id": "q_009",
+              "prompt": "Why did early named image formats like MacPaint (.MAC), PC Paintbrush (.PCX), and NEOchrome (.NEO) still struggle to serve as universal standards?",
+              "choices": [
+                "They were legally restricted from being transmitted across public telephone lines by telecom tariffs.",
+                "They could only store vector geometric shapes rather than pixel-by-pixel raster bitmaps.",
+                "They remained closely tied to the screen resolutions and memory layouts of their native machines.",
+                "They required a dedicated mainframe computer to recalculate every pixel before each screen refresh."
+              ],
+              "correct_index": 2,
+              "explanation": "Although formats like .MAC, .PCX, and .NEO added basic file headers, their internal bitmap structures were still designed around the specific display modes and hardware layouts of their native computers."
+            },
+            {
+              "id": "q_010",
+              "prompt": "What technological shift in the mid-1980s turned incompatible graphics formats from a minor local nuisance into an urgent industry problem?",
+              "choices": [
+                "The government mandate requiring all software companies to archive source code as digital photographs.",
+                "The rise of dial-up online networks where diverse computers needed to download the same shared image files.",
+                "The invention of color laser printers that refused to print any file tied to a specific video chip.",
+                "The sudden disappearance of monochrome monitors from both corporate offices and university labs."
+              ],
+              "correct_index": 1,
+              "explanation": "Once users with completely different computers began connecting to shared dial-up networks, online services urgently needed a single hardware-independent format that every machine could decode."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_02",
+      "title": "2. CompuServe's Dial-Up Bottleneck \u0026 the Birth of GIF87a (1987)",
+      "summary": "Step inside CompuServe Information Service in the mid-1980s, where subscribers paying by the minute over $$300\\text{-baud}$$ and $$1200\\text{-baud}$$ telephone modems waited painfully long times to download pictures. Trace how CompuServe engineer Steve Wilhite designed a compact, hardware-independent Graphics Interchange Format (GIF87a) in May 1987 so a single online file could be viewed across any computer brand.",
+      "introduced_terms": [
+        "CompuServe Information Service (CIS)",
+        "dial-up bandwidth bottleneck (300 to 1200 baud)",
+        "GIF87a (Graphics Interchange Format, 1987)"
+      ],
+      "chunks": [
+        {
+          "id": "ch_006",
+          "title": "Welcome to CompuServe, circa 1986",
+          "content_markdown": "Long before the World Wide Web existed, the center of the online universe in the mid-1980s was **CompuServe Information Service (CIS)**, based in Columbus, Ohio. Founded in 1969 as a corporate time-sharing business, CompuServe had grown into the premier dial-up destination for home computer owners. Subscribers dialed a local phone number, listened to their modem whistle and screech, and entered a text-based world of news wires, stock quotes, chat rooms, and special-interest forums.\n\nCrucially, CompuServe charged subscribers by the hour—often $$6$$ to $$12.50\\text{ dollars per hour}$$ (equivalent to roughly $$17$$ to $$35\\text{ dollars per hour}$$ today), on top of any long-distance telephone charges. Every minute spent waiting for a file to arrive literally ticked money off the user's monthly bill.\n\nCompuServe wanted to enrich its text menus with color weather maps, stock charts, and shared photographs. Yet hosting ten separate versions of every image—one for Apple II, one for Amiga, one for IBM PC, and so on—wasted vast amounts of mainframe disk storage and fractured user communities.",
+          "questions": [
+            {
+              "id": "q_011",
+              "prompt": "Why were file download times a major financial concern for CompuServe Information Service (CIS) subscribers in the mid-1980s?",
+              "choices": [
+                "CompuServe billed users by connect time, so slow downloads directly increased their hourly charges.",
+                "CompuServe charged a flat fee per kilobyte that doubled whenever a transfer took more than one minute.",
+                "Telephone companies automatically disconnected any modem call that lasted longer than five minutes.",
+                "Home computers of the era overheated and damaged their disk drives during lengthy file transfers."
+              ],
+              "correct_index": 0,
+              "explanation": "Because CompuServe charged steep hourly connect rates (often 6 to 12.50 dollars per hour), every extra minute spent transferring a bulky image file cost the subscriber real money."
+            },
+            {
+              "id": "q_012",
+              "prompt": "Why was storing hardware-specific image files problematic for CompuServe's central servers?",
+              "choices": [
+                "Mainframe hard drives could only store text characters and physically rejected binary bitmap files.",
+                "Hardware-specific files erased themselves whenever two users downloaded them at the same time.",
+                "Maintaining separate versions of each picture for every computer brand wasted storage and split forums.",
+                "Federal telecommunications rules prohibited online services from favoring one computer brand's format."
+              ],
+              "correct_index": 2,
+              "explanation": "Without a hardware-independent format, CompuServe either had to store duplicate versions of every graphic for each machine type or leave users of other brands unable to view the file."
+            }
+          ]
+        },
+        {
+          "id": "ch_007",
+          "title": "Life in the 300-to-1200 Baud Slow Lane",
+          "content_markdown": "Even more punishing than hardware incompatibility was the **dial-up bandwidth bottleneck (300 to 1200 baud)**. In 1986, most home modems transmitted data over ordinary copper telephone lines at either $$300\\text{ baud}$$ (roughly $$300\\text{ bits per second}$$) or $$1200\\text{ baud}$$ (roughly $$1,200\\text{ bits per second}$$, with $$2400\\text{ baud}$$ still an expensive luxury).\n\nBecause serial phone links added start and stop framing bits to every $$8\\text{-bit}$$ byte of data, each byte took about $$10\\text{ bits}$$ on the wire. That meant a $$300\\text{-baud}$$ modem delivered roughly $$30\\text{ bytes per second}$$—about the speed a human reads scrolling text—while a $$1200\\text{-baud}$$ modem delivered about $$120\\text{ bytes per second}$$.\n\nNow imagine trying to download a modest $$64\\text{ kilobyte}$$ ($$65,536\\text{-byte}$$) uncompressed color picture:\n- At $$1200\\text{ baud}$$ ($$120\\text{ bytes/sec}$$), that single image took over **$$9\\text{ minutes}$$** to arrive.\n- At $$300\\text{ baud}$$ ($$30\\text{ bytes/sec}$$), the same picture took **$$36\\text{ minutes}$$**—more than half an hour of expensive connect time for one static frame!",
+          "questions": [
+            {
+              "id": "q_013",
+              "prompt": "Approximately how many bytes of actual file data per second could a standard 1200-baud dial-up modem deliver after accounting for serial framing bits?",
+              "choices": [
+                "About 1,200 bytes per second.",
+                "About 120 bytes per second.",
+                "About 12,000 bytes per second.",
+                "About 12 bytes per second."
+              ],
+              "correct_index": 1,
+              "explanation": "Because asynchronous serial transmission uses roughly 10 bits on the phone line per 8-bit byte (including start and stop bits), a 1200-baud connection transfers about 120 bytes per second."
+            },
+            {
+              "id": "q_014",
+              "prompt": "Why was downloading an uncompressed 64-kilobyte image impractical over a 300-baud modem in the mid-1980s?",
+              "choices": [
+                "A 300-baud modem could only transmit uppercase letters and stripped out all numeric pixel values.",
+                "Telephone switches automatically blocked any file larger than 10 kilobytes at 300 baud.",
+                "At 300 baud, the modem tones were too low-pitched to carry red and blue color channels.",
+                "At roughly 30 bytes per second, transferring a single 64-kilobyte image took over 36 minutes."
+              ],
+              "correct_index": 3,
+              "explanation": "Dividing 65,536 bytes by 30 bytes per second yields 2,184 seconds, or more than 36 minutes of paid online connect time for a single picture."
+            }
+          ]
+        },
+        {
+          "id": "ch_008",
+          "title": "Why NAPLPS and Early RLE Fell Short",
+          "content_markdown": "Before 1987, online services tried two main workarounds to send graphics over slow phone lines, and both had serious flaws.\n\nFirst, television and telecom giants promoted **NAPLPS** (North American Presentation Level Protocol Syntax), a vector graphics language that transmitted drawing instructions like 'draw a blue circle here and fill that polygon with green.' While tiny for simple weather-map icons and cartoon logos, NAPLPS was useless for digitized photographs or complex pixel art, where millions of natural shading variations cannot be reduced to neat geometric shapes.\n\nSecond, CompuServe introduced a simple black-and-white bitmap format called **RLE** (Run-Length Encoded graphics). CompuServe RLE could transmit monochrome pixel art reasonably well by counting consecutive black or white dots, but it offered no support for rich multi-color palettes, and its rudimentary compression fell apart as soon as images contained textured shading.\n\nCompuServe's executive Sandy Trevor and software engineer **Steve Wilhite** realized they needed a brand-new standard: a true color raster format that was both hardware-independent and aggressively compressed.",
+          "questions": [
+            {
+              "id": "q_015",
+              "prompt": "Why was the vector-based NAPLPS protocol poorly suited for sharing digitized photographs on CompuServe?",
+              "choices": [
+                "NAPLPS required users to install a dedicated satellite dish alongside their telephone modem.",
+                "Photographs contain subtle pixel-by-pixel shading that cannot be efficiently described as geometric shapes.",
+                "NAPLPS could only draw horizontal black-and-white lines and lacked any commands for color.",
+                "Photographs stored in NAPLPS automatically deleted themselves after being viewed once on screen."
+              ],
+              "correct_index": 1,
+              "explanation": "NAPLPS encoded images as geometric drawing commands (lines, arcs, polygons), which worked well for simple diagrams and logos but could not practically represent continuous photographic textures."
+            },
+            {
+              "id": "q_016",
+              "prompt": "What two core requirements did Steve Wilhite and Sandy Trevor set out to combine when replacing CompuServe's early monochrome RLE format?",
+              "choices": [
+                "3D polygon rendering and real-time stereo audio streaming over phone lines.",
+                "Direct compatibility with IBM CGA video memory and uncompressed 24-bit color.",
+                "Cross-platform color bitmap compatibility and high-efficiency data compression.",
+                "Copy-protection encryption and automatic billing per color used in an image."
+              ],
+              "correct_index": 2,
+              "explanation": "CompuServe needed a format that any computer brand could display in color (hardware independence) while shrinking file sizes dramatically for slow dial-up modems (strong compression)."
+            }
+          ]
+        },
+        {
+          "id": "ch_009",
+          "title": "Steve Wilhite and the May 1987 Launch of GIF87a",
+          "content_markdown": "Working at CompuServe in early 1987, **Steve Wilhite** designed the specification that solved both problems at once. On **May 28, 1987** (with public rollout across June 1987), CompuServe officially released **GIF87a (Graphics Interchange Format, 1987)**—with '87a' marking the first revision of the 1987 specification.\n\nEvery GIF87a file began with a plain 6-byte ASCII signature—the exact characters `'GIF87a'`—so any computer opening the file immediately knew what rulebook to follow. Next came a hardware-neutral description of the image's canvas width, height, and color table, followed by pixel data compressed with a state-of-the-art dictionary algorithm called LZW (which we will unpack step by step in Sections 6 through 9).\n\nInstead of dumping raw video memory from one brand of computer, GIF87a defined a clean, logical image model. An Apple IIGS, an Amiga, an Atari ST, a Macintosh II, and an IBM PC could all read the exact same `.GIF` file and translate its logical colors onto their own screens.",
+          "questions": [
+            {
+              "id": "q_017",
+              "prompt": "What is the purpose of the 6-byte ASCII string 'GIF87a' at the very beginning of a 1987 GIF file?",
+              "choices": [
+                "It acts as a file signature identifying the format and specification version to any decoding software.",
+                "It serves as an encrypted password that unlocks CompuServe's central billing database.",
+                "It instructs the user's modem to switch from 300 baud to 1200 baud during the transfer.",
+                "It specifies the exact brand of graphics card that originally created the picture."
+              ],
+              "correct_index": 0,
+              "explanation": "The leading 6-byte 'GIF87a' header (magic signature) lets any software program immediately verify that the file is a GIF image and follows the 1987a specification."
+            },
+            {
+              "id": "q_018",
+              "prompt": "How did GIF87a achieve hardware independence across rival computers like the Amiga, Macintosh, and IBM PC?",
+              "choices": [
+                "It bundled ten separate copies of the picture inside every file so each computer could pick its native version.",
+                "It forced all participating computer manufacturers to replace their video chips with an identical CompuServe chip.",
+                "It restricted all online images to plain black-and-white text characters that any terminal could print.",
+                "It described images using a device-neutral grid and color table that each machine's viewer mapped to its own display."
+              ],
+              "correct_index": 3,
+              "explanation": "Rather than saving a hardware-specific VRAM dump, GIF87a stored a logical pixel grid and color palette, allowing viewer software on each platform to render the image as best suited its own display hardware."
+            }
+          ]
+        },
+        {
+          "id": "ch_010",
+          "title": "Why GIF Spread Beyond CompuServe—and That Famous Pronunciation",
+          "content_markdown": "CompuServe made a brilliant strategic move with GIF87a: instead of locking the format inside proprietary software, it published the specification openly and encouraged volunteer programmers in its hardware forums to write free GIF viewers and converters for every machine imaginable. Within months, hobbyists had built fast GIF decoders for DOS, Macintosh, Amiga, Atari ST, Apple II, and Commodore 64, and the format quickly leaped from CompuServe to grassroots Bulletin Board Systems (BBSes) worldwide.\n\nAlong the way, a lighthearted cultural debate was born. Steve Wilhite insisted from day one that GIF was pronounced with a soft 'G'—like **'jif'**—deliberately echoing the famous peanut butter slogan: *'Choosy developers choose GIF.'* Millions of users, seeing the word *Graphics* at the start of *Graphics Interchange Format*, naturally pronounced it with a hard 'G' instead, sparking one of computing history's longest-running friendly arguments.\n\nBefore we can see how Wilhite's format squeezed vibrant color images through slow phone lines, we first need to understand the math of pixels and digital color.",
+          "questions": [
+            {
+              "id": "q_019",
+              "prompt": "What strategic decision helped GIF87a rapidly become the de facto image standard across both CompuServe and independent Bulletin Board Systems (BBSes)?",
+              "choices": [
+                "CompuServe paid telephone companies to transmit GIF files free of long-distance charges.",
+                "CompuServe pre-installed GIF decoding microchips inside every Hayes Smartmodem sold after 1987.",
+                "CompuServe published the specification openly so developers could write viewers for every computer platform.",
+                "CompuServe sued any online forum operator who hosted older MacPaint or PC Paintbrush files."
+              ],
+              "correct_index": 2,
+              "explanation": "By openly publishing the GIF87a specification and encouraging community developers to write viewing utilities for every platform, CompuServe turned GIF into a universal cross-platform standard."
+            },
+            {
+              "id": "q_020",
+              "prompt": "Why did GIF creator Steve Wilhite originally intend the acronym 'GIF' to be pronounced with a soft 'G' ('jif')?",
+              "choices": [
+                "He named the format after his hometown of Jifna and wanted the pronunciation to match.",
+                "He modeled it as a playful nod to Jif peanut butter ('Choosy developers choose GIF').",
+                "He followed an official CompuServe rule requiring all acronyms to use soft consonants.",
+                "He wanted to distinguish the format from a rival graphics chip called the Hard-G."
+              ],
+              "correct_index": 1,
+              "explanation": "Steve Wilhite and his team at CompuServe famously joked that 'Choosy developers choose GIF,' echoing the classic television commercial for Jif peanut butter."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_03",
+      "title": "3. Pixel Grids, Binary Bits \u0026 the Weight of 24-Bit True Color",
+      "summary": "Build from first principles how digital screens break a continuous picture into a two-dimensional grid of picture elements (pixels) and mix red, green, and blue light. See why dedicating $$1\\text{ byte}$$ ($$8\\text{ bits}$$, or $$2^8 = 256$$ intensity steps) to each RGB channel yields $$24\\text{-bit}$$ true color ($$2^{24} = 16,777,216$$ colors)—and why storing $$3\\text{ bytes}$$ per pixel overwhelmed 1980s floppy disks, RAM, and phone lines.",
+      "introduced_terms": [
+        "pixel (picture element) and resolution grid",
+        "RGB additive color model (red, green, and blue channels)",
+        "bit depth and 24-bit true color"
+      ],
+      "chunks": [
+        {
+          "id": "ch_011",
+          "title": "The Mosaic of Picture Elements (Pixels)",
+          "content_markdown": "When you look at a printed photograph or an oil painting from across the room, the scene appears smooth and continuous. If you press a magnifying glass against a computer monitor, however, that smooth illusion dissolves into a strict checkerboard of tiny glowing squares.\n\nEach square is called a **pixel**—a linguistic mashup of *pic*ture *el*ement. Together, the width and height of this rectangular mosaic define the image's **pixel (picture element) and resolution grid**. For example, a standard 1987 medium-resolution screen of $$320 \\times 200$$ measures $$320$$ columns wide by $$200$$ rows tall, containing exactly $$320 \\times 200 = 64,000$$ individual pixels. A sharper $$640 \\times 480$$ grid holds $$307,200$$ pixels.\n\nA pixel has no internal shading or diagonal edges of its own; it can only glow with a single uniform color at any moment. The sharper and more lifelike we want a digital picture to look, the more pixels we must pack into the grid—and the more numbers the computer has to store.",
+          "questions": [
+            {
+              "id": "q_021",
+              "prompt": "What does the resolution notation '320 x 200' tell you about a digital raster image?",
+              "choices": [
+                "The grid contains 320 columns across and 200 rows down, totaling 64,000 individual pixels.",
+                "The image uses 320 shades of red and 200 shades of blue inside every single dot.",
+                "The file requires 320 kilobytes of disk space and takes 200 seconds to load into memory.",
+                "The picture must be viewed on a physical monitor measuring 320 millimeters by 200 millimeters."
+              ],
+              "correct_index": 0,
+              "explanation": "Image resolution specifies the horizontal width (320 columns) and vertical height (200 rows) of the pixel grid, which multiply to give 64,000 total pixels."
+            },
+            {
+              "id": "q_022",
+              "prompt": "What is the fundamental visual property of a single pixel inside a raster grid?",
+              "choices": [
+                "It can split itself diagonally to show two different colors at sharp object borders.",
+                "It displays one uniform color across its entire tiny square at any given moment.",
+                "It stores a miniature vector equation that redraws smooth curves when zoomed in.",
+                "It automatically brightens at the top edge and darkens at the bottom edge for depth."
+              ],
+              "correct_index": 1,
+              "explanation": "A pixel is the smallest indivisible unit of a raster image and can hold only one uniform color value at a time."
+            }
+          ]
+        },
+        {
+          "id": "ch_012",
+          "title": "Painting with Light: The RGB Additive Color Model",
+          "content_markdown": "How do we tell a pixel what color to glow? In elementary school art class, you mixed red, yellow, and blue paint on white paper. Paint works by *subtraction*: each pigment absorbs certain wavelengths of room light and reflects what is left, so mixing all your paints together produces a muddy dark brown.\n\nA computer monitor works the opposite way: it starts as a pitch-black glass screen in a dark room and emits light directly into your eyes. Because human retinas contain three types of color-sensitive cone cells tuned roughly to red, green, and blue light, monitors use the **RGB additive color model (red, green, and blue channels)**.\n\nInside every color pixel sit three microscopic light emitters: one Red, one Green, and one Blue:\n- Turning all three off gives **black**.\n- Turning Red and Green full on (with Blue off) fools your eye into seeing bright **yellow**.\n- Turning Red, Green, and Blue all to maximum intensity produces pure **white**.",
+          "questions": [
+            {
+              "id": "q_023",
+              "prompt": "Why does combining red, green, and blue at full intensity on a computer monitor produce white rather than dark brown?",
+              "choices": [
+                "Monitors spin the three colors so rapidly that centrifugal force bleaches the phosphors white.",
+                "Monitor glass contains a chemical bleach that neutralizes dark pigments when voltage is applied.",
+                "Monitors subtract red, green, and blue wavelengths from the room's ambient fluorescent lighting.",
+                "Monitors use additive light mixing, where emitted wavelengths combine to stimulate all three retinal cone types."
+              ],
+              "correct_index": 3,
+              "explanation": "Unlike paint on paper (which subtracts light by absorption), a monitor emits light directly; adding full red, green, and blue light together stimulates all three human cone receptors to produce the perception of white."
+            },
+            {
+              "id": "q_024",
+              "prompt": "In the RGB additive color model, which combination of channel intensities produces bright yellow on a screen?",
+              "choices": [
+                "Red off, Green at maximum, and Blue at maximum.",
+                "Red at maximum, Green off, and Blue at maximum.",
+                "Red at maximum, Green at maximum, and Blue off.",
+                "Red off, Green off, and Blue at maximum."
+              ],
+              "correct_index": 2,
+              "explanation": "In additive RGB light mixing, combining full Red light and full Green light with zero Blue light stimulates the eye's red and green cones just like yellow light does."
+            }
+          ]
+        },
+        {
+          "id": "ch_013",
+          "title": "Binary Switches, Bytes, and 256 Brightness Steps",
+          "content_markdown": "To control how brightly each Red, Green, and Blue emitter glows, a computer stores numbers using binary **bits**—microscopic electronic switches that can either be off ($$0$$) or on ($$1$$).\n\nEvery time we add one more bit switch, we double the number of distinct dimmer settings we can represent:\n- **$$1\\text{ bit}$$** gives $$2^1 = 2$$ levels: off ($$0$$) or full on ($$1$$).\n- **$$2\\text{ bits}$$** give $$2^2 = 4$$ levels ($$00, 01, 10, 11$$).\n- **$$4\\text{ bits}$$** give $$2^4 = 16$$ levels.\n- **$$8\\text{ bits}$$**—a standard bundle called **$$1\\text{ byte}$$**—give $$2^8 = 256$$ graduations, numbered from $$0$$ (completely dark) to $$255$$ (maximum brightness).\n\nWhy is $$256$$ levels the magic threshold for a single color channel? Because across a normal screen brightness range, the human eye cannot easily spot the tiny brightness jump between step $$142$$ and step $$143$$. Giving Red, Green, and Blue $$1\\text{ byte}$$ ($$0$$–$$255$$) apiece makes every shading transition look silky-smooth.",
+          "questions": [
+            {
+              "id": "q_025",
+              "prompt": "Why does a single 8-bit byte provide exactly 256 possible brightness values (0 through 255)?",
+              "choices": [
+                "Each of the 8 binary switches doubles the number of combinations, yielding 2 to the 8th power.",
+                "Each bit adds 32 brightness units to a linear scale, so 8 bits multiplied by 32 equals 256.",
+                "International telegraph rules reserved numbers above 255 for telephone area codes.",
+                "Computer memory chips are physically built as 16-by-16 square grids of copper wires."
+              ],
+              "correct_index": 0,
+              "explanation": "Because each binary bit has 2 states (0 or 1), a group of 8 independent bits produces 2^8 = 256 unique patterns, corresponding to integers 0 through 255."
+            },
+            {
+              "id": "q_026",
+              "prompt": "In an 8-bit-per-channel RGB system, what color is represented by the byte triplet (255, 0, 0)?",
+              "choices": [
+                "Pure white at maximum brightness.",
+                "Pure red at maximum brightness.",
+                "Pure black with all channels off.",
+                "Pure cyan with red turned off."
+              ],
+              "correct_index": 1,
+              "explanation": "In an RGB triplet (R, G, B) where each channel ranges from 0 to 255, (255, 0, 0) sets Red to maximum intensity while keeping Green and Blue completely off."
+            }
+          ]
+        },
+        {
+          "id": "ch_014",
+          "title": "The Math of 24-Bit True Color: 16.7 Million Shades",
+          "content_markdown": "The number of bits used to describe the color of a single pixel is called **bit depth**. When we dedicate $$1\\text{ byte}$$ ($$8\\text{ bits}$$) to Red, $$1\\text{ byte}$$ ($$8\\text{ bits}$$) to Green, and $$1\\text{ byte}$$ ($$8\\text{ bits}$$) to Blue, each pixel consumes $$8 + 8 + 8 = 24\\text{ bits}$$ ($$3\\text{ bytes}$$) of data. In computer graphics, this benchmark is known as **bit depth and 24-bit true color**.\n\nHow many distinct colors can a $$24\\text{-bit}$$ pixel display? Since any of the $$256$$ Red levels can pair with any of the $$256$$ Green levels and any of the $$256$$ Blue levels, we multiply the choices together:\n$$256 \\times 256 \\times 256 = 2^{24} = 16,777,216\\text{ colors}$$\n\nWait—can the human eye even see $$16.7\\text{ million}$$ colors? Vision scientists estimate that humans can distinguish roughly $$1\\text{ million}$$ to $$10\\text{ million}$$ surface hues. We don't use $$24\\text{-bit}$$ color because we need $$16.7\\text{ million}$$ named crayons; we use it because $$8\\text{ bits}$$ per channel prevents visible 'stair-step' banding across smooth sky gradients and skin tones.",
+          "questions": [
+            {
+              "id": "q_027",
+              "prompt": "How many bytes of storage are required for each individual pixel in an uncompressed 24-bit true color image, and how many total colors are possible?",
+              "choices": [
+                "1 byte per pixel, allowing 256 total colors.",
+                "2 bytes per pixel, allowing 65,536 total colors.",
+                "3 bytes per pixel, allowing 16,777,216 total colors.",
+                "24 bytes per pixel, allowing 24,000,000 total colors."
+              ],
+              "correct_index": 2,
+              "explanation": "At 8 bits per byte, 24 bits equals 3 bytes per pixel (1 byte each for Red, Green, and Blue), producing 256 x 256 x 256 = 2^24 = 16,777,216 possible colors."
+            },
+            {
+              "id": "q_028",
+              "prompt": "Why is 24-bit color (16.7 million possibilities) considered the 'true color' sweet spot even though humans cannot name 16.7 million distinct hues?",
+              "choices": [
+                "Computer processors can only multiply numbers that are exact powers of 24.",
+                "Having 256 steps per RGB channel prevents the eye from seeing artificial stair-step bands in smooth gradients.",
+                "Monitors automatically discard 16 million of those colors and only display the brightest 777,216 shades.",
+                "Extra unused colors act as error-correction padding when telephone lines suffer from static."
+              ],
+              "correct_index": 1,
+              "explanation": "Giving each primary channel 256 intensity steps ensures that subtle brightness transitions (like a sunset sky or curved shadow) appear continuous rather than breaking into visible contour bands."
+            }
+          ]
+        },
+        {
+          "id": "ch_015",
+          "title": "Why 24-Bit True Color Crushed 1980s Hardware",
+          "content_markdown": "If $$24\\text{-bit}$$ true color looks so effortless and lifelike, why didn't Steve Wilhite simply make GIF a $$24\\text{-bit}$$ format in 1987? Let's do the storage arithmetic.\n\nTake a single $$640 \\times 480$$ photograph—a modest postcard-sized grid of $$307,200\\text{ pixels}$$. At $$3\\text{ bytes}$$ per pixel, that one uncompressed picture weighs:\n$$307,200 \\times 3\\text{ bytes} = 921,600\\text{ bytes} \\approx 900\\text{ kilobytes}$$\n\nIn 1987, a $$900\\text{ KB}$$ file was a monster:\n1. **RAM and Video Memory:** An entire Commodore 64 had only $$64\\text{ KB}$$ of RAM; a standard IBM PC topped out at $$640\\text{ KB}$$ of system RAM, and even IBM's brand-new 1987 VGA card held just $$256\\text{ KB}$$ of video memory.\n2. **Floppy Disks:** A standard 5.25-inch PC floppy disk held only $$360\\text{ KB}$$—meaning one $$24\\text{-bit}$$ photo wouldn't even fit on two disks!\n3. **Dial-Up Modems:** At $$1200\\text{ baud}$$ ($$120\\text{ bytes/sec}$$), downloading $$921,600\\text{ bytes}$$ would take **$$128\\text{ minutes}$$**—over two hours for a single picture!\n\nTo make color images practical, Wilhite needed a clever way to get near-photographic color at a fraction of $$3\\text{ bytes}$$ per pixel.",
+          "questions": [
+            {
+              "id": "q_029",
+              "prompt": "How much raw data does a single uncompressed 640 x 480 image require when stored in 24-bit true color (3 bytes per pixel)?",
+              "choices": [
+                "64,000 bytes (about 62.5 kilobytes).",
+                "307,200 bytes (about 300 kilobytes).",
+                "614,400 bytes (about 600 kilobytes).",
+                "921,600 bytes (about 900 kilobytes)."
+              ],
+              "correct_index": 3,
+              "explanation": "Multiplying 640 columns by 480 rows gives 307,200 pixels; at 3 bytes per pixel, the raw image requires 307,200 x 3 = 921,600 bytes (roughly 900 KB)."
+            },
+            {
+              "id": "q_030",
+              "prompt": "Why was an uncompressed 900-kilobyte 24-bit image completely impractical for typical personal computers in 1987?",
+              "choices": [
+                "It exceeded standard floppy capacities, overflowed typical video RAM, and took hours over dial-up.",
+                "Microprocessors in 1987 lacked the arithmetic instructions needed to count past 65,536 pixels.",
+                "Color monitors had not yet been invented for personal computers in 1987.",
+                "Operating systems in 1987 banned any file whose size was a multiple of three bytes."
+              ],
+              "correct_index": 0,
+              "explanation": "In 1987, a 900 KB image was larger than a 360 KB floppy disk, larger than a 256 KB VGA video buffer, and took more than two hours to transfer at 1200 baud."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_04",
+      "title": "4. The Paint-by-Numbers Trick: Color Quantization, Dithering \u0026 the 8-Bit Palette",
+      "summary": "Discover how GIF cuts raw pixel storage to a third of its $$24\\text{-bit}$$ size by acting like a digital paint-by-numbers kit. Trace how color quantization selects the $$256$$ best shades for a specific image, how an $$8\\text{-bit}$$ Color Lookup Table (CLUT) maps each $$1\\text{-byte}$$ index ($$0$$–$$255$$) to a full $$24\\text{-bit}$$ RGB triplet, and how checkerboard dithering fools the human eye into seeing smooth gradients.",
+      "introduced_terms": [
+        "Color Lookup Table (CLUT / indexed color palette)",
+        "color quantization",
+        "dithering (spatial color mixing)"
+      ],
+      "chunks": [
+        {
+          "id": "ch_016",
+          "title": "Why Every Picture Doesn't Need All 16.7 Million Colors at Once",
+          "content_markdown": "Suppose you are painting a portrait of a golden retriever sitting on a green lawn. Across the entire universe of art, there may be $$16,777,216$$ possible colors—including neon magenta, deep ocean teal, and fluorescent violet. But does *this specific dog portrait* use neon magenta or ocean teal? Not at all! Even a rich, detailed photograph of a dog on grass mostly uses a couple hundred shades of warm gold, brown, charcoal, sky blue, and lawn green.\n\nIn fact, look back at the math of our $$640 \\times 480$$ image: it only has $$307,200\\text{ pixels}$$ in total, so it could never display $$16.7\\text{ million}$$ colors simultaneously even if every single pixel were unique!\n\nThis observation inspired one of the smartest compromises in graphics history: instead of spending $$3\\text{ bytes}$$ at every single pixel to choose from $$16.7\\text{ million}$$ colors, what if each image brings along a custom painter's box holding just **$$256$$ carefully chosen colors** tailored to that specific picture?",
+          "questions": [
+            {
+              "id": "q_031",
+              "prompt": "What key insight about natural images makes indexed palette graphics practical?",
+              "choices": [
+                "Human eyes can only perceive three colors at a time when looking at a glass screen.",
+                "Any single picture typically uses a small, focused subset of the 16.7 million possible RGB shades.",
+                "Red and blue light cancel each other out whenever more than 256 pixels are lit on a monitor.",
+                "Most photographs consist entirely of pure black and pure white dots when viewed up close."
+              ],
+              "correct_index": 1,
+              "explanation": "While the full RGB color space spans 16.7 million shades, any individual photograph or illustration usually relies on a much narrower range of hues that can be well represented by 256 custom-selected colors."
+            },
+            {
+              "id": "q_032",
+              "prompt": "Why is it mathematically impossible for a single 640 x 480 image to display all 16,777,216 true-color shades simultaneously?",
+              "choices": [
+                "The grid contains only 307,200 total pixels, which is far fewer than 16,777,216.",
+                "The horizontal width of 640 is not evenly divisible by the three primary RGB channels.",
+                "Cathode-ray monitors erase the top half of the screen before drawing the bottom half.",
+                "Binary numbers cannot represent values larger than 307,200 without decimal points."
+              ],
+              "correct_index": 0,
+              "explanation": "Since each pixel can show only one color at a time, a 640 x 480 grid (307,200 pixels) can display at most 307,200 distinct colors at once—less than 2 percent of the 16.7 million possibilities."
+            }
+          ]
+        },
+        {
+          "id": "ch_017",
+          "title": "Digital Paint-by-Numbers: The Color Lookup Table (CLUT)",
+          "content_markdown": "Think of a classic children's paint-by-numbers kit. The cardboard canvas isn't pre-printed with heavy globs of oil paint on every square millimeter; instead, each region is stamped with a short number like `4` or `17`. At the top of the box sits a legend: *Pot 4 = burnt sienna, Pot 17 = sky cerulean.*\n\nGIF87a works the exact same way using a **Color Lookup Table (CLUT / indexed color palette)**. At the start of the file (or before an individual image frame), GIF stores a compact palette of up to $$256$$ numbered slots, indexed from $$0$$ to $$255$$.\n\nEach slot in the Color Lookup Table holds a full $$24\\text{-bit}$$ RGB recipe ($$3\\text{ bytes}$$: Red, Green, and Blue from $$0$$ to $$255$$). For example:\n- Slot `0` $$\\rightarrow (12, 24, 98)$$ (midnight navy)\n- Slot `1` $$\\rightarrow (245, 210, 60)$$ (warm gold)\n\nOnce that $$768\\text{-byte}$$ table ($$256 \\times 3\\text{ bytes}$$) is defined at the top of the file, every pixel on the canvas only needs to store a **$$1\\text{-byte}$$ index** ($$8\\text{ bits}$$, since $$2^8 = 256$$) pointing to its slot in the table—instantly slashing raw pixel data by **two-thirds**!",
+          "questions": [
+            {
+              "id": "q_033",
+              "prompt": "How does an 8-bit Color Lookup Table (CLUT) in a GIF file combine 1-byte pixels with 24-bit color precision?",
+              "choices": [
+                "Each pixel stores 24 bits of data, and the table discards 16 bits whenever the user's modem slows down.",
+                "Each pixel stores only its red value, and the table guesses the green and blue values from neighboring rows.",
+                "Each pixel stores a 1-byte slot number, and the table maps each slot to a 3-byte RGB triplet.",
+                "Each pixel alternates between red, green, and blue on three consecutive screen refreshes."
+              ],
+              "correct_index": 2,
+              "explanation": "In indexed color, the palette table holds up to 256 full 24-bit RGB definitions (3 bytes per slot), while each pixel in the grid stores only a 1-byte index (0–255) referencing one of those slots."
+            },
+            {
+              "id": "q_034",
+              "prompt": "How many bytes does a full 256-color Lookup Table occupy in a GIF file, and how much does indexed color reduce raw pixel storage compared to 24-bit true color?",
+              "choices": [
+                "The table takes 256 bytes and reduces pixel storage by one-half.",
+                "The table takes 768 bytes and reduces pixel storage by two-thirds.",
+                "The table takes 65,536 bytes and reduces pixel storage by ninety percent.",
+                "The table takes 3 bytes and keeps pixel storage identical to 24-bit true color."
+              ],
+              "correct_index": 1,
+              "explanation": "A 256-slot palette with 3 bytes (R, G, B) per slot occupies 256 x 3 = 768 bytes, and replacing 3-byte pixels with 1-byte palette indices cuts the raw pixel grid to one-third of its 24-bit size."
+            }
+          ]
+        },
+        {
+          "id": "ch_018",
+          "title": "Color Quantization: Choosing the 256 Best Crayons",
+          "content_markdown": "Suppose you scan a vibrant photograph that contains $$45,000$$ distinct shades of color, and you want to save it as a $$256\\text{-color}$$ GIF. How does the computer decide which $$256$$ colors earn a coveted spot in the Color Lookup Table, and what happens to the other $$44,744$$ shades?\n\nThis mathematical sorting process is called **color quantization**. A naive approach would be to divide the RGB cube into a fixed uniform grid regardless of the picture, but that wastes dozens of palette slots on bright greens and purples even when you are saving a warm sepia desert sunset.\n\nInstead, smart quantization algorithms (such as Paul Heckbert's *median-cut* algorithm) build an **adaptive palette** tailored to the image. If $$70\\%$$ of a portrait consists of subtle peach, tan, and espresso skin tones, the algorithm allocates most of the $$256$$ slots to finely graduated skin shades—and spends only a few slots on the small blue necktie in the corner. Every original pixel is then mapped to its closest matching neighbor in that custom $$256\\text{-slot}$$ palette.",
+          "questions": [
+            {
+              "id": "q_035",
+              "prompt": "What is the goal of adaptive color quantization when converting a true-color photograph into a 256-color GIF?",
+              "choices": [
+                "To enlarge the pixel grid so that every removed color is replaced by four black-and-white pixels.",
+                "To strip out all warm colors so the file can be transmitted over lower-frequency modem tones.",
+                "To encrypt the Color Lookup Table so only registered CompuServe subscribers can view the hues.",
+                "To select the 256 RGB shades that best represent the actual color distribution of that specific image."
+              ],
+              "correct_index": 3,
+              "explanation": "Adaptive color quantization analyzes the colors actually present in an image and populates the 256 palette slots with the shades that minimize visual error—allocating more slots to dominant gradients."
+            },
+            {
+              "id": "q_036",
+              "prompt": "Why does an adaptive palette usually look much better than a fixed uniform 256-color palette on a portrait photograph?",
+              "choices": [
+                "An adaptive palette concentrates its 256 slots on the subtle skin tones and hues that actually appear in the portrait.",
+                "A fixed uniform palette refuses to display primary red, green, or blue on standard monitors.",
+                "An adaptive palette secretly increases the GIF file's bit depth from 8 bits per pixel to 16 bits per pixel.",
+                "A fixed uniform palette forces the monitor to refresh at half its normal vertical scan rate."
+              ],
+              "correct_index": 0,
+              "explanation": "A fixed palette wastes slots on colors absent from the scene, whereas an adaptive palette dedicates its 256 entries to the fine shading transitions (such as skin tones) that dominate that image."
+            }
+          ]
+        },
+        {
+          "id": "ch_019",
+          "title": "Dithering: Fooling the Eye with Spatial Color Mixing",
+          "content_markdown": "Even with a smartly chosen $$256\\text{-color}$$ palette, smooth gradients—like a twilight sky fading slowly from deep indigo to pale rose—can still show ugly stair-step contour rings (called **color banding**) where pixels jump abruptly from Palette Slot `41` to Palette Slot `42`.\n\nTo erase those bands without adding a single new color to the palette, graphics artists use **dithering (spatial color mixing)**. Think of a 19th-century Pointillist painting by Georges Seurat, or a newspaper comic strip viewed under a magnifying glass: if you don't have pink ink, you print a tight checkerboard of tiny red and white dots. From normal reading distance, your eye's lens blends those neighboring dots into a smooth, convincing pink.\n\nAlgorithms like **Floyd–Steinberg error diffusion** automate this trick: when a pixel wants to be 'halfway between Slot `41` and Slot `42`,' the computer colors that pixel with Slot `41` and pushes the leftover 'color error' onto its neighbors, nudging them toward Slot `42`. The result is a fine, speckled weave that restores smooth gradients across the screen.",
+          "questions": [
+            {
+              "id": "q_037",
+              "prompt": "How does dithering create the illusion of intermediate shades that are not present in the 256-color Lookup Table?",
+              "choices": [
+                "It rapidly blinks the monitor's power supply to dim the screen during dark scenes.",
+                "It rewrites the computer's video memory chip to hold 512 slots instead of 256 slots.",
+                "It interweaves tiny patterns of existing palette colors so the human eye blends them from a distance.",
+                "It blurs the glass surface of the monitor using a high-frequency magnetic signal."
+              ],
+              "correct_index": 2,
+              "explanation": "Like Pointillist painting or halftone printing, dithering arranges available palette colors in fine spatial patterns (such as checkerboards or error-diffused speckles) that the human visual system integrates into intermediate hues."
+            },
+            {
+              "id": "q_038",
+              "prompt": "What visual defect in smooth sky or shadow gradients is dithering specifically designed to prevent?",
+              "choices": [
+                "Horizontal screen rolling caused by mismatched television refresh rates.",
+                "Visible stair-step contour rings where areas jump abruptly between palette slots.",
+                "Complete loss of the green channel when files are copied between different disk drives.",
+                "Mirror-image reversal of text labels located near the bottom edge of a picture."
+              ],
+              "correct_index": 1,
+              "explanation": "Without dithering, a limited palette forces smooth gradients to snap abruptly from one palette shade to the next, creating artificial contour stripes known as color banding."
+            }
+          ]
+        },
+        {
+          "id": "ch_020",
+          "title": "Flexible Palettes (From 2 to 256 Colors) and the Compression Catch",
+          "content_markdown": "Steve Wilhite added one more thoughtful touch to GIF87a's palette design: you don't have to pay for a full $$256\\text{-slot}$$ table if your image only uses a few colors. A GIF file can declare a palette of any power of two from $$2^1 = 2$$ colors (black and white, taking just $$6\\text{ bytes}$$ for the table) up through $$4, 8, 16, 32, 64, 128,$$ or $$256$$ colors. Moreover, if a GIF file contains multiple images on a shared screen, all images can share a **Global Color Table** at the start of the file, or an individual image can bring its own **Local Color Table**.\n\nCutting each pixel from $$3\\text{ bytes}$$ down to $$1\\text{ byte}$$ (or less) already shrinks our $$640 \\times 480$$ image from $$921,600\\text{ bytes}$$ to about $$307,968\\text{ bytes}$$ (including the $$768\\text{-byte}$$ palette). Yet $$300\\text{ KB}$$ still took over **$$42\\text{ minutes}$$** to download at $$1200\\text{ baud}$$!\n\nTo shrink that $$300\\text{ KB}$$ grid down to $$20\\text{ KB}$$ or $$40\\text{ KB}$$ without losing a single pixel, we need lossless data compression—and as we are about to see, those clever dithered checkerboards we just praised are going to break traditional compression wide open.",
+          "questions": [
+            {
+              "id": "q_039",
+              "prompt": "How does GIF87a avoid wasting space in the Color Lookup Table when an image is a simple 4-color cartoon logo?",
+              "choices": [
+                "It omits the Color Lookup Table completely and forces the monitor to guess the four colors.",
+                "It converts the cartoon logo into a plain ASCII text paragraph before saving the file.",
+                "It stores the remaining 252 unused palette slots on a separate floppy disk.",
+                "It allows the header to declare a smaller power-of-two palette of just four 3-byte slots."
+              ],
+              "correct_index": 3,
+              "explanation": "GIF87a lets a file specify any power-of-two palette size from 2^1 (2 colors) to 2^8 (256 colors), so a 4-color image only needs a 12-byte (4 x 3 bytes) color table."
+            },
+            {
+              "id": "q_040",
+              "prompt": "Even after an 8-bit Color Lookup Table cuts a 640 x 480 image from ~900 KB down to ~300 KB, why did GIF87a still require a powerful compression algorithm?",
+              "choices": [
+                "A 300 KB uncompressed grid still took over 40 minutes to transfer across a 1200-baud phone line.",
+                "CompuServe servers rejected any file that contained repeated palette index numbers.",
+                "Telephone modems could not transmit numbers between 0 and 255 unless they were scrambled first.",
+                "Standard computer monitors could not read uncompressed bytes from a hard drive."
+              ],
+              "correct_index": 0,
+              "explanation": "At 120 bytes per second (1200 baud), transferring 307,200 bytes of raw 8-bit pixel indices still took roughly 42 minutes, making strong lossless compression essential."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_05",
+      "title": "5. Visual Redundancy \u0026 Why Run-Length Encoding (RLE) Hits a Wall",
+      "summary": "Distinguish between lossy compression (which permanently discards detail) and lossless compression (which reconstructs every pixel bit-for-bit). Examine how early formats like PCX and MacPaint used Run-Length Encoding (RLE) to collapse solid horizontal color streaks into '(count, color)' pairs—and why RLE fails or even bloats file sizes when confronted with dithered checkerboards and multi-pixel textures.",
+      "introduced_terms": [
+        "lossless vs. lossy compression",
+        "Run-Length Encoding (RLE)",
+        "dithered-pattern RLE expansion"
+      ],
+      "chunks": [
+        {
+          "id": "ch_021",
+          "title": "Why Most Pictures Are Full of Repetition",
+          "content_markdown": "Open almost any graphic—a weather map of North America, a corporate bar chart, or a portrait against a blue sky—and scan your eyes across a single horizontal row of pixels from left to right. You will immediately notice something striking: neighboring pixels are rarely strangers.\n\nIf Pixel 10 in the top row is sky blue, there is an overwhelmingly high chance that Pixel 11, Pixel 12, and the next two hundred pixels across that row are also sky blue—or part of a repeating cloud texture. Information theorists call this predictability **visual redundancy**.\n\nStoring `Blue, Blue, Blue, Blue...` two hundred separate times in a file is like a sportscaster shouting *'The grass is green! The grass is still green!'* every second of a soccer match. Data compression works by spotting that repetition and expressing it in a much shorter shorthand before sending the file over the phone line.",
+          "questions": [
+            {
+              "id": "q_041",
+              "prompt": "What do computer scientists mean by 'visual redundancy' in a typical digital image?",
+              "choices": [
+                "Every image file automatically stores two identical backup copies of the picture at the end of the disk.",
+                "Neighboring pixels and regions frequently share identical colors or recurring patterns rather than random static.",
+                "Computer monitors require both a digital cable and an analog cable to display the same pixel.",
+                "Human eyes contain two retinas that view the same screen from slightly different angles."
+              ],
+              "correct_index": 1,
+              "explanation": "Visual redundancy refers to the statistical predictability of real-world images, where adjacent pixels and regions tend to repeat the same colors or textures rather than varying like random static."
+            },
+            {
+              "id": "q_042",
+              "prompt": "Which type of image contains the LEAST visual redundancy and is therefore the hardest for any algorithm to compress?",
+              "choices": [
+                "A corporate logo featuring a solid blue rectangle on a white background.",
+                "A weather map showing three large bands of green, yellow, and orange.",
+                "A screen filled with pure random television snow where every pixel is independent.",
+                "A black-and-white line drawing of a house with wide empty margins."
+              ],
+              "correct_index": 2,
+              "explanation": "Pure random noise (static) has almost zero redundancy because knowing one pixel gives no clue about the next pixel, leaving no repeating patterns for a compressor to shorten."
+            }
+          ]
+        },
+        {
+          "id": "ch_022",
+          "title": "Lossless vs. Lossy Compression: Rebuilding Every Pixel Bit for Bit",
+          "content_markdown": "Once you decide to shrink an image file, you face a fundamental fork in the road: **lossless vs. lossy compression**.\n\n**Lossy compression** (made famous a few years later by the JPEG photographic standard in 1992) shrinks files aggressively by throwing away subtle visual details that the human eye barely notices. Once discarded, those original pixel values are gone forever; if you compress and re-save a lossy image repeatedly, blurry block artifacts accumulate like a photocopy of a photocopy.\n\nIn 1987, however, once an image had already been quantized down to an $$8\\text{-bit}$$ palette ($$256$$ slots), throwing away or blurring palette index numbers would be disastrous! If index `14` is bright red and index `15` is dark green, 'averaging' or slightly altering index `14` into `15` turns a red apple into a green leaf. Therefore, GIF87a's compression step had to be **100 percent lossless**: when the decoder unpacks the compressed stream, it must reconstruct every single pixel's palette index *bit for bit* without a single alteration.",
+          "questions": [
+            {
+              "id": "q_043",
+              "prompt": "What is the defining guarantee of a lossless compression algorithm?",
+              "choices": [
+                "Decompressing the file reconstructs the exact original sequence of data bit for bit with zero changes.",
+                "The compressed file will always be at least ten times smaller than the original uncompressed file.",
+                "The image can still be viewed normally even if half of the file is lost during a phone disconnection.",
+                "Subtle background details are permanently smoothed out to save space without changing the foreground."
+              ],
+              "correct_index": 0,
+              "explanation": "Lossless compression guarantees that unpacking the compressed data yields an exact, bit-for-bit duplicate of the original input stream."
+            },
+            {
+              "id": "q_044",
+              "prompt": "Why would applying lossy numeric approximation directly to 8-bit palette index numbers ruin a GIF image?",
+              "choices": [
+                "Lossy compression only works on black-and-white images and crashes when given more than two colors.",
+                "Changing a single palette index causes the computer's floppy drive motor to spin backward.",
+                "Palette tables are stored in read-only memory chips that physically melt if approximated.",
+                "Palette indices are arbitrary slot numbers, so nudging index 14 to index 15 could swap red for green."
+              ],
+              "correct_index": 3,
+              "explanation": "Because adjacent slot numbers in a Color Lookup Table may point to completely unrelated RGB colors, slightly altering an index number can substitute a wildly different color on screen."
+            }
+          ]
+        },
+        {
+          "id": "ch_023",
+          "title": "Run-Length Encoding (RLE): Counting Consecutive Streaks",
+          "content_markdown": "Before GIF87a arrived, almost every popular paint format—including MacPaint (`.MAC`), PC Paintbrush (`.PCX`), and CompuServe's own early monochrome format—relied on the simplest lossless technique in computing: **Run-Length Encoding (RLE)**.\n\nImagine reading a single row of $$20$$ pixels across a simple flag:\n`Blue, Blue, Blue, Blue, Blue, Blue, Blue, Blue, White, White, White, White, Red, Red, Red, Red, Red, Red, Red, Red`\n\nInstead of writing out $$20$$ separate pixel values, Run-Length Encoding counts each uninterrupted horizontal streak (or **run**) of identical pixels and writes a compact `(count, color)` pair:\n`(8, Blue), (4, White), (8, Red)`\n\nJust like that, $$20\\text{ bytes}$$ of raw pixel data shrink down to $$6\\text{ bytes}$$ (three 2-byte pairs)! On cartoons, architectural diagrams, and flat-shaded charts with wide horizontal bands of solid color, RLE is lightning-fast and shrinks files dramatically.",
+          "questions": [
+            {
+              "id": "q_045",
+              "prompt": "How does basic Run-Length Encoding (RLE) compress a horizontal row of pixels?",
+              "choices": [
+                "It sorts all pixels in the row alphabetically by color name and deletes every odd-numbered pixel.",
+                "It replaces consecutive streaks of identical pixel values with a count followed by the repeated value.",
+                "It averages every group of four neighboring pixels into a single wider pixel of intermediate brightness.",
+                "It looks up entire words in an English dictionary and replaces them with page numbers."
+              ],
+              "correct_index": 1,
+              "explanation": "Run-Length Encoding (RLE) scans for contiguous runs of identical symbols and encodes each streak as a compact (run-length count, symbol value) pair."
+            },
+            {
+              "id": "q_046",
+              "prompt": "If a simple RLE encoder stores each run as a 2-byte pair (count, color), how many bytes does it need to encode a solid horizontal row of 100 identical blue pixels?",
+              "choices": [
+                "100 bytes.",
+                "50 bytes.",
+                "10 bytes.",
+                "2 bytes."
+              ],
+              "correct_index": 3,
+              "explanation": "A single uninterrupted streak of 100 identical blue pixels collapses into one 2-byte pair: (100, Blue)."
+            }
+          ]
+        },
+        {
+          "id": "ch_024",
+          "title": "The Dithering Trap: When RLE Makes Files Larger!",
+          "content_markdown": "If Run-Length Encoding is so fast and simple, why didn't Steve Wilhite just use RLE for GIF87a? Look back at Section 4, where we used **dithering** to make $$256\\text{-color}$$ photographs and smooth sky gradients look lifelike.\n\nIn a dithered pink sky, a horizontal row of pixels doesn't say `Red, Red, Red, Red, White, White, White, White`. Instead, it alternates on every single dot:\n`Red, White, Red, White, Red, White, Red, White`\n\nWatch what happens when a simple RLE encoder tries to count consecutive identical pixels across that $$8\\text{-pixel}$$ dithered row:\n`(1, Red), (1, White), (1, Red), (1, White), (1, Red), (1, White), (1, Red), (1, White)`\n\nBecause no two adjacent pixels are identical, every 'run' has a length of $$1$$! Writing a `(count, color)` pair for every single pixel turns $$8\\text{ bytes}$$ of raw data into **$$16\\text{ bytes}$$**—a disaster known as **dithered-pattern RLE expansion**. Even cleverer RLE variants (like `.PCX` and MacPaint PackBits, which use special marker bits to pass non-repeating pixels through) fail to compress dithered shading at all, leaving the file near $$100\\%$$ of its raw uncompressed size.",
+          "questions": [
+            {
+              "id": "q_047",
+              "prompt": "Why does simple Run-Length Encoding (RLE) fail miserably on a checkerboard dithered gradient like 'Red, White, Red, White, Red, White'?",
+              "choices": [
+                "Every adjacent pixel changes color, reducing every run length to 1 and eliminating consecutive streaks.",
+                "RLE encoders can only count even numbers of pixels and crash when a color appears once.",
+                "Dithering introduces negative palette index numbers that RLE counters cannot represent.",
+                "RLE automatically deletes every white pixel when it detects an alternating checkerboard pattern."
+              ],
+              "correct_index": 0,
+              "explanation": "Because RLE only spots consecutive repeats of a single identical value, an alternating pattern (Red, White, Red, White...) breaks every run into length 1, preventing compression or even expanding the file."
+            },
+            {
+              "id": "q_048",
+              "prompt": "What happens to the file size of an 8-pixel alternating row ('Red, White, Red, White, Red, White, Red, White') under a naive RLE scheme that outputs a 2-byte (count, color) pair for every run?",
+              "choices": [
+                "It shrinks from 8 bytes down to 2 bytes.",
+                "It shrinks from 8 bytes down to 4 bytes.",
+                "It expands from 8 bytes up to 16 bytes.",
+                "It stays at exactly 8 bytes."
+              ],
+              "correct_index": 2,
+              "explanation": "Since all 8 pixels have a run length of 1, outputting a 2-byte (count, color) pair for each of the 8 runs produces 8 x 2 = 16 bytes—doubling the size of the raw data."
+            }
+          ]
+        },
+        {
+          "id": "ch_025",
+          "title": "Beyond Single-Pixel Streaks: The Need for Pattern Memory",
+          "content_markdown": "Look again at that dithered row: `Red, White, Red, White, Red, White, Red, White`.\n\nTo a human reader, that row is *intensely* repetitive! The two-pixel pair `Red, White` repeats four times in a row, and the four-pixel phrase `Red, White, Red, White` repeats twice. The same is true across brick walls, woven fabrics, grassy lawns, and textured game backgrounds: the image is full of repeating **multi-pixel patterns**, not just solid single-color streaks.\n\nRun-Length Encoding is blind to `Red, White, Red, White` because RLE has the memory of a goldfish: it can only remember the *single pixel* it just saw a microsecond ago.\n\nWhat if, instead of only counting consecutive clones of one pixel, a compression algorithm could learn multi-pixel *phrases* as it reads the image—remembering that Code `258` means `'Red, White'` and Code `260` means `'Red, White, Red, White'`? That exact breakthrough had been brewing in information theory since 1977.",
+          "questions": [
+            {
+              "id": "q_049",
+              "prompt": "Why can a human immediately see repetition in 'Red, White, Red, White, Red, White' even though Run-Length Encoding sees none?",
+              "choices": [
+                "Humans ignore white pixels completely and only see a solid line of red pixels.",
+                "The repetition occurs as a multi-pixel sequence ('Red, White') rather than consecutive identical single pixels.",
+                "Run-Length Encoding scans images vertically from bottom to top instead of horizontally.",
+                "The human eye converts alternating red and white pixels into pure black."
+              ],
+              "correct_index": 1,
+              "explanation": "While RLE can only detect runs of a single identical value, the pattern 'Red, White, Red, White...' repeats a multi-pixel phrase ('Red, White') over and over."
+            },
+            {
+              "id": "q_050",
+              "prompt": "What capability must a compression algorithm possess to compress dithered gradients and textured backgrounds effectively?",
+              "choices": [
+                "The ability to recognize and assign shorthand codes to recurring multi-pixel sequences.",
+                "The ability to blur alternating checkerboards into a single solid intermediate color.",
+                "The ability to discard every second scan line before transmitting the image over a modem.",
+                "The ability to convert raster pixel grids into 3D wireframe triangles."
+              ],
+              "correct_index": 0,
+              "explanation": "By remembering and encoding recurring multi-pixel phrases (such as 'Red, White' or 'Red, White, Red, White'), a dictionary compressor can collapse both solid runs and dithered textures."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_06",
+      "title": "6. Lempel and Ziv's Dictionary Breakthrough: From LZ77 to LZ78 (1977–1978)",
+      "summary": "Follow Israeli computer scientists Abraham Lempel and Jacob Ziv as they revolutionize data compression in 1977 and 1978. Contrast LZ77's backward-looking sliding window with LZ78's explicit dynamic dictionary, where recurring sequences of characters or pixels—including alternating dither patterns—are assigned short numerical codewords on the fly as the file is read.",
+      "introduced_terms": [
+        "LZ77 sliding-window compression",
+        "LZ78 dynamic dictionary compression",
+        "dictionary codeword (token)"
+      ],
+      "chunks": [
+        {
+          "id": "ch_026",
+          "title": "Two Israeli Researchers Rethink Redundancy (1977)",
+          "content_markdown": "In the mid-1970s at the Technion (Israel Institute of Technology) in Haifa, electrical engineer **Jacob Ziv** and computer scientist **Abraham Lempel** tackled a question that had puzzled engineers since the dawn of telegraphy: how do you compress a stream of data when you don't know ahead of time what language, picture, or pattern is inside it?\n\nOlder compression methods (like Morse code or Huffman coding) worked by counting which individual letters were most common—giving `'E'` a tiny code and `'Z'` a long code—or required scanning the entire file twice to build a custom frequency chart.\n\nIn two landmark papers published in May 1977 and September 1978, Ziv and Lempel introduced a radically different idea: **adaptive compression on the fly**. Instead of pre-scanning a file or only counting single symbols, their algorithms learned recurring multi-symbol phrases in a single pass as the data streamed by—turning the data's own recent past into its lookup codebook.",
+          "questions": [
+            {
+              "id": "q_051",
+              "prompt": "How did Abraham Lempel and Jacob Ziv's 1977–1978 compression approach differ from older single-letter frequency schemes like Morse code?",
+              "choices": [
+                "It learned recurring multi-symbol phrases adaptively in a single pass without needing a pre-built frequency table.",
+                "It required a human operator to manually type a custom translation dictionary before sending each file.",
+                "It permanently deleted rare characters like 'Q' and 'Z' so common vowels could use fewer bits.",
+                "It worked exclusively on spoken Hebrew audio recordings and could not compress written text or pixels."
+              ],
+              "correct_index": 0,
+              "explanation": "Lempel and Ziv's algorithms dynamically discovered and encoded multi-symbol substrings on the fly as the data streamed past, requiring zero prior knowledge of the file's contents."
+            },
+            {
+              "id": "q_052",
+              "prompt": "Why is an 'adaptive single-pass' algorithm ideal for compressing a variety of files from English text to dithered graphics?",
+              "choices": [
+                "It forces every file to use the exact same pre-installed English dictionary stored in the monitor.",
+                "It automatically tailors its shorthand to whatever patterns actually repeat inside the current file.",
+                "It converts all binary data into spoken words that travel faster over copper telephone wires.",
+                "It skips the first half of every file so the user only has to download the second half."
+              ],
+              "correct_index": 1,
+              "explanation": "Because an adaptive algorithm builds its pattern memory from the stream itself, it seamlessly adapts whether the file repeats English words like 'the' or alternating dither pixels like 'Red, White'."
+            }
+          ]
+        },
+        {
+          "id": "ch_027",
+          "title": "1977: LZ77 and the Backward-Looking Sliding Window",
+          "content_markdown": "Their first breakthrough, published in 1977 and forever known as **LZ77 sliding-window compression**, works like an editor who points backward at a sentence they just wrote.\n\nImagine the compressor is reading the nursery rhyme:\n`BLAH BLAH BLUR`\n\nAfter reading the first five characters (`BLAH `), the encoder reaches the second `BLAH `. Instead of writing those letters out again, LZ77 looks backward into a recent history buffer—a **sliding window** of the last few thousand characters—and emits a compact pointer: *(go back $$5$$ positions, copy $$4$$ characters)*.\n\nBetter yet, what if a pattern repeats immediately, like our dithered pixel row `Red, White, Red, White, Red, White`? After seeing the first `Red, White`, LZ77 can say *(go back $$2$$ positions, copy $$4$$ pixels)*—copying from what it is currently laying down! LZ77 was so effective that decades later it became the core engine inside `.ZIP` archives, `gzip`, and `.PNG` images.",
+          "questions": [
+            {
+              "id": "q_053",
+              "prompt": "How does LZ77 sliding-window compression represent a phrase that has already appeared recently in the data stream?",
+              "choices": [
+                "It replaces the phrase with the page and line number of the Oxford English Dictionary.",
+                "It deletes all spaces and vowels inside the repeated phrase while keeping the consonants.",
+                "It emits a backward-looking pointer specifying how far back to look and how many symbols to copy.",
+                "It moves every repeated phrase to a separate appendix file at the end of the disk."
+              ],
+              "correct_index": 2,
+              "explanation": "LZ77 maintains a sliding window of recently processed data and encodes matching sequences as (distance back, length to copy) pointer pairs."
+            },
+            {
+              "id": "q_054",
+              "prompt": "In LZ77, why is the history buffer called a 'sliding window'?",
+              "choices": [
+                "The user must drag a graphical window across the monitor with a mouse to reveal the image.",
+                "The algorithm only compresses pixels located near the outer glass frame of a picture.",
+                "The modem shifts its audio pitch up and down like a slide trombone during transmission.",
+                "As new bytes are read, the fixed-size lookback buffer moves forward along the data stream."
+              ],
+              "correct_index": 3,
+              "explanation": "Because computer memory is finite, LZ77 keeps track of the most recent N bytes; as encoding advances, this fixed-length window slides forward so new data enters and old data drops off."
+            }
+          ]
+        },
+        {
+          "id": "ch_028",
+          "title": "1978: LZ78 and the Dynamic Numbered Dictionary",
+          "content_markdown": "Wait: what if a distinctive logo pattern or sky texture appears at the top of a picture, disappears during the middle third of the image, and then returns near the bottom—long after it has fallen out of LZ77's short sliding window? And what if searching backward through thousands of raw bytes for the longest match is too slow for a 1970s or 1980s processor?\n\nIn 1978, Ziv and Lempel published a second, distinct algorithm: **LZ78 dynamic dictionary compression**. Instead of pointing backward by distance along a raw sliding window, LZ78 builds an explicit **numbered phrasebook**—a dynamic dictionary—as it reads.\n\nEach time LZ78 encounters a new combination of symbols, it writes that phrase onto the next numbered line of its scratchpad dictionary and assigns it a compact **dictionary codeword (token)**. From that moment on, whether that phrase reappears two pixels later or ten thousand pixels later, the encoder can refer to it by its short dictionary entry number!",
+          "questions": [
+            {
+              "id": "q_055",
+              "prompt": "How does LZ78 dynamic dictionary compression fundamentally differ from LZ77 sliding-window compression?",
+              "choices": [
+                "LZ78 builds an explicit numbered table of phrases rather than emitting relative distance-and-length pointers.",
+                "LZ78 permanently discards every third pixel to shrink the image, whereas LZ77 is completely lossless.",
+                "LZ78 can only compress 24-bit color photographs, whereas LZ77 can only compress plain ASCII text.",
+                "LZ78 requires the user to mail a printed codebook to the recipient before sending the digital file."
+              ],
+              "correct_index": 0,
+              "explanation": "While LZ77 points backward by offset and length into a sliding window of recent raw bytes, LZ78 constructs a numbered dictionary table of phrases and references them by entry index."
+            },
+            {
+              "id": "q_056",
+              "prompt": "What is a 'dictionary codeword (token)' in an LZ78-style compression system?",
+              "choices": [
+                "A hardware security key required to log into CompuServe's dial-up billing server.",
+                "A compact numeric index that stands in for a multi-symbol phrase stored in the dictionary table.",
+                "A special marker byte that tells the monitor to turn off its electron beam between scan lines.",
+                "A three-byte RGB color value stored inside the image's Color Lookup Table."
+              ],
+              "correct_index": 1,
+              "explanation": "A dictionary codeword (or token) is the short numerical ID assigned to a specific character or pixel sequence in the compressor's lookup table."
+            }
+          ]
+        },
+        {
+          "id": "ch_029",
+          "title": "How LZ78 Grows Its Phrasebook One Character at a Time",
+          "content_markdown": "How does LZ78 build its dictionary from scratch? It starts with just Entry `0` representing the empty string (`''`), and each step outputs a pair: `(existing dictionary index, next novel character)`.\n\nLet's trace LZ78 on the repeating dither sequence `A B A B A B`:\n1. **Read `'A'`:** Not in dictionary yet! Output `(0, 'A')` (meaning *empty string + `'A'`*), and add **Entry `1` = `'A'`** to the dictionary.\n2. **Read `'B'`:** Not in dictionary yet! Output `(0, 'B')`, and add **Entry `2` = `'B'`**.\n3. **Read `'A'`, then peek at `'B'`:** `'A'` is already Entry `1`, and `'AB'` is new! Output `(1, 'B')` (meaning *Entry `1` + `'B'`*), and add **Entry `3` = `'AB'`**.\n4. **Read `'A'`, `'B'`, then peek at `'A'`:** `'AB'` is already Entry `3`, and `'ABA'` is new! Output `(3, 'A')` (meaning *Entry `3` + `'A'`*), and add **Entry `4` = `'ABA'`**.\n\nNotice the magic: every time a known phrase appears, LZ78 extends it by one symbol, turning a 2-pixel phrase (`'AB'`) into a 3-pixel phrase (`'ABA'`), then 4 pixels, and so on!",
+          "questions": [
+            {
+              "id": "q_057",
+              "prompt": "In the original 1978 LZ78 algorithm, what two pieces of information does the encoder output at each step?",
+              "choices": [
+                "The distance backward in bytes, followed by the total number of bytes to copy forward.",
+                "The red channel brightness, followed by the sum of the green and blue channel brightnesses.",
+                "The index of the longest matching dictionary entry, followed by the next character that extended it.",
+                "The total number of times a pixel repeats consecutively, followed by its palette slot."
+              ],
+              "correct_index": 2,
+              "explanation": "LZ78 emits pairs of the form (dictionary index of longest known prefix, next novel symbol) and registers that combined string as the next dictionary entry."
+            },
+            {
+              "id": "q_058",
+              "prompt": "Why do dictionary entries in LZ78 naturally grow longer and more powerful as a repeating texture continues?",
+              "choices": [
+                "Each new entry merges all previously created entries into a single giant string.",
+                "The encoder doubles the resolution of the image every time it finishes reading a horizontal row.",
+                "The dictionary automatically downloads longer English phrases from a central mainframe server.",
+                "Each match combines an existing multi-symbol dictionary entry with one additional following symbol."
+              ],
+              "correct_index": 3,
+              "explanation": "Because every step takes the longest already-known entry (say length L) and appends the next symbol to form a new entry of length L + 1, recurring textures quickly build long multi-pixel phrases."
+            }
+          ]
+        },
+        {
+          "id": "ch_030",
+          "title": "The Clunky Catch in LZ78—and Terry Welch's Question",
+          "content_markdown": "Take a critical look at the output pairs our LZ78 encoder just produced:\n`(0, 'A'), (0, 'B'), (1, 'B'), (3, 'A')...`\n\nOn the bright side, the receiver doesn't need the dictionary mailed ahead of time—because every pair explicitly spells out `(old entry number, new raw character)`, the decoder can build the exact same dictionary table as it unpacks the pairs.\n\nOn the downside, look at how much baggage LZ78 is still carrying! At the start of the file, it wastes output steps just learning single characters like `'A'` and `'B'`. Worse still, *every single step* has to transmit both a **dictionary codeword** AND a **raw uncompressed character** (`'A'` or `'B'`) right beside it. Those raw characters clutter up the output stream and limit how tightly the file can shrink.\n\nIn 1984, a computer engineer named **Terry Welch** looked at LZ78 and asked a brilliant question: *What if we pre-fill the dictionary with every single character before we even start—and never transmit a raw character again?*",
+          "questions": [
+            {
+              "id": "q_059",
+              "prompt": "What inefficiency in the original LZ78 output format limited its compression ratio?",
+              "choices": [
+                "Every output token had to carry both a dictionary index and an explicit raw uncompressed symbol.",
+                "The entire dictionary table had to be transmitted uncompressed at the start and end of every row.",
+                "LZ78 could only store up to eight phrases in its dictionary before crashing.",
+                "Every dictionary entry had to be padded with spaces until it was exactly 80 characters long."
+              ],
+              "correct_index": 0,
+              "explanation": "Because LZ78 started with an empty dictionary and output (index, raw character) pairs at every step, transmitting those explicit raw characters alongside the codewords added significant overhead."
+            },
+            {
+              "id": "q_060",
+              "prompt": "What key insight did Terry Welch propose in 1984 to eliminate raw characters from the LZ78 output stream?",
+              "choices": [
+                "Delete all single symbols that appear fewer than ten times before compressing the file.",
+                "Pre-populate the dictionary with all possible single symbols so the encoder only ever emits code numbers.",
+                "Replace all numeric dictionary indices with spoken phonetic syllables.",
+                "Switch back to Run-Length Encoding whenever a dithered checkerboard pattern appears."
+              ],
+              "correct_index": 1,
+              "explanation": "Terry Welch realized that if both encoder and decoder initialize their dictionary with all possible single-symbol values, the stream needs to contain only dictionary code numbers."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_07",
+      "title": "7. Terry Welch's 1984 LZW Innovation \u0026 GIF's Pre-Populated Starting Table",
+      "summary": "Unpack how Sperry researcher Terry Welch streamlined LZ78 in 1984 to create Lempel–Ziv–Welch (LZW) compression, sending only code numbers without explicit next-character pairs. See how GIF pre-populates its starting dictionary with all $$256$$ single-pixel palette indices ($$0$$–$$255$$) plus two special control codes—Clear ($$256$$) and End of Information ($$257$$)—so no dictionary table ever has to be stored inside the file.",
+      "introduced_terms": [
+        "Lempel–Ziv–Welch (LZW) algorithm",
+        "implicit pre-populated root table (indices 0–255)",
+        "Clear code (256) and End-of-Information code (257)"
+      ],
+      "chunks": [
+        {
+          "id": "ch_031",
+          "title": "Terry Welch's 1984 Paper: Sending Only Code Numbers",
+          "content_markdown": "In June 1984, **Terry Welch**, a researcher at the Sperry Research Center in Sudbury, Massachusetts, published a landmark paper in *IEEE Computer* titled *'A Technique for High-Performance Data Compression.'* Welch was looking for a fast, hardware-friendly way to compress data flowing onto high-speed mainframe disk drives, and his refinement of Lempel and Ziv's 1978 dictionary idea became universally known as the **Lempel–Ziv–Welch (LZW) algorithm**.\n\nWelch's big realization was simple: why does LZ78 have to transmit `(0, 'A')` just to teach the decoder that the single byte `'A'` exists? Both computers already know beforehand that a byte can only ever hold one of $$256$$ possible single-symbol values ($$0$$ through $$255$$)!\n\nBy agreeing in advance that the first $$256$$ dictionary entries *already* hold every possible single byte, the encoder never has to transmit a `(code, raw character)` pair. An LZW stream consists of **100 percent dictionary code numbers** from start to finish.",
+          "questions": [
+            {
+              "id": "q_061",
+              "prompt": "What does the compressed output stream of the Lempel–Ziv–Welch (LZW) algorithm consist of?",
+              "choices": [
+                "A continuous sequence of dictionary code numbers with no explicit raw characters mixed in.",
+                "Alternating pairs of backward distance pointers and uncompressed RGB color triplets.",
+                "A pre-computed frequency table of the 100 most common pixel runs followed by raw bytes.",
+                "Plain English words describing the geometric shapes and gradients in the picture."
+              ],
+              "correct_index": 0,
+              "explanation": "By pre-populating the dictionary with all possible single-symbol roots, Terry Welch's LZW algorithm eliminated LZ78's explicit character field and transmitted only dictionary code numbers."
+            },
+            {
+              "id": "q_062",
+              "prompt": "Why doesn't an LZW encoder need to waste output tokens teaching the decoder about single-byte values the first time they appear?",
+              "choices": [
+                "Single-byte values are never compressed and are sent over a separate second telephone line.",
+                "The LZW algorithm automatically deletes any single byte that does not repeat at least twice.",
+                "Both encoder and decoder pre-populate their starting dictionaries with all possible single-symbol values.",
+                "The user must type in a list of all single-byte values present in the picture before opening it."
+              ],
+              "correct_index": 2,
+              "explanation": "Because the set of possible single symbols (such as byte values 0–255) is known in advance, both sides initialize their dictionaries with those single-symbol roots before processing the first pixel."
+            }
+          ]
+        },
+        {
+          "id": "ch_032",
+          "title": "GIF's Pre-Populated Root Table: Indices 0 through 255",
+          "content_markdown": "When Steve Wilhite adopted LZW for GIF87a in 1987, Welch's pre-populated dictionary fit GIF's $$8\\text{-bit}$$ Color Lookup Table like a key in a lock.\n\nIn a standard $$256\\text{-color}$$ GIF image, every pixel is a palette index between $$0$$ and $$255$$. Therefore, before reading a single pixel of the picture, both the GIF encoder and the GIF decoder silently initialize an **implicit pre-populated root table (indices 0–255)**:\n- Dictionary Entry `0` $$=$$ single pixel of Palette Color `0`\n- Dictionary Entry `1` $$=$$ single pixel of Palette Color `1`\n- $$\\dots$$\n- Dictionary Entry `255` $$=$$ single pixel of Palette Color `255`\n\nWhy is the word **implicit** so important here? Because this starting table of $$256$$ single-pixel entries is built into the rules of GIF itself—it **never has to be written into the file**! Zero bytes of phone-line bandwidth are spent transmitting the dictionary.",
+          "questions": [
+            {
+              "id": "q_063",
+              "prompt": "In a 256-color GIF file, what do LZW dictionary entries 0 through 255 represent at the start of compression?",
+              "choices": [
+                "The 256 most common 10-pixel horizontal streaks found during a pre-scan of the image.",
+                "The 256 individual single-pixel palette indices from the Color Lookup Table.",
+                "The 256 ASCII text characters used to write the image creator's copyright notice.",
+                "The 256 telephone area codes supported by CompuServe's dial-up network."
+              ],
+              "correct_index": 1,
+              "explanation": "In a 256-color GIF, the root dictionary entries 0 through 255 correspond one-to-one with the 256 single-pixel palette indices."
+            },
+            {
+              "id": "q_064",
+              "prompt": "How many bytes inside a GIF file are spent storing the LZW dictionary table itself?",
+              "choices": [
+                "256 bytes, stored right after the Color Lookup Table at the top of the file.",
+                "4,096 bytes, appended as a mandatory footer at the very end of the file.",
+                "12,288 bytes, split evenly across the four interlaced passes of the image.",
+                "Zero bytes, because the starting root table is implicit and all new entries are rebuilt on the fly."
+              ],
+              "correct_index": 3,
+              "explanation": "A GIF file never stores or transmits the LZW dictionary; both sides start from the same implicit root table (0–255) and construct identical multi-pixel entries dynamically from the code stream."
+            }
+          ]
+        },
+        {
+          "id": "ch_033",
+          "title": "Reserved Control Codes: Clear (256) and End of Information (257)",
+          "content_markdown": "If slots `0` through `255` hold all $$256$$ single-pixel colors, does the first multi-pixel dictionary phrase get assigned to slot `256`? Almost—but Steve Wilhite reserved two special slot numbers right above the root colors as traffic-control signals for the decoder: the **Clear code (256) and End-of-Information code (257)**.\n\nHere is what those two reserved codes do in a $$256\\text{-color}$$ GIF:\n- **Code `256` (Clear Code):** Tells the decoder, *'Wipe out all learned multi-pixel phrases from slot `258` upward and reset the dictionary back to its clean initial state (slots `0`–`255`)!'* In fact, GIF encoders traditionally emit a `256` Clear code as the very first token of the image stream.\n- **Code `257` (End of Information / EOI):** Tells the decoder, *'The pixel stream for this image is officially complete—stop decoding!'*\n\nBecause slots `0`–`255` are single pixels and slots `256`–`257` are reserved control codes, the **very first learned two-pixel phrase** in a $$256\\text{-color}$$ GIF always goes into **Slot `258`**!",
+          "questions": [
+            {
+              "id": "q_065",
+              "prompt": "In a 256-color GIF, what are LZW dictionary slots 256 and 257 reserved for, and which slot receives the very first learned multi-pixel phrase?",
+              "choices": [
+                "Slots 256 and 257 are Clear and End-of-Information control codes; the first learned phrase goes into slot 258.",
+                "Slots 256 and 257 store pure black and pure white; the first learned phrase goes into slot 0.",
+                "Slots 256 and 257 store the image width and height; the first learned phrase goes into slot 512.",
+                "Slots 256 and 257 are unused padding; the first learned phrase overwrites slot 255."
+              ],
+              "correct_index": 0,
+              "explanation": "In an 8-bit (256-color) GIF, code 256 is the Clear code and code 257 is the End-of-Information (EOI) code, so newly learned multi-pixel strings begin at index 258."
+            },
+            {
+              "id": "q_066",
+              "prompt": "What action does a GIF decoder take the moment it reads a Clear code (256) in the compressed LZW stream?",
+              "choices": [
+                "It erases the user's monitor screen to solid black and restarts the file download.",
+                "It discards all learned dictionary entries (258 and above) and resets the dictionary to its root table.",
+                "It deletes the Color Lookup Table and switches the display into grayscale mode.",
+                "It closes the file immediately and displays an error message to the user."
+              ],
+              "correct_index": 1,
+              "explanation": "When the decoder encounters a Clear code (256), it flushes all dynamically learned phrases (258+) and restores the dictionary to its initial pre-populated root state."
+            }
+          ]
+        },
+        {
+          "id": "ch_034",
+          "title": "Why 9 Bits? Crossing the 256-Entry Boundary",
+          "content_markdown": "Pause for a moment to appreciate a neat binary consequence of adding those new dictionary slots. When our pixels were just raw $$8\\text{-bit}$$ palette numbers ($$0$$ through $$255$$), every pixel fit inside $$8\\text{ bits}$$ ($$2^8 = 256$$ possible values).\n\nNow, however, our LZW encoder needs to send code numbers that include `256` (Clear), `257` (EOI), `258` (first multi-pixel phrase), `259` (second phrase), and so on! Since $$8\\text{ bits}$$ can only count from $$0$$ to $$255$$, $$8\\text{ bits}$$ cannot represent code `256` or `258`.\n\nBy adding just **$$1$$ extra bit**—moving from $$8\\text{ bits}$$ to **$$9\\text{ bits}$$** per code—we double the number of addressable slots from $$2^8 = 256$$ to $$2^9 = 512$$ slots (numbered `0` through `511`)! That means a $$256\\text{-color}$$ GIF begins transmitting its LZW codes using $$9\\text{-bit}$$ chunks, giving the dictionary room for $$254$$ learned multi-pixel phrases (`258` through `511`) before it even needs a tenth bit.",
+          "questions": [
+            {
+              "id": "q_067",
+              "prompt": "Why must LZW codewords in a 256-color GIF start at 9 bits wide rather than 8 bits wide?",
+              "choices": [
+                "Telephone modems in 1987 could only transmit binary chunks that were odd multiples of 3 bits.",
+                "The 9th bit is required to specify whether each pixel belongs to the top half or bottom half of the screen.",
+                "An 8-bit number can only represent 0–255, leaving no room for control codes or learned phrases.",
+                "CompuServe used the extra bit to embed a hidden billing timestamp inside every pixel."
+              ],
+              "correct_index": 2,
+              "explanation": "Because 2^8 = 256 covers only indices 0 through 255, at least 9 bits (2^9 = 512 values, 0 through 511) are required to represent codes 256, 257, and newly learned phrases starting at 258."
+            },
+            {
+              "id": "q_068",
+              "prompt": "How does spending 9 bits on code 258 or 260 still achieve dramatic compression compared to raw 8-bit pixels?",
+              "choices": [
+                "The 9-bit codes are automatically shrunk back down to 2 bits by the user's monitor cable.",
+                "The encoder only transmits every ninth code and lets the decoder guess the eight codes in between.",
+                "Each 9-bit code also replaces the 768-byte Color Lookup Table at the top of the file.",
+                "A single 9-bit code above 257 can replace two, five, or dozens of 8-bit pixels at once."
+              ],
+              "correct_index": 3,
+              "explanation": "Although one 9-bit code is 1 bit wider than a single 8-bit pixel, any dictionary code from 258 upward represents a multi-pixel sequence (2 pixels = 16 bits, 10 pixels = 80 bits, etc.)."
+            }
+          ]
+        },
+        {
+          "id": "ch_035",
+          "title": "Smaller Palettes, Smaller Starting Codes",
+          "content_markdown": "What if a GIF image only uses a $$4\\text{-color}$$ palette (slots `0`, `1`, `2`, and `3`, where $$2^2 = 4$$)? Does it still have to waste $$9\\text{ bits}$$ on every starting code?\n\nNot in GIF87a! Right before the compressed LZW data begins, the file stores a single byte called the **LZW Minimum Code Size** (let's call it $$L$$). If an image has $$2^L$$ root colors, then:\n- Root colors occupy slots $$0$$ through $$2^L - 1$$\n- The **Clear code** sits at $$2^L$$\n- The **End-of-Information (EOI) code** sits at $$2^L + 1$$\n- Learned phrases begin at $$2^L + 2$$, and the starting code width is just $$L + 1\\text{ bits}$$!\n\nFor example, in a $$4\\text{-color}$$ image ($$L = 2$$, since $$2^2 = 4$$), slots `0`–`3` are the four colors, `4` is Clear, `5` is EOI, learned phrases start at slot `6`, and the codes begin at a tiny **$$3\\text{ bits}$$** wide ($$2 + 1 = 3\\text{ bits}$$)! Now that we know how the starting table is set up, let's hand-trace how LZW actually encodes and decodes a picture.",
+          "questions": [
+            {
+              "id": "q_069",
+              "prompt": "If a GIF image uses an LZW Minimum Code Size of L = 4 (meaning 2^4 = 16 root colors, indexed 0–15), what are the code numbers for Clear, End of Information, and the first learned phrase?",
+              "choices": [
+                "Clear = 16, End of Information = 17, and the first learned phrase = 18.",
+                "Clear = 256, End of Information = 257, and the first learned phrase = 258.",
+                "Clear = 0, End of Information = 1, and the first learned phrase = 2.",
+                "Clear = 4, End of Information = 5, and the first learned phrase = 6."
+              ],
+              "correct_index": 0,
+              "explanation": "With 2^4 = 16 root colors occupying indices 0 through 15, the Clear code is placed at 2^4 = 16, End of Information at 17, and the first dynamically learned phrase at 18."
+            },
+            {
+              "id": "q_070",
+              "prompt": "For that same 16-color GIF (where L = 4), how many bits wide are the initial LZW codes at the start of the stream?",
+              "choices": [
+                "4 bits wide.",
+                "5 bits wide.",
+                "8 bits wide.",
+                "9 bits wide."
+              ],
+              "correct_index": 1,
+              "explanation": "When the LZW Minimum Code Size is L, the initial code size is L + 1 bits (here 4 + 1 = 5 bits, allowing values 0 through 31) so there is room above 0–15 for control codes and initial learned phrases."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_08",
+      "title": "8. Hand-Tracing LZW: Greedy Prefix Matching \u0026 Lockstep Decoder Reconstruction",
+      "summary": "Walk step by step through LZW encoding and decoding on a concrete pixel stream using no higher math. Trace how the encoder accumulates the longest known prefix string $$w$$, emits the code for $$w$$ when the next pixel $$k$$ creates an unseen sequence $$w + k$$, and assigns $$w + k$$ to the next available slot (starting at $$258$$)—while the decoder rebuilds the exact same dictionary one step behind.",
+      "introduced_terms": [
+        "greedy longest-match prefix (w) and extension character (k)",
+        "dictionary rule (emit w, register w + k)",
+        "lockstep decoder reconstruction"
+      ],
+      "chunks": [
+        {
+          "id": "ch_036",
+          "title": "The Two Variables of LZW Encoding: Prefix w and Next Pixel k",
+          "content_markdown": "You don't need a computer-science degree to run the LZW encoder by hand—in fact, the entire loop uses just two sticky notes on your desk, traditionally called **$$w$$** and **$$k$$**.\n\n- **$$w$$ (the working prefix):** Holds the sequence of pixels we have accumulated so far that *already exists* in our dictionary.\n- **$$k$$ (the extension character):** Holds the very next single pixel we just read from the image.\n\nAt every step, the encoder checks its dictionary for the combined sequence **$$w + k$$** (meaning string $$w$$ followed immediately by pixel $$k$$). This is called finding the **greedy longest-match prefix (w) and extension character (k)**:\n1. **If $$w + k$$ IS already in the dictionary:** Don't output anything yet! Greedily swallow $$k$$ into your working string (set $$w = w + k$$) and read the next pixel.\n2. **If $$w + k$$ is NOT in the dictionary:** We have found the longest match we know (`w`), plus one new pixel (`k`) that makes a brand-new phrase!",
+          "questions": [
+            {
+              "id": "q_071",
+              "prompt": "In the LZW encoding loop, what do the variables w and k represent?",
+              "choices": [
+                "w is the longest known prefix string accumulated so far, and k is the next single pixel read from the input.",
+                "w is the total width of the image in pixels, and k is the total file size in kilobytes.",
+                "w is the white balance of the monitor, and k is the black level of the printer ink.",
+                "w is the backward distance in the sliding window, and k is the number of bytes to delete."
+              ],
+              "correct_index": 0,
+              "explanation": "During LZW encoding, w holds the current working prefix (a string already present in the dictionary) and k holds the next single input symbol being tested."
+            },
+            {
+              "id": "q_072",
+              "prompt": "What does the LZW encoder do when it checks the combined string w + k and finds that w + k IS already in the dictionary?",
+              "choices": [
+                "It immediately outputs the code for w + k and resets the entire dictionary to empty.",
+                "It outputs nothing yet, updates w to equal w + k, and reads the next pixel to try for an even longer match.",
+                "It discards pixel k as a duplicate error and skips forward to the next scan line.",
+                "It outputs the Clear code (256) because the dictionary has encountered a collision."
+              ],
+              "correct_index": 1,
+              "explanation": "LZW is a 'greedy' longest-match algorithm: as long as w + k is already in the dictionary, it keeps extending w without emitting a code until it hits an unseen combination."
+            }
+          ]
+        },
+        {
+          "id": "ch_037",
+          "title": "The Golden Dictionary Rule: Emit w, Register w + k, Set w = k",
+          "content_markdown": "What happens at the exact moment $$w + k$$ is **not** found in the dictionary? The encoder executes the three-part **dictionary rule (emit w, register w + k)**:\n\n1. **Emit the code for $$w$$:** Write the dictionary code number for the known prefix $$w$$ to the output file.\n2. **Register $$w + k$$ in the dictionary:** Write the new combined sequence $$w + k$$ into the next empty dictionary slot (starting at `258` in a $$256\\text{-color}$$ GIF).\n3. **Reset $$w = k$$:** Don't throw pixel $$k$$ away! Because we only emitted the code for $$w$$, pixel $$k$$ has not been sent to the output file yet. So $$k$$ becomes the starting prefix $$w$$ for the very next step!\n\nWhy is Step 3 (`set w = k`) so crucial? Because pixel $$k$$ does double duty: first, it acts as the *ending character* of the new dictionary entry $$w + k$$; second, it acts as the *first character* of the next output token!",
+          "questions": [
+            {
+              "id": "q_073",
+              "prompt": "When the LZW encoder discovers that w + k is NOT in the dictionary, what three actions does it perform?",
+              "choices": [
+                "It emits the code for w + k, deletes w from the dictionary, and sets w to empty.",
+                "It emits the code for k, registers k + w in the dictionary, and re-reads the previous pixel.",
+                "It emits the code for w, adds w + k to the next dictionary slot, and sets w = k.",
+                "It emits both w and k as raw bytes, skips a dictionary slot, and advances two pixels."
+              ],
+              "correct_index": 2,
+              "explanation": "When w + k is unseen, the encoder outputs the code for the known prefix w, registers the new string w + k in the next available dictionary slot, and initializes the next prefix w to k."
+            },
+            {
+              "id": "q_074",
+              "prompt": "Why must the encoder set w = k (rather than setting w to empty) after emitting the code for w?",
+              "choices": [
+                "Because the LZW algorithm requires every output code to begin with the letter k.",
+                "Because setting w to empty would trigger an automatic hardware reboot on IBM PCs.",
+                "Because pixel k must be transmitted twice in a row to verify phone line quality.",
+                "Because only w was emitted to the output stream, so pixel k still needs to be encoded as the start of the next match."
+              ],
+              "correct_index": 3,
+              "explanation": "Since the code emitted only covered the prefix w, the pixel k has not yet been represented in the output stream; setting w = k makes k the starting symbol of the next phrase."
+            }
+          ]
+        },
+        {
+          "id": "ch_038",
+          "title": "Hand-Tracing the Encoder on a Dithered Pixel Row",
+          "content_markdown": "Let's hand-trace our $$256\\text{-color}$$ GIF encoder on a $$7\\text{-pixel}$$ dithered stripe of Red (Palette `10`) and White (Palette `20`):\nInput pixels: `10, 20, 10, 20, 10, 20, 10` (after an initial Clear code `256`).\n\nStart with the first pixel in $$w$$: **$$w = \\text{'10'}$$**.\n- **Step 1 (read $$k = \\text{'20'}$$):** Is `'10, 20'` in the dictionary? No! Emit code for $$w$$ (**`10`**), add **Slot `258` = `'10, 20'`**, and set $$w = \\text{'20'}$$.\n- **Step 2 (read $$k = \\text{'10'}$$):** Is `'20, 10'` in the dictionary? No! Emit code for $$w$$ (**`20`**), add **Slot `259` = `'20, 10'`**, and set $$w = \\text{'10'}$$.\n- **Step 3 (read $$k = \\text{'20'}$$):** Is `'10, 20'` in the dictionary? **YES—it's Slot `258`!** Swallow it: $$w = \\text{'10, 20'}$$.\n- **Step 4 (read next $$k = \\text{'10'}$$):** Is `'10, 20, 10'` in the dictionary? No! Emit code for $$w$$ (**`258`**), add **Slot `260` = `'10, 20, 10'`**, and set $$w = \\text{'10'}$$.\n- **Step 5 (read $$k = \\text{'20'}$$):** `'10, 20'` is in the dictionary (Slot `258`), so $$w = \\text{'10, 20'}$$.\n- **Step 6 (read final $$k = \\text{'10'}$$):** Is `'10, 20, 10'` in the dictionary? **YES—it's Slot `260`!** Set $$w = \\text{'10, 20, 10'}$$. End of input: emit **`260`**!\n\nOur $$7$$ pixels compressed into just $$4$$ tokens: **`10, 20, 258, 260`**!",
+          "questions": [
+            {
+              "id": "q_075",
+              "prompt": "In our hand-trace of '10, 20, 10, 20, 10, 20, 10', why didn't the encoder emit a code during Step 3 when it saw the second '10, 20' pair?",
+              "choices": [
+                "Because '10, 20' had just been registered as Slot 258 in Step 1, so the encoder greedily extended w to '10, 20'.",
+                "Because the encoder skips every third pixel to save telephone bandwidth.",
+                "Because '10, 20' is a reserved CompuServe control code that cannot be transmitted.",
+                "Because the dictionary was already full after learning two entries."
+              ],
+              "correct_index": 0,
+              "explanation": "Since Step 1 added '10, 20' to Slot 258, encountering '10' followed by '20' in Step 3 matched an existing entry; the greedy encoder absorbed it into w and read the next pixel to build the 3-pixel entry '10, 20, 10' (Slot 260)."
+            },
+            {
+              "id": "q_076",
+              "prompt": "How many pixels did the single output code '260' represent at the end of our 7-pixel hand-trace?",
+              "choices": [
+                "1 pixel ('10').",
+                "2 pixels ('10, 20').",
+                "3 pixels ('10, 20, 10').",
+                "7 pixels ('10, 20, 10, 20, 10, 20, 10')."
+              ],
+              "correct_index": 2,
+              "explanation": "Slot 260 was created in Step 4 by combining w = '10, 20' (Slot 258) with k = '10', so emitting code 260 at the end represented the 3-pixel sequence '10, 20, 10'."
+            }
+          ]
+        },
+        {
+          "id": "ch_039",
+          "title": "How the Decoder Rebuilds the Dictionary One Step Behind",
+          "content_markdown": "Now comes the part that feels like a magic trick when you first see it: **lockstep decoder reconstruction**. Remember, the encoder *only* sent the four numbers **`10, 20, 258, 260`** over the phone line—it never sent the dictionary table!\n\nHow can the user's home computer decode `258` and `260`? Watch what happens as the decoder reads **`10, 20, 258, 260`** one code at a time:\n1. **Read `10`:** Outputs pixel `'10'`. (Remembers `prev = '10'`).\n2. **Read `20`:** Outputs pixel `'20'`. Now the decoder asks: *'Why did the encoder stop after `10` instead of combining `10` with whatever came next?'* Because `10` + the first pixel of the new code (`'20'`) wasn't in the dictionary yet! So the decoder immediately adds **Slot `258` = `'10, 20'`**! (Sets `prev = '20'`).\n3. **Read `258`:** The decoder looks up Slot `258`, which it *just created a microsecond ago*! It outputs `'10, 20'`. And since `prev` was `'20'` and the first pixel of `258` is `'10'`, the decoder adds **Slot `259` = `'20, 10'`**! (Sets `prev = '10, 20'`).\n4. **Read `260`:** Wait—what happens if a code arrives *before* the decoder has added it? Hold that thought for Section 9; in normal steps, the decoder always reconstructs each slot **one step behind** the encoder!",
+          "questions": [
+            {
+              "id": "q_077",
+              "prompt": "During normal LZW decompression, how does the decoder know what new phrase to add to its dictionary each time it receives a new code?",
+              "choices": [
+                "It pauses the modem transfer and asks the CompuServe server to send the definition in plain text.",
+                "It takes the string from the previous code and appends the very first pixel of the newly received code.",
+                "It adds the numeric values of the last two codes together and divides by 256.",
+                "It looks ahead ten codes into the future to see which colors appear most frequently."
+              ],
+              "correct_index": 1,
+              "explanation": "Because the encoder emitted the previous code (w) when w + k wasn't in the dictionary—and then started the current code with k—the character k is guaranteed to be the first pixel of the current code!"
+            },
+            {
+              "id": "q_078",
+              "prompt": "Why is the LZW decoder described as rebuilding the dictionary 'one step behind' the encoder?",
+              "choices": [
+                "The decoder must wait until the entire image file is saved to disk before it can decode the first pixel.",
+                "The decoder intentionally delays displaying each row by one second so the monitor does not flicker.",
+                "The decoder skips slot 258 and starts numbering its own dictionary entries at slot 259.",
+                "The encoder creates a new slot when emitting w, whereas the decoder learns the extension pixel k upon reading the very next code."
+              ],
+              "correct_index": 3,
+              "explanation": "When the encoder emits w, it already knows the next pixel k and registers w + k immediately; the decoder discovers k one step later when it sees the first pixel of the following code."
+            }
+          ]
+        },
+        {
+          "id": "ch_040",
+          "title": "Why LZW Crushes Both Solid Runs and Dithered Textures",
+          "content_markdown": "Before we examine the famous cliffhanger we just stumbled across at the end of Chunk 4 (`Read 260` when the decoder had only built up to `259`!), let's appreciate what LZW achieves on real images.\n\n- **On solid color streaks** (like `Blue, Blue, Blue, Blue...`), LZW first learns a 2-pixel run (`258 = BB`), then a 3-pixel run (`259 = BBB`), then a 4-pixel run (`260 = BBBB`), growing its streak length every single step so a solid background shrinks down to a tiny handful of codes.\n- **On dithered checkerboards and repeating textures** (where Run-Length Encoding completely failed!), LZW effortlessly learns 2-pixel dither pairs (`Red, White`), 4-pixel dither bars (`Red, White, Red, White`), and 8-pixel dither strips.\n\nWait—go back and look closely at Step 4 of our decoder trace in the previous chunk. When the encoder sent **`10, 20, 258, 260`**, our decoder had built Slot `258` and Slot `259`—and then suddenly received **`260`** before it had created Slot `260`! Did LZW just break? Let's solve that exact mystery in Section 9.",
+          "questions": [
+            {
+              "id": "q_079",
+              "prompt": "How do the dictionary entries grow when LZW compresses a long solid streak of identical pixels (such as 'B, B, B, B, B, B...')?",
+              "choices": [
+                "It registers progressively longer runs ('BB', 'BBB', 'BBBB', ...) in successive dictionary slots.",
+                "It registers only the 2-pixel pair 'BB' and refuses to create any entries longer than two pixels.",
+                "It switches off the dictionary and falls back to sending raw 24-bit RGB triplets.",
+                "It combines all consecutive 'B' pixels into a single slot 258 on the very first step."
+              ],
+              "correct_index": 0,
+              "explanation": "On a solid run of 'B's, step 1 registers 'BB' (length 2), step 2 matches 'BB' and registers 'BBB' (length 3), step 3 matches 'BBB' and registers 'BBBB' (length 4), rapidly compressing long streaks."
+            },
+            {
+              "id": "q_080",
+              "prompt": "What puzzling situation did we encounter at the end of our decoder trace for '10, 20, 258, 260'?",
+              "choices": [
+                "The decoder ran out of memory after creating only two dictionary entries.",
+                "The code number 258 was smaller than the Clear code 256, causing a syntax error.",
+                "The encoder emitted code 260 on the very step it created Slot 260, before the decoder had registered Slot 260.",
+                "The output stream contained more codes than there were original pixels in the image."
+              ],
+              "correct_index": 2,
+              "explanation": "Because the decoder builds each dictionary slot one step behind the encoder, if the encoder uses a brand-new slot on the exact step it was minted, the decoder receives a code number that is not yet in its table!"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_09",
+      "title": "9. The Famous kwkwk Anomaly: Decoding a Code Before It Exists",
+      "summary": "Investigate the classic puzzle of LZW decompression: what happens when a repeating pattern causes the encoder to emit a brand-new dictionary code on the very step it was created—one step before the decoder has learned what that code means? See why this edge case only occurs for symmetrical strings of the form $$k\\text{w}k\\text{w}k$$, and how appending the previous string's first pixel to itself solves the mystery every time.",
+      "introduced_terms": [
+        "kwkwk decoder anomaly (unseen-code edge case)",
+        "first-equals-last character symmetry",
+        "LZW exception handler (previous string + first character)"
+      ],
+      "chunks": [
+        {
+          "id": "ch_041",
+          "title": "Catching the Encoder in the Act: How Code 260 Arrived Early",
+          "content_markdown": "At the end of Section 8, we caught the LZW encoder doing something that looked almost illegal. On our 7-pixel dithered stripe `10, 20, 10, 20, 10, 20, 10`, the encoder output the four codes **`10, 20, 258, 260`**.\n\nLet's replay the crime scene in slow motion from the decoder's chair:\n- After reading `10` and `20`, the decoder creates **Slot `258` = `'10, 20'`**, and remembers `prev = '20'`.\n- Next, the decoder reads `258` (`'10, 20'`). It takes `prev` (`'20'`) plus the first pixel of `258` (`'10'`) and creates **Slot `259` = `'20, 10'`**. It sets `prev = '10, 20'` (which is Slot `258`).\n- At this exact instant, the highest slot in the decoder's dictionary is **`259`**—and the very next code arriving over the phone line is **`260`**!\n\nThis is the famous **kwkwk decoder anomaly (unseen-code edge case)**: the encoder minted Slot `260` (`'10, 20, 10'`) and *immediately* used Slot `260` as its next output token before the decoder had a chance to learn what `260` means!",
+          "questions": [
+            {
+              "id": "q_081",
+              "prompt": "What is the 'kwkwk decoder anomaly' (unseen-code edge case) in LZW decompression?",
+              "choices": [
+                "The decoder receives a code number for the very next dictionary slot that it has not yet filled in.",
+                "The encoder accidentally emits a negative code number when an image contains pure black pixels.",
+                "The decoder's dictionary overflows past 4,096 slots and overwrites the Color Lookup Table.",
+                "The encoder sends the End-of-Information code (257) before sending the Clear code (256)."
+              ],
+              "correct_index": 0,
+              "explanation": "The kwkwk anomaly occurs when the encoder registers a new dictionary entry and immediately emits that new entry's code on the very next match, so the decoder (working one step behind) sees a code equal to its next unfilled slot."
+            },
+            {
+              "id": "q_082",
+              "prompt": "In our trace of '10, 20, 258, 260', what is the highest slot number the decoder has defined at the moment code 260 arrives?",
+              "choices": [
+                "Slot 255.",
+                "Slot 258.",
+                "Slot 259.",
+                "Slot 261."
+              ],
+              "correct_index": 2,
+              "explanation": "After reading 10 and 20, the decoder created Slot 258; after reading 258, it created Slot 259. Thus, when code 260 arrives, the decoder's table only has entries up through Slot 259."
+            }
+          ]
+        },
+        {
+          "id": "ch_042",
+          "title": "The Pattern Behind the Puzzle: Why It's Called kwkwk",
+          "content_markdown": "Why did the encoder create Slot `260` and immediately use it? Let's trace the exact structure required for that to happen.\n\nSuppose the encoder just matched a prefix that starts with a single pixel **$$k$$** followed by some middle string **$$w$$**—so the previous output string was **$$k\\text{w}$$** (in our example, Slot `258` was `'10, 20'`, where $$k = \\text{'10'}$$ and $$w = \\text{'20'}$$).\n\n1. While matching that $$k\\text{w}$$, the encoder peeked at the next pixel, saw another **$$k$$** (`'10'`), emitted the code for $$k\\text{w}$$ (`258`), and registered the new entry **$$k\\text{w}k$$** (`'10, 20, 10'`) in **Slot `260`**.\n2. Remember the Golden Rule from Section 8: after emitting $$k\\text{w}$$, that extension pixel **$$k$$** becomes the start of the *next* match!\n3. If the pixels that immediately follow that $$k$$ happen to be **$$w$$** and **$$k$$** again—forming the 5-part sequence **$$k\\text{w}k\\text{w}k$$** (`10, 20, 10, 20, 10`)—then the encoder starting at the middle $$k$$ sees $$k\\text{w}k$$ (`10, 20, 10`), which is the **exact Slot `260` it just created a microsecond ago**!",
+          "questions": [
+            {
+              "id": "q_083",
+              "prompt": "Why does the unseen-code anomaly ONLY occur when the input stream contains an overlapping pattern of the form kwkwk?",
+              "choices": [
+                "Because LZW encoders are programmed to reverse the order of pixels whenever five pixels match.",
+                "Because the letter w represents white pixels and the letter k represents black pixels in CMYK printing.",
+                "Because telephone modems automatically duplicate every fifth byte when line noise occurs.",
+                "Because the final pixel k of the newly registered entry kwk immediately serves as the first pixel of the next match kwk."
+              ],
+              "correct_index": 3,
+              "explanation": "When the encoder sees kw followed by k, it emits kw, registers kwk in the new slot, and starts its next match at that middle k; if w and k immediately follow (forming kwkwk), the new match is kwk—the exact slot just created!"
+            },
+            {
+              "id": "q_084",
+              "prompt": "In our 7-pixel dithered stripe, which 5-pixel substring formed the 'kwkwk' pattern that triggered code 260?",
+              "choices": [
+                "10, 10, 10, 10, 10 (where k = 10 and w is empty).",
+                "10, 20, 10, 20, 10 (where k = 10 and w = 20).",
+                "20, 20, 10, 20, 20 (where k = 20 and w = 10).",
+                "10, 20, 30, 40, 50 (where every pixel is distinct)."
+              ],
+              "correct_index": 1,
+              "explanation": "Starting at the third pixel of '10, 20, 10, 20, 10, 20, 10', the 5-pixel sequence '10, 20, 10, 20, 10' matches kwkwk with k = 10 and w = 20."
+            }
+          ]
+        },
+        {
+          "id": "ch_043",
+          "title": "First-Equals-Last Character Symmetry: The Decoder's Clue",
+          "content_markdown": "Put yourself back in the decoder's shoes. You just decoded `prev = '10, 20'` (which was $$k\\text{w}$$), and now you receive the mystery code **`260`**—the slot right at the top of your table that you haven't filled in yet!\n\nTo fill in Slot `260`, you normally compute:\n`Slot 260 = prev + (first pixel of current code)`\n\nWait—here the current code *is* Slot `260`! How can you know the **first pixel of Slot `260`** before you know what Slot `260` is?\n\nLook at the formula on the line above: `Slot 260 = prev + (first pixel of Slot 260)`.\nSince `Slot 260` *starts* with `prev`, the **first pixel of Slot `260`** is guaranteed to be the **first pixel of `prev`**! That gives us **first-equals-last character symmetry**: every unseen-code entry $$k\\text{w}k$$ starts with $$k$$ (the first pixel of `prev`) and *also ends* with that exact same pixel $$k$$!",
+          "questions": [
+            {
+              "id": "q_085",
+              "prompt": "Why does the decoder already know the FIRST pixel of the mystery unseen code even before looking it up?",
+              "choices": [
+                "Because the mystery slot was built by extending 'prev', so its first pixel must be identical to the first pixel of 'prev'.",
+                "Because every dictionary entry above 257 is required by the GIF specification to begin with Palette Slot 0.",
+                "Because the encoder sends the first pixel as a separate uncompressed byte inside the file header.",
+                "Because the first pixel of any unseen code is always equal to the image's background color."
+              ],
+              "correct_index": 0,
+              "explanation": "Since the new dictionary slot is formed by taking the previous string (prev) and appending one pixel, the new slot begins with prev—meaning its first pixel is simply the first pixel of prev!"
+            },
+            {
+              "id": "q_086",
+              "prompt": "What is 'first-equals-last character symmetry' in any LZW dictionary entry that triggers the unseen-code anomaly?",
+              "choices": [
+                "The unseen entry is always a complete palindrome that reads identically forward and backward.",
+                "The unseen entry (kwk) always begins and ends with the exact same pixel value (k).",
+                "The unseen entry always contains an even number of pixels totaling at least eight bytes.",
+                "The unseen entry always swaps its first and last pixels when displayed on the monitor."
+              ],
+              "correct_index": 1,
+              "explanation": "Because the mystery entry has the form kwk (prev = kw followed by its own first character k), its first character and its last character are always identical (both equal to k)."
+            }
+          ]
+        },
+        {
+          "id": "ch_044",
+          "title": "The One-Line Fix: Previous String + First Character of Previous String",
+          "content_markdown": "That observation gives every LZW decoder a clean, foolproof rescue rule called the **LZW exception handler (previous string + first character)**:\n\n- **Normal Case (code IS in the dictionary):**\n  Output `dictionary[code]`, and add `prev + first_pixel(dictionary[code])` to the next slot.\n- **Exception Case (code is NOT in the dictionary yet—i.e., `code == next_free_slot`):**\n  Construct the string by taking **`prev + first_pixel(prev)`**, output that string, and store it into `dictionary[code]`!\n\nLet's test that rule on our cliffhanger (`Read 260` when `prev = '10, 20'`):\n1. Is `260` in the dictionary yet? No (`260 == next_free_slot`)!\n2. Take `prev` (`'10, 20'`) and append `first_pixel(prev)` (`'10'`), giving **`'10, 20, 10'`**.\n3. Output **`'10, 20, 10'`** and save **Slot `260` = `'10, 20, 10'`**!\n\nPutting all three decoded pieces together—`10`, `20`, `'10, 20'` (`258`), and `'10, 20, 10'` (`260`)—the decoder reconstructs **`10, 20, 10, 20, 10, 20, 10`**, all $$7$$ original pixels bit for bit!",
+          "questions": [
+            {
+              "id": "q_087",
+              "prompt": "When an LZW decoder receives a code number equal to its next unfilled dictionary slot, how does its exception handler construct the decoded string?",
+              "choices": [
+                "It takes the previously decoded string (prev) and appends the very last pixel of that previous string.",
+                "It repeats the entire previously decoded string (prev) twice in a row.",
+                "It outputs a single pixel of color 0 and resets the dictionary to slot 258.",
+                "It takes the previously decoded string (prev) and appends the very first pixel of that same previous string."
+              ],
+              "correct_index": 3,
+              "explanation": "In the kwkwk exception case, the missing entry is kwk, where prev = kw and k = first_pixel(prev); thus prev + first_pixel(prev) reconstructs kwk."
+            },
+            {
+              "id": "q_088",
+              "prompt": "Suppose an LZW decoder just decoded 'prev = Red, Blue, Green' and immediately receives an unseen code for the next unfilled slot. What pixel sequence does that unseen code represent?",
+              "choices": [
+                "Red, Blue, Green, Green.",
+                "Red, Blue, Green, Blue.",
+                "Red, Blue, Green, Red.",
+                "Green, Blue, Red, Green."
+              ],
+              "correct_index": 2,
+              "explanation": "Applying the rule 'prev + first_pixel(prev)' to 'Red, Blue, Green' appends its first pixel ('Red') to the end, yielding 'Red, Blue, Green, Red'."
+            }
+          ]
+        },
+        {
+          "id": "ch_045",
+          "title": "Why Solid Streaks Trigger kwkwk on the Very First Repeat!",
+          "content_markdown": "Programmers who wrote early GIF decoders in 1987 sometimes forgot to include the `kwkwk` exception handler, assuming it was a rare mathematical curiosity that would almost never happen in real life. Then they opened their very first cartoon or solid-background image—and their program crashed immediately!\n\nWhy? Because a simple solid streak of three identical pixels—like `Blue, Blue, Blue`—is actually the simplest `kwkwk` pattern of all (where $$k = \\text{Blue}$$ and the middle string $$w$$ is **empty**, so $$k\\text{w}k\\text{w}k = kkk$$)!\n\nWatch `Blue, Blue, Blue` encode:\n1. Start with $$w = \\text{'Blue'}$$. Read next `'Blue'`: emit **`Blue`**, register **Slot `258` = `'Blue, Blue'`**, and set $$w = \\text{'Blue'}$$.\n2. Read the third `'Blue'`, followed by a fourth `'Blue'`: `'Blue, Blue'` matches **Slot `258`**, so the encoder immediately emits **`258`** on Step 2—before the decoder has processed a second code to create Slot `258`!\n\nThanks to the `prev + first_pixel(prev)` rule, both solid runs (`kkk`) and dithered weaves (`kwkwk`) decode without a hitch. Now let's see how GIF packs these variable-width codes into bytes and streams them over slow modems.",
+          "questions": [
+            {
+              "id": "q_089",
+              "prompt": "Why does even a simple solid-color streak like 'Blue, Blue, Blue, Blue' immediately trigger the kwkwk decoder exception?",
+              "choices": [
+                "When the middle string w is empty, kwkwk simplifies to kkk, so the encoder creates 'Blue, Blue' (Slot 258) and uses it on the very next step.",
+                "Solid streaks bypass the pre-populated root table (0–255) and start encoding at slot 4,096.",
+                "The LZW encoder treats solid blue pixels as Clear codes unless the exception handler is active.",
+                "Solid streaks cause the Color Lookup Table to swap the red and blue channels on every odd pixel."
+              ],
+              "correct_index": 0,
+              "explanation": "A solid run of identical pixels is the special case of kwkwk where w is the empty string (making kwk = kk and kwkwk = kkk), causing Slot 258 ('Blue, Blue') to be emitted immediately after 'Blue'."
+            },
+            {
+              "id": "q_090",
+              "prompt": "What happened to early 1987 hobbyist GIF viewers if the programmer forgot to implement the kwkwk unseen-code exception case?",
+              "choices": [
+                "They still decoded every image perfectly, but took twice as long to calculate the Color Lookup Table.",
+                "They crashed or produced corrupted streaks as soon as an image contained solid color runs or repeating textures.",
+                "They displayed the image upside down because the scan lines arrived in reverse order.",
+                "They automatically converted 256-color photographs into 2-color black-and-white drawings."
+              ],
+              "correct_index": 1,
+              "explanation": "Because solid color runs (kkk) and repeating dither patterns (kwkwk) occur constantly in real graphics, a decoder lacking the unseen-code handler fails almost immediately on everyday GIF files."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_10",
+      "title": "10. Variable-Width Bit Packing, 12-Bit Table Resets \u0026 Four-Pass Interlacing",
+      "summary": "Complete the GIF87a architecture by seeing how code numbers start at a compact $$9\\text{ bits}$$ wide and widen one bit at a time as the dictionary crosses $$512$$, $$1,024$$, and $$2,048$$ entries up to GIF's $$12\\text{-bit}$$ ceiling ($$2^{12} = 4,096$$ slots). Explore how emitting a Clear code resets a full table to adapt to changing image regions, and how four-pass Venetian-blind interlacing let dial-up users preview an entire picture in seconds—setting the stage for GIF89a in Part II.",
+      "introduced_terms": [
+        "variable-width bit packing (9-bit to 12-bit codes)",
+        "12-bit dictionary ceiling (4,096 entries) and adaptive Clear reset",
+        "four-pass interlacing (Venetian-blind progressive rendering)"
+      ],
+      "chunks": [
+        {
+          "id": "ch_046",
+          "title": "Variable-Width Bit Packing: Growing from 9 Bits to 12 Bits",
+          "content_markdown": "How large should we let our LZW dictionary grow? In GIF87a, Steve Wilhite set the maximum dictionary size to $$4,096$$ slots (numbered `0` through `4095`). Because $$2^{12} = 4,096$$, addressing all $$4,096$$ slots requires **$$12\\text{ bits}$$** per code.\n\nWait: at the beginning of a $$256\\text{-color}$$ image, when the dictionary only has entries up to `258` or `300`, wouldn't sending a full $$12\\text{ bits}$$ for every single code waste $$3\\text{ bits}$$ of precious modem time on every token?\n\nTo avoid that waste, GIF uses **variable-width bit packing (9-bit to 12-bit codes)**:\n- **Slots `258` to `511`:** Codes are packed using just **$$9\\text{ bits}$$** each ($$2^9 = 512$$).\n- **As soon as Slot `511` is filled:** Both encoder and decoder automatically widen to **$$10\\text{ bits}$$** per code for slots `512` through `1023` ($$2^{10} = 1,024$$).\n- **After Slot `1023`:** Codes widen to **$$11\\text{ bits}$$** (`1024` through `2047`, where $$2^{11} = 2,048$$).\n- **After Slot `2047`:** Codes widen to **$$12\\text{ bits}$$** (`2048` through `4095`, where $$2^{12} = 4,096$$).\n\nThese variable-width bit codes are packed tightly head-to-tail across byte boundaries into data sub-blocks of up to $$255\\text{ bytes}$$ each, wasting not a single bit.",
+          "questions": [
+            {
+              "id": "q_091",
+              "prompt": "Why does a 256-color GIF start with 9-bit LZW codes and gradually widen to 10, 11, and 12 bits rather than using 12-bit codes from the very beginning?",
+              "choices": [
+                "Using narrower 9-bit and 10-bit codes early on saves bandwidth while the dictionary still has fewer than 512 or 1,024 entries.",
+                "Telephone modems need several seconds to warm up before they can transmit 12-bit numbers reliably.",
+                "The first 512 pixels of every GIF image are required to be monochrome black-and-white.",
+                "Computer monitors draw the top quarter of the screen with 9-bit color and the bottom quarter with 12-bit color."
+              ],
+              "correct_index": 0,
+              "explanation": "While the dictionary has fewer than 512 entries (slots 0–511), every code fits inside 9 bits; sending 12 bits per code from the start would waste 3 bits on every early token."
+            },
+            {
+              "id": "q_092",
+              "prompt": "In a 256-color GIF, at what dictionary slot threshold do the LZW codewords step up from 9 bits wide to 10 bits wide?",
+              "choices": [
+                "As soon as the dictionary fills slot 255 and needs to address slot 256.",
+                "As soon as the dictionary fills slot 511 and needs to address slot 512.",
+                "As soon as the dictionary fills slot 1,023 and needs to address slot 1,024.",
+                "As soon as the dictionary fills slot 4,095 and needs to address slot 4,096."
+              ],
+              "correct_index": 1,
+              "explanation": "A 9-bit unsigned integer can represent values 0 through 511 (2^9 = 512 slots); once slot 511 is created, the next code could be 512, so both encoder and decoder step up to 10-bit codes."
+            }
+          ]
+        },
+        {
+          "id": "ch_047",
+          "title": "The 12-Bit Ceiling (4,096 Slots) and Adaptive Clear Resets",
+          "content_markdown": "Why did GIF87a cap the dictionary at a **12-bit dictionary ceiling (4,096 entries) and adaptive Clear reset** instead of letting codes grow to $$15$$ or $$16\\text{ bits}$$ ($$65,536$$ slots)?\n\nRemember our 1987 hardware constraints from Section 3: a Commodore 64 had only $$64\\text{ KB}$$ of total system RAM! A $$4,096\\text{-slot}$$ table fit comfortably inside a few kilobytes of memory on every 8-bit and 16-bit home computer, whereas a $$65,536\\text{-slot}$$ table would have blown right past an 8-bit microcomputer's memory limits.\n\nWhat happens when a complex photograph fills all $$4,096$$ slots (up through Slot `4095`) halfway down the image? Suppose the top half of the picture was blue sky and puffy clouds, so all $$4,096$$ slots are full of sky phrases—and suddenly the scan lines reach green forest trees and brown bark!\n\nWhenever the table fills up (or compression efficiency drops because the scene's texture changed), the encoder simply emits the **Clear code (`256`)**! Both sides instantly wipe slots `258`–`4095`, drop the code size back down to a nimble **$$9\\text{ bits}$$**, and start learning fresh forest phrases from scratch.",
+          "questions": [
+            {
+              "id": "q_093",
+              "prompt": "Why did Steve Wilhite cap GIF's LZW dictionary at 12 bits (2^12 = 4,096 entries) rather than 16 bits (65,536 entries)?",
+              "choices": [
+                "Terry Welch's 1984 algorithm mathematically breaks down if a dictionary ever exceeds 4,096 entries.",
+                "Images in 1987 were prohibited from containing more than 4,096 total pixels on screen.",
+                "A 4,096-entry table easily fit inside the scarce RAM of 1980s home computers while still delivering strong compression.",
+                "CompuServe's mainframe hard drives used 12-bit sectors and could not store larger numbers."
+              ],
+              "correct_index": 2,
+              "explanation": "Keeping the dictionary capped at 4,096 slots allowed even memory-constrained 1980s microcomputers (like the 64 KB Commodore 64 or Apple II) to decode GIF files quickly in RAM."
+            },
+            {
+              "id": "q_094",
+              "prompt": "What two things happen when a GIF encoder emits a Clear code (256) after filling its 4,096-slot dictionary halfway through an image?",
+              "choices": [
+                "The top half of the picture is erased from the monitor AND the Color Lookup Table is deleted.",
+                "The codeword bit width increases to 13 bits AND the modem speed doubles to 2400 baud.",
+                "The decoder stops reading the file AND fills the remaining scan lines with solid black.",
+                "Learned slots (258–4095) are wiped clean AND the codeword bit width drops from 12 bits back to 9 bits."
+              ],
+              "correct_index": 3,
+              "explanation": "Emitting a Clear code (256) flushes all learned multi-pixel entries (258–4095) so the table can adapt to new image textures, and resets the code width from 12 bits back to the initial 9 bits."
+            }
+          ]
+        },
+        {
+          "id": "ch_048",
+          "title": "The Dial-Up User's Frustration: Waiting for the Bottom of the Picture",
+          "content_markdown": "With an $$8\\text{-bit}$$ Color Lookup Table and $$9\\text{-to-}12\\text{-bit}$$ LZW compression working together, a $$640 \\times 480$$ color picture that once weighed $$921\\text{ kilobytes}$$ (taking over two hours at $$1200\\text{ baud}$$) shrank down to roughly $$30\\text{ to }60\\text{ kilobytes}$$—a $$4\\text{-to-}8\\text{ minute}$$ download!\n\nYet even a $$5\\text{-minute}$$ download had a frustrating human problem. Normally, a raster image is stored in strict top-to-bottom order: Row `0`, Row `1`, Row `2`, all the way down to Row `479`.\n\nImagine paying CompuServe $$12.50\\text{ dollars per hour}$$ while downloading a portrait or weather map from top to bottom. For the first two minutes, all you see creeping down the top of your monitor is empty blue sky or the top of a hat! You have no idea whether the main subject in the center of the frame is what you actually wanted until three or four minutes of connect time have already been billed.",
+          "questions": [
+            {
+              "id": "q_095",
+              "prompt": "Why was standard top-to-bottom scan-line transmission frustrating for dial-up users paying by the minute in 1987?",
+              "choices": [
+                "Users had to wait through minutes of top background rows before seeing whether the central subject was what they wanted.",
+                "Top-to-bottom transmission caused cathode-ray monitors to overheat along their upper glass edge.",
+                "LZW compression could only compress the bottom half of an image when rows were sent in normal order.",
+                "Telephone modems lost synchronization whenever more than ten consecutive sky rows were transmitted."
+              ],
+              "correct_index": 0,
+              "explanation": "When an image downloads strictly row by row from top to bottom over a slow modem, the viewer sees only the top border or sky for the first several minutes before the main subject appears."
+            },
+            {
+              "id": "q_096",
+              "prompt": "Roughly how much did combining an 8-bit palette with LZW compression shrink a typical 640 x 480 color image compared to raw 24-bit true color?",
+              "choices": [
+                "From ~900 kilobytes down to exactly 12 bytes.",
+                "From ~900 kilobytes down to roughly 30 to 60 kilobytes.",
+                "From ~900 kilobytes down to 890 kilobytes.",
+                "It did not change the file size, but it made the colors brighter."
+              ],
+              "correct_index": 1,
+              "explanation": "Cutting 3 bytes per pixel to 1 byte (307 KB) and applying LZW dictionary compression typically reduced a 640 x 480 graphic to roughly 30–60 KB, turning a two-hour transfer into a few minutes."
+            }
+          ]
+        },
+        {
+          "id": "ch_049",
+          "title": "Four-Pass Interlacing: The Venetian-Blind Preview",
+          "content_markdown": "To let dial-up users judge an entire picture within seconds, GIF87a introduced an optional feature called **four-pass interlacing (Venetian-blind progressive rendering)**. Instead of storing rows sequentially (`0, 1, 2, 3, 4...`), an interlaced GIF scrambles the row order into four progressive passes across the whole canvas:\n\n- **Pass 1 ($$\\frac{1}{8}$$ of the image):** Sends every **$$8\\text{th}$$ row** starting at Row `0` (`0, 8, 16, 24...`). After just $$12.5\\%$$ of the download time, the user sees a complete—though blocky—top-to-bottom sketch of the entire picture!\n- **Pass 2 (another $$\\frac{1}{8}$$):** Fills in every **$$8\\text{th}$$ row** halfway between Pass 1, starting at Row `4` (`4, 12, 20, 28...`). Now $$25\\%$$ of the rows are on screen (every $$4\\text{th}$$ row).\n- **Pass 3 ($$\\frac{1}{4}$$ of the image):** Fills in every **$$4\\text{th}$$ row** starting at Row `2` (`2, 6, 10, 14...`), bringing the picture to $$50\\%$$ (all even-numbered rows).\n- **Pass 4 (final $$\\frac{1}{2}$$):** Fills in all remaining **odd-numbered rows** (`1, 3, 5, 7...`), snapping the image into crisp focus like opening a set of Venetian blinds!",
+          "questions": [
+            {
+              "id": "q_097",
+              "prompt": "In GIF87a's four-pass interlacing scheme, which scan lines are transmitted during Pass 1, and what fraction of the total rows do they represent?",
+              "choices": [
+                "Every 8th row starting at row 0 (0, 8, 16, ...), representing 1/8 (12.5 percent) of the image.",
+                "Every 2nd row starting at row 1 (1, 3, 5, ...), representing 1/2 (50 percent) of the image.",
+                "The top 100 rows in sequential order, representing 1/4 (25 percent) of the image.",
+                "Only the four outer border rows of the canvas, representing less than 1 percent of the image."
+              ],
+              "correct_index": 0,
+              "explanation": "Pass 1 transmits every 8th scan line starting at line 0 (0, 8, 16, 24...), allowing the viewer to see a coarse full-height preview after just 1/8 (12.5%) of the rows have arrived."
+            },
+            {
+              "id": "q_098",
+              "prompt": "Which scan lines are transmitted during the fourth and final pass (Pass 4) of an interlaced GIF?",
+              "choices": [
+                "Every 8th row starting at row 4 (4, 12, 20, ...), comprising 1/8 of the image.",
+                "Every 4th row starting at row 2 (2, 6, 10, ...), comprising 1/4 of the image.",
+                "All odd-numbered rows (1, 3, 5, 7, ...), comprising the remaining 1/2 of the image.",
+                "A duplicate copy of row 0 to verify that no phone line errors occurred."
+              ],
+              "correct_index": 2,
+              "explanation": "After Passes 1, 2, and 3 have filled in all even-numbered scan lines (multiples of 8, plus 4, plus 2), Pass 4 transmits every odd-numbered row (1, 3, 5, 7...), which makes up the final 50% of the image."
+            }
+          ]
+        },
+        {
+          "id": "ch_050",
+          "title": "The Trade-Off of Interlacing—and the Eve of GIF89a",
+          "content_markdown": "There is one subtle catch to GIF interlacing: an interlaced GIF is often **slightly larger** (by a few percent) than the exact same image saved without interlacing! Why? Because adjacent rows (`Row 0` and `Row 1`) are much more similar to each other than rows separated by an $$8\\text{-pixel}$$ jump (`Row 0` and `Row 8`). Skipping $$8$$ rows at a time in Pass 1 slightly disrupts the smooth row-to-row patterns that the LZW dictionary loves to exploit—a small price many users gladly paid for an instant preview.\n\nBy late 1988, Steve Wilhite's GIF87a had conquered the dial-up world. For the first time in computing history, an Apple II, Commodore 64, Amiga, Atari ST, Macintosh, and IBM PC could all download and display the exact same full-color graphics file in minutes.\n\nYet users were already asking for more: *What if a GIF could have transparent backgrounds so sprites could float over any screen? What if a single GIF file could play timed animations?* And lurking quietly beneath Terry Welch's 1984 LZW paper was a sleeping legal time bomb—a software patent owned by Unisys—that would ignite the greatest format war in Internet history. We will explore all of that in **Part II**!",
+          "questions": [
+            {
+              "id": "q_099",
+              "prompt": "Why does enabling four-pass interlacing often make a GIF file slightly larger in byte size than a non-interlaced GIF of the exact same picture?",
+              "choices": [
+                "Interlaced GIFs are required to store four separate copies of the 768-byte Color Lookup Table.",
+                "Interlacing disables the LZW dictionary completely and reverts to uncompressed 24-bit RGB pixels.",
+                "Pass 4 transmits every odd-numbered row twice to prevent Venetian-blind flicker on the monitor.",
+                "Jumping 8 rows at a time reduces similarity between consecutive scan lines, slightly lowering LZW compression efficiency."
+              ],
+              "correct_index": 3,
+              "explanation": "Because adjacent scan lines (e.g., row 0 and row 1) usually share stronger visual continuity than rows 8 lines apart (row 0 and row 8), reordering rows for interlacing slightly reduces LZW pattern matches across row boundaries."
+            },
+            {
+              "id": "q_100",
+              "prompt": "Looking back across all ten sections of Part I, how do GIF87a's three core pillars—indexed palettes, LZW compression, and interlacing—work together?",
+              "choices": [
+                "The 8-bit CLUT discards half the rows, LZW converts the rest into vector formulas, and interlacing encrypts the file for CompuServe.",
+                "The 8-bit CLUT cuts pixels to 1 byte, LZW losslessly compresses repeating and dithered patterns, and interlacing provides a fast full-frame dial-up preview.",
+                "The 8-bit CLUT provides 16.7 million simultaneous colors, LZW blurs background details lossily, and interlacing doubles the modem baud rate.",
+                "The 8-bit CLUT copies IBM CGA memory directly, LZW counts only single-pixel streaks like RLE, and interlacing rotates the image 90 degrees."
+              ],
+              "correct_index": 1,
+              "explanation": "GIF87a solved the 1980s cross-platform and dial-up graphics bottleneck by combining a hardware-independent 8-bit Color Lookup Table (1 byte/pixel), lossless 9-to-12-bit LZW dictionary compression, and optional four-pass interlacing."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
