@@ -1,0 +1,1689 @@
+{
+  "id": "first_16bit_wave_bridge_part_1",
+  "title": "First 16-Bit Wave \u0026 the 8-to-16 Bridge I: The TI TMS9900, TI-99/4A \u0026 TMS9995 (1976–1984)",
+  "summary": "Part I of the 'First 16-Bit Wave \u0026 the 8-to-16 Bridge' Quest Arc: a relaxed, first-principles yet architecturally concrete 100-question journey through the Texas Instruments TMS9900, the TI-99/4 and TI-99/4A home computers, and the redeemed 40-pin TMS9995. Building smoothly on learners' 8-bit Intel-Zilog and Motorola-MOS foundations, this module traces how TI shrank a 16-bit minicomputer onto 64-pin silicon with RAM-resident registers, hardware multiply and divide, and bit-addressable serial I/O—and why console bus bottlenecks, double-interpreted BASIC, and cartridge gatekeeping obscured a remarkable architecture until the TMS9995 arrived.",
+  "topic_prompt": "Part I of the 'First 16-Bit Wave \u0026 the 8-to-16 Bridge' Quest Arc (building on learners' 8-bit foundations from the Intel-Zilog and Motorola-MOS arcs): a relaxed, first-principles yet architecturally concrete 50-chunk journey through the Texas Instruments TMS9900 and its TMS9995 descendant (1976–1984). Explain every hardware and ISA idea intuitively for an educated generalist: (1) shrinking the TI 990 minicomputer onto one of the earliest single-chip 16-bit CPUs, and why separate address/data buses forced a bulky 64-pin DIP, three supply voltages, and a 4-phase clock; (2) the radical Memory-to-Memory architecture—keeping only PC, Status (ST), and the Workspace Pointer (WP) on silicon while storing registers R0–R15 in external RAM; (3) ultra-fast context switches via BLWP/RTWP (and why RAM-resident registers made sense in 1976 before fast CPUs hit the memory wall); (4) genuine hardware 16-by-16 multiply (MPY), 32-by-16 divide (DIV), and XOP traps; (5) bit-addressable CRU (Communications Register Unit) serial I/O (SBO, SBZ, TB, LDCR, STCR) vs. byte-wide ports; (6) the cautionary tale of the TI-99/4 and TI-99/4A—cancelling the 8-bit-bus TMS9985, squeezing the TMS9900 behind a wait-state-heavy 8-bit bus multiplexer with only 256 bytes of fast 16-bit scratchpad RAM, trapping 16 KB of user RAM behind the TMS9918A Video Display Processor, and double-interpreting TI BASIC atop GROM-based GPL bytecode (versus assembly programmers running workspaces in the 256-byte scratchpad); and (7) TI's cartridge gatekeeping, the 1983 price war exit, and the late redemption of the 40-pin TMS9995 (256 bytes of on-chip 16-bit RAM, prefetch, signed MPYS/DIVS, Tomy Tutor, and Geneve 9640).",
+  "tag_path": [
+    "History",
+    "History of Technology",
+    "Microprocessor History"
+  ],
+  "prerequisite_ids": [
+    "intel_zilog_8bit_dynasty_part_4",
+    "motorola_mos_axis_part_4"
+  ],
+  "vetting_summary": "Completed a sequential college-freshman generalist vetting pass across all 10 sections (50 chunks and 100 questions), refining 16 chunks and 28 questions in place. All unexplained technical terms and notations were defined in plain English on first appearance, forward references to later hardware features were removed from early distractors, multiple-choice options were tightly balanced in length and plausibility with zero parenthetical giveaways, and mathematical expressions were uniformly wrapped in double-dollar LaTeX delimiters with double-escaped JSON backslashes.",
+  "created_at": "2026-11-20T02:43:40Z",
+  "sections": [
+    {
+      "id": "sec_01",
+      "title": "1. Shrinking the TI 990: One of the First Single-Chip 16-Bit CPUs",
+      "summary": "Meet the 1976 Texas Instruments TMS9900, born from shrinking the board-level TI 990 minicomputer architecture onto a single NMOS chip while most personal computers were still 8-bit. Explore why keeping the 15-bit word address bus and 16-bit data bus completely separate forced a towering 64-pin DIP package, and unpack the electrical overhead of three power rails (+5 V, −5 V, and +12 V) plus an external four-phase clock.",
+      "introduced_terms": [
+        "non-multiplexed bus",
+        "word-aligned addressing",
+        "four-phase clock"
+      ],
+      "chunks": [
+        {
+          "id": "ch_001",
+          "title": "A Three-Inch Slab from Dallas",
+          "content_markdown": "In June 1976, the microprocessor world belonged to sleek 40-pin, 8-bit chips like the Zilog Z80 and the Motorola 6800 family. Then Texas Instruments placed an unmistakable giant on engineers' workbenches: the **TMS9900**, a ceramic chip over three inches long bristling with 64 metal legs.\n\nWhy build something so huge? Unlike startup designs invented from scratch for small microcomputers, the TMS9900 was a single-chip shrink of TI's rack-mounted **TI 990 minicomputer** family. The larger TI 990/10 used circuit boards full of discrete logic chips, while the compact TI 990/4 dropped the TMS9900 onto one board and ran the exact same 16-bit machine code.\n\nThat made the TMS9900 one of the earliest commercial single-chip 16-bit CPUs, offering true binary compatibility with an industrial minicomputer. Yet its dramatic 64-pin bulk immediately raised a practical puzzle: why couldn't TI squeeze this 16-bit processor into the standard 40-pin package that everyone else used?",
+          "questions": [
+            {
+              "id": "q_001",
+              "prompt": "What existing computer line served as the direct architectural blueprint for the Texas Instruments TMS9900?",
+              "choices": [
+                "The Intel 8080 microcomputer family",
+                "The TI 990 minicomputer family",
+                "The Motorola 6800 industrial series",
+                "The Zilog Z80 business workstation line"
+              ],
+              "correct_index": 1,
+              "explanation": "Texas Instruments designed the TMS9900 as a single-chip implementation of its rack-mounted TI 990 minicomputer architecture, maintaining binary compatibility with board-level models like the TI 990/10."
+            },
+            {
+              "id": "q_002",
+              "prompt": "How did the TI 990/4 differ from its larger sibling, the TI 990/10?",
+              "choices": [
+                "It ran a trimmed 8-bit subset of TI 990 instructions",
+                "It stored its operating system on external cassette tape reels",
+                "It omitted binary compatibility with larger rack-mounted TI 990 code",
+                "It used a single TMS9900 chip instead of discrete boards"
+              ],
+              "correct_index": 3,
+              "explanation": "Both systems executed the same 16-bit TI 990 instruction set, but the TI 990/4 replaced the 990/10's multi-board discrete logic CPU with the single-chip TMS9900."
+            }
+          ]
+        },
+        {
+          "id": "ch_002",
+          "title": "Dedicated Lanes and Word-Aligned Streets",
+          "content_markdown": "The answer to the 64-pin mystery comes down to traffic flow. Some early chips saved pins by making the same wires carry memory addresses on one beat and data on the next—like a narrow one-lane bridge where cars take turns. TI rejected that delay and gave the TMS9900 a **non-multiplexed bus**, meaning address wires and data wires stayed permanently separate so memory transfers happened at full speed without extra external latch chips holding addresses between beats.\n\nMoving a full 16-bit value at once claimed 16 dedicated data pins. To reach 64 kilobytes of memory, you might expect another 16 address pins, yet TI needed only 15. That trick relied on **word-aligned addressing**: every 16-bit word occupies two consecutive bytes starting at an even address, so 15 lines select $$2^{15} = 32{,}768$$ word slots covering all $$65{,}536$$ bytes.\n\nEven with one pin saved, 15 address lines plus 16 data lines already consumed 31 pins—leaving far too little room inside a 40-pin shell.",
+          "questions": [
+            {
+              "id": "q_003",
+              "prompt": "Why did Texas Instruments choose a non-multiplexed bus for the TMS9900?",
+              "choices": [
+                "To keep address and data lines separate for direct, full-speed transfers",
+                "To shrink the chip into an inexpensive 24-pin plastic package",
+                "To let two different CPUs share the same external data pins",
+                "To force memory chips to transmit only four bits per cycle"
+              ],
+              "correct_index": 0,
+              "explanation": "A non-multiplexed bus assigns permanent, separate pins to addresses and data, avoiding the turn-taking delays and external address-latch logic required by multiplexed buses."
+            },
+            {
+              "id": "q_004",
+              "prompt": "How could the TMS9900 reach 65,536 bytes of memory using only 15 address pins?",
+              "choices": [
+                "By compressing every program instruction to half its normal length",
+                "By borrowing an extra address bit from the interrupt pins",
+                "By addressing 32,768 two-byte words starting on even boundaries",
+                "By splitting RAM into two isolated banks switched by hand"
+              ],
+              "correct_index": 2,
+              "explanation": "With word-aligned addressing, each 15-bit address selects one of 32,768 16-bit (two-byte) words, spanning all 65,536 bytes without needing a sixteenth address pin."
+            }
+          ]
+        },
+        {
+          "id": "ch_003",
+          "title": "Three Power Rails and a Four-Beat Metronome",
+          "content_markdown": "Dedicated buses were only half the story behind the TMS9900's bulky footprint. Once 31 pins went to addresses and data, TI still had to fit four interrupt-priority inputs, serial peripheral lines, bus-control signals, and demanding power and timing wires. All told, 64 pins made circuit boards wider, sockets pricier, and hobbyist builds far trickier than 40-pin rivals.\n\nElectrical requirements compounded that cost. Built with an older mid-1970s silicon transistor process (enhancement-mode NMOS, like the 1974 Intel 8080), the TMS9900 required three separate steady power voltages—$$+5\\,\\text{V}$$, $$-5\\,\\text{V}$$, and $$+12\\,\\text{V}$$—rather than the single $$+5\\,\\text{V}$$ supply that made the Z80 and 6809 so effortless to wire.\n\nWorst of all, it could not tick on a simple single-wire clock. It demanded an external **four-phase clock**, four tightly staggered, non-overlapping timing pulses ($$\\phi_1$$ through $$\\phi_4$$) produced by a dedicated companion clock chip to march data cleanly through the processor's internal circuits.",
+          "questions": [
+            {
+              "id": "q_005",
+              "prompt": "How did the TMS9900's power-supply requirements compare to those of the Zilog Z80 and Motorola 6809?",
+              "choices": [
+                "It ran on a single low-power voltage shared with CMOS memory",
+                "It required three separate power rails instead of a single 5-volt supply",
+                "It drew a single 12-volt supply regulated directly inside the CPU",
+                "It switched between two alternating power rails on each clock beat"
+              ],
+              "correct_index": 1,
+              "explanation": "Like the earlier Intel 8080, the TMS9900 needed three separate voltages ($$+5\\,\\text{V}$$, $$-5\\,\\text{V}$$, and $$+12\\,\\text{V}$$), whereas the Z80 and 6809 ran cleanly from a single $$+5\\,\\text{V}$$ supply."
+            },
+            {
+              "id": "q_006",
+              "prompt": "What is a four-phase clock as required by the TMS9900?",
+              "choices": [
+                "Four staggered, non-overlapping timing signals supplied by an external clock chip",
+                "Four independent crystal oscillators letting the CPU run four programs simultaneously",
+                "A software timer that slows the processor down during four memory wait cycles",
+                "A power-saving feature that shuts off one quarter of the chip at a time"
+              ],
+              "correct_index": 0,
+              "explanation": "The TMS9900 relied on an external clock generator to deliver four non-overlapping pulse phases ($$\\phi_1$$ through $$\\phi_4$$) that sequenced internal logic steps across each cycle."
+            }
+          ]
+        },
+        {
+          "id": "ch_004",
+          "title": "Byte Quirks and Upside-Down Bit Numbers",
+          "content_markdown": "Word-aligned addressing saved a pin, yet it introduced two famous quirks that surprised programmers arriving from 8-bit machines. First, what happens when a program wants to change just one 8-bit character in memory, even though the TMS9900 has no pin to select an odd byte? The chip must quietly perform a hidden read-before-write dance: it fetches the entire 16-bit word, swaps in the single updated byte inside the CPU, and writes the complete 16-bit word back out.\n\nSecond, TI inherited a numbering habit from big minicomputers and IBM mainframes. Most 8-bit programmers labeled the rightmost, smallest-value bit as bit 0 and the leftmost bit as bit 7. TI did the exact opposite on its 16-bit words: **bit 0** was the leftmost, highest-value bit ($$2^{15}$$), and **bit 15** was the rightmost ones place ($$2^0$$). Reading a TMS9900 manual upside-down was a rite of passage for newcomers.",
+          "questions": [
+            {
+              "id": "q_007",
+              "prompt": "Because the TMS9900 lacks a pin to address individual bytes directly, how does it write a single 8-bit byte to memory?",
+              "choices": [
+                "It shifts the single byte out serially across the four-phase clock pins",
+                "It disables half of the external RAM chips during odd byte writes",
+                "It forces programmers to store every text character as a 16-bit word",
+                "It fetches the full word, updates one byte, and writes it back"
+              ],
+              "correct_index": 3,
+              "explanation": "Lacking a lowest-bit byte-select pin on its word-aligned bus, the TMS9900 performs a read-modify-write sequence on the full 16-bit word whenever updating a single byte."
+            },
+            {
+              "id": "q_008",
+              "prompt": "In Texas Instruments' TMS9900 documentation, which bit of a 16-bit word is labeled bit 0?",
+              "choices": [
+                "The extra carry flag bit appended to every bus transfer",
+                "The rightmost bit representing the smallest place value of one",
+                "The leftmost bit representing the largest place value of 32,768",
+                "The middle divider bit separating the upper and lower bytes"
+              ],
+              "correct_index": 2,
+              "explanation": "Following minicomputer and mainframe convention, TI numbered bits from left to right, making bit 0 the most-significant bit and bit 15 the least-significant bit."
+            }
+          ]
+        },
+        {
+          "id": "ch_005",
+          "title": "Big Ambition, Tight Silicon",
+          "content_markdown": "Step back and admire what Texas Instruments pulled off in 1976. Despite a giant 64-pin ceramic package, triple power supplies, and a fussy four-phase clock, the TMS9900 delivered genuine 16-bit minicomputer computing on a single piece of silicon—moving full 16-bit words across a clean, non-multiplexed bus while keeping software compatible with larger TI 990 systems.\n\nYet shrinking a minicomputer onto a mid-1970s microchip created an acute real-estate crisis inside the silicon die itself. Manufacturing yields—the share of working chips salvaged from each silicon wafer—dropped fast whenever a chip grew too wide, leaving TI's engineers with a harsh transistor budget. Building a full 16-bit arithmetic unit and decoding minicomputer instructions ate up most of the available room.\n\nThere was simply no space left on silicon for sixteen big 16-bit general-purpose registers. Instead of cutting the architecture down to one or two tiny accumulators, TI made the most daring bet of its era: if registers won't fit inside the CPU, where else could they live?",
+          "questions": [
+            {
+              "id": "q_009",
+              "prompt": "What major manufacturing constraint forced TI engineers to rethink where the TMS9900 kept its 16-bit registers?",
+              "choices": [
+                "Fitting sixteen 16-bit registers on 1976 silicon would blow past the practical die-size budget",
+                "Federal minicomputer regulations barred single chips from holding more than three registers",
+                "The 64-pin ceramic package lacked enough electrical ground pins to power internal registers",
+                "Four-phase clocks could only synchronize arithmetic units and could not drive register storage"
+              ],
+              "correct_index": 0,
+              "explanation": "On 1976 NMOS silicon, large dies suffered poor manufacturing yields, so building a full 16-bit datapath left too little silicon area for sixteen on-chip 16-bit registers."
+            },
+            {
+              "id": "q_010",
+              "prompt": "Which trade-off best summarizes the physical design of the original 1976 TMS9900?",
+              "choices": [
+                "Minimal pin count and battery friendliness at the cost of 4-bit internal math",
+                "Strict 8-bit Z80 compatibility at the cost of dropping 16-bit data transfers",
+                "Built-in video graphics and sound at the cost of eliminating external memory",
+                "Full 16-bit minicomputer bus width at the cost of bulky support hardware"
+              ],
+              "correct_index": 3,
+              "explanation": "The TMS9900 delivered a genuine non-multiplexed 16-bit minicomputer bus on one chip, but paid for it with a 64-pin DIP, three supply voltages, and an external four-phase clock."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_02",
+      "title": "2. The Memory-to-Memory Gamble: Three Silicon Registers \u0026 RAM Workspaces",
+      "summary": "Discover the TMS9900's boldest architectural break from both the Z80 and 6809: keeping only the Program Counter (PC), Status Register (ST), and Workspace Pointer (WP) on silicon while storing all sixteen general-purpose registers (R0–R15) in a relocatable 32-byte block of external RAM. See how pointing WP anywhere in memory freed scarce 1976 transistor space for a clean, orthogonal 16-bit instruction set.",
+      "introduced_terms": [
+        "memory-to-memory architecture",
+        "Workspace Pointer (WP)",
+        "register workspace"
+      ],
+      "chunks": [
+        {
+          "id": "ch_006",
+          "title": "Taking the Direct Page to Its Extreme",
+          "content_markdown": "If you have explored the Zilog Z80 and the Motorola 6809, you already know how creative 1970s designers got with register space. Zilog squeezed an extra shadow register bank onto the Z80 die so programs could flip between two register sets. Motorola gave the 6809 a relocatable Direct Page register that turned a chosen 256-byte strip of RAM into quick-access scratch memory.\n\nTexas Instruments faced the same tight transistor budget on an even wider 16-bit processor. Putting sixteen 16-bit general-purpose registers directly on the TMS9900 die would require 256 microscopic storage latches plus dense selection wiring—crowding out everything else.\n\nSo TI asked an audacious question: why keep *any* general-purpose registers on silicon at all? If external RAM already holds thousands of bytes right outside the chip's pins, why not leave the entire register set sitting out in main memory?",
+          "questions": [
+            {
+              "id": "q_011",
+              "prompt": "How many individual bit-storage latches would sixteen 16-bit on-chip registers have demanded on the TMS9900 die?",
+              "choices": [
+                "64 bit latches",
+                "128 bit latches",
+                "256 bit latches",
+                "512 bit latches"
+              ],
+              "correct_index": 2,
+              "explanation": "Sixteen registers holding 16 bits each equals $$16 \\times 16 = 256$$ bit latches, plus supporting selector circuitry—a steep silicon cost in 1976."
+            },
+            {
+              "id": "q_012",
+              "prompt": "Which earlier 8-bit idea most closely foreshadowed TI's decision to treat a relocatable slice of RAM like processor registers?",
+              "choices": [
+                "The Motorola 6809's relocatable Direct Page register",
+                "The Zilog Z80's built-in dynamic RAM refresh counter",
+                "The Intel 8080's fixed hardware stack inside ROM",
+                "The Hitachi 6309's hidden CMOS power-down sleep mode"
+              ],
+              "correct_index": 0,
+              "explanation": "Just as the 6809's Direct Page register let a movable slice of RAM act like fast scratch space, TI pushed the concept further by placing all sixteen general-purpose registers in relocatable RAM."
+            }
+          ]
+        },
+        {
+          "id": "ch_007",
+          "title": "A Bookmark Instead of Sixteen Notebooks",
+          "content_markdown": "That bold leap produced TI's **memory-to-memory architecture**, a processor design where data operations read operands from memory and write results straight back to memory rather than hoarding them inside on-chip registers.\n\nInside the TMS9900 silicon sit just three user-visible 16-bit registers: the **Program Counter (`PC`)**, which tracks the next instruction; the **Status Register (`ST`)**, which holds comparison flags, math carry/overflow bits, and an interrupt mask controlling which priority levels can interrupt the CPU; and the star of the show, the **Workspace Pointer (`WP`)**.\n\nPicture an accountant who refuses to haul sixteen bulky ledgers everywhere. Instead, she carries one metal bookmark (`WP`) and clips it onto the top of any 32-byte drawer in a filing cabinet. That 32-byte block of external RAM—sixteen consecutive 16-bit words—becomes the CPU's active **register workspace**, serving as general-purpose registers `R0` through `R15`. Move the bookmark, and an entirely different block of RAM instantly becomes `R0` through `R15`.",
+          "questions": [
+            {
+              "id": "q_013",
+              "prompt": "Which three user-visible 16-bit registers actually live on the TMS9900 silicon die?",
+              "choices": [
+                "Accumulator A, Index Register X, and Stack Pointer SP",
+                "Registers R0, R1, and the Status Register ST",
+                "Base Pointer BP, Segment Register CS, and Program Counter PC",
+                "Program Counter PC, Status Register ST, and Workspace Pointer WP"
+              ],
+              "correct_index": 3,
+              "explanation": "The TMS9900 keeps only PC, ST, and WP on silicon; all sixteen general-purpose registers (R0–R15) reside in external RAM starting at the address stored in WP."
+            },
+            {
+              "id": "q_014",
+              "prompt": "How many bytes of external RAM make up one complete TMS9900 register workspace?",
+              "choices": [
+                "16 bytes, holding sixteen 8-bit registers",
+                "32 bytes, holding sixteen 16-bit registers",
+                "64 bytes, holding thirty-two 16-bit registers",
+                "256 bytes, matching a standard memory page"
+              ],
+              "correct_index": 1,
+              "explanation": "A register workspace holds sixteen registers (R0 through R15) of 16 bits (2 bytes) each, totaling exactly 32 consecutive bytes of RAM."
+            }
+          ]
+        },
+        {
+          "id": "ch_008",
+          "title": "Finding R4 Inside RAM",
+          "content_markdown": "Let's trace how the TMS9900 turns a register name into a real memory address. In TI assembly manuals, hexadecimal (base-16) numbers start with a `\u003e` sign, so `\u003e0100` means decimal 256. Suppose `WP` currently holds `\u003e0100`, placing the active register workspace at byte 256 in RAM.\n\nBecause each register is two bytes wide, register `Rn` always sits at the simple formula $$\\text{WP} + 2n$$. That puts `R0` at `\u003e0100`, `R1` at `\u003e0102`, `R4` at `\u003e0108`, and `R15` at `\u003e011E` (where hex `1E` equals decimal 30).\n\nNow watch the instruction `A R1, R4` ('add `R1` to `R4`'). The CPU multiplies 1 by 2, adds `\u003e0100`, and fetches the 16-bit word at `\u003e0102`. Next, it computes `\u003e0100 + 8`, fetches the word at `\u003e0108`, sums both values in its 16-bit ALU, and writes the new total straight back to `\u003e0108`—all without a single on-chip data register.",
+          "questions": [
+            {
+              "id": "q_015",
+              "prompt": "If the Workspace Pointer (WP) holds decimal address 256, at which byte address does register R4 reside?",
+              "choices": [
+                "Address 260, because each register occupies one byte",
+                "Address 262, because R0 is skipped for system flags",
+                "Address 264, because each 16-bit register spans two bytes",
+                "Address 272, because each register reserves four bytes"
+              ],
+              "correct_index": 2,
+              "explanation": "Each register sits at $$\\text{WP} + 2n$$. For $$\\text{WP} = 256$$ and $$n = 4$$, R4 lives at $$256 + 2(4) = 264$$."
+            },
+            {
+              "id": "q_016",
+              "prompt": "When the TMS9900 executes the instruction A R1, R4, where does the final sum get written?",
+              "choices": [
+                "Into an internal 16-bit accumulator hidden beside the ALU",
+                "Into the fixed stack area at the top of main memory",
+                "Into the Workspace Pointer register to advance the frame",
+                "Into the external RAM word located at WP plus eight bytes"
+              ],
+              "correct_index": 3,
+              "explanation": "Because R4 lives in external RAM at $$\\text{WP} + 8$$, the memory-to-memory add instruction writes the updated 16-bit sum directly back to that RAM address."
+            }
+          ]
+        },
+        {
+          "id": "ch_009",
+          "title": "Symmetry, One Quirky Register, and Overlapping Desks",
+          "content_markdown": "Because registers *were* ordinary RAM words, TI's instruction set achieved remarkable regularity—what architects call an **orthogonal** design, where operations work uniformly across addressing modes. The exact same `A` (add) instruction could add a register to a register, a memory variable to a register, or even one memory location directly to another, using modes like indirect addressing and auto-increment (automatically advancing a pointer register after reading it).\n\nStill, two clever twists kept programmers alert. First, `R0` could never serve as an index register when adding an offset to a base address: TI reused register code zero inside the instruction bits to mean 'no index register—use a plain direct address instead.'\n\nSecond, nothing stopped two register workspaces from *overlapping* in RAM! By placing a helper routine's `WP` just sixteen bytes past the caller's `WP`, the caller's `R8`–`R15` seamlessly became the helper's `R0`–`R7`—passing parameters instantly without copying a single byte.",
+          "questions": [
+            {
+              "id": "q_017",
+              "prompt": "Why could TMS9900 programmers not use register R0 as an index register?",
+              "choices": [
+                "Encoding zero in the index field signaled plain direct addressing instead",
+                "Register R0 was physically hardwired to store the constant value zero",
+                "Register R0 lived inside read-only memory and could never be changed",
+                "Indexing with R0 was reserved exclusively for hardware interrupt priority lookups"
+              ],
+              "correct_index": 0,
+              "explanation": "In the TMS9900's instruction encoding, specifying register 0 in an indexed-addressing field tells the decoder to perform direct (symbolic) addressing without adding any register."
+            },
+            {
+              "id": "q_018",
+              "prompt": "What clever trick became possible if two TMS9900 routines positioned their register workspaces so they partially overlapped in RAM?",
+              "choices": [
+                "The CPU doubled its clock speed by reading both blocks simultaneously",
+                "The routines shared data directly without copying arguments between registers",
+                "The hardware automatically compressed 16-bit numbers into 8-bit bytes",
+                "Both routines gained permission to run inside the Status Register"
+              ],
+              "correct_index": 1,
+              "explanation": "Overlapping workspaces made one routine's upper registers occupy the exact same RAM addresses as another routine's lower registers, allowing zero-copy parameter passing."
+            }
+          ]
+        },
+        {
+          "id": "ch_010",
+          "title": "Transistors Saved, New Superpower Unlocked",
+          "content_markdown": "Looking at the TMS9900 die reveals why TI's memory-to-memory gamble was such an engineering coup. By offloading sixteen 16-bit registers into external RAM, TI built a genuine 16-bit microprocessor with roughly 8,000 transistors—barely more than the 8-bit Z80! Those saved transistors bought a full 16-bit arithmetic path and a clean two-operand instruction set that felt spacious to minicomputer programmers.\n\nOf course, moving registers off-chip was not just a space-saving trick. Think about what happens on a conventional CPU like the Z80 or 6809 whenever a program jumps to a subroutine or answers an urgent hardware interrupt: the processor has to painstakingly copy its on-chip registers out to RAM one by one so it doesn't clobber them.\n\nOn the TMS9900, your entire register set is *already* in RAM, anchored by a single 16-bit pointer. What happens when you simply point `WP` somewhere new?",
+          "questions": [
+            {
+              "id": "q_019",
+              "prompt": "Roughly how did the TMS9900's transistor count compare to contemporary 8-bit chips after moving its registers to external RAM?",
+              "choices": [
+                "It still required over ten times as many transistors as the Z80",
+                "It shrank to fewer than five hundred transistors on the entire die",
+                "It doubled the Z80's budget to roughly 16,000 transistors on silicon",
+                "It stayed around 8,000 transistors, close to the 8-bit Z80's budget"
+              ],
+              "correct_index": 3,
+              "explanation": "Offloading R0–R15 to RAM kept the 16-bit TMS9900 around 8,000 transistors—remarkably close to the 8-bit Z80—while still supporting a full 16-bit ALU."
+            },
+            {
+              "id": "q_020",
+              "prompt": "Why does keeping all sixteen registers in RAM behind a single Workspace Pointer hint at a dramatic advantage during interrupts?",
+              "choices": [
+                "Interrupts can bypass main memory completely and run inside ROM",
+                "External RAM automatically ignores writes whenever an interrupt fires",
+                "Changing WP moves the entire register set without pushing registers onto a stack",
+                "The CPU can execute sixteen different interrupts through R0–R15 at once"
+              ],
+              "correct_index": 2,
+              "explanation": "Because the active registers are simply whatever 32-byte RAM block WP points to, updating WP gives an interrupt handler a brand-new set of sixteen registers without saving the old ones one by one."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_03",
+      "title": "3. Instant Context Switches (BLWP/RTWP) \u0026 the Coming Memory Wall",
+      "summary": "Walk through how RAM-resident registers turned full context switches into a single-step maneuver: BLWP reads a two-word transfer vector, flips to a fresh register workspace, and automatically saves the caller's WP, PC, and ST in R13–R15—while RTWP restores everything just as fast, powering stackless calls and 16-level hardware interrupts. Then uncover the historical twist: why keeping registers in external RAM made brilliant sense when 1976 CPUs and memory ran at matching speeds, before faster processors slammed into the memory wall.",
+      "introduced_terms": [
+        "transfer vector",
+        "workspace linkage",
+        "memory wall"
+      ],
+      "chunks": [
+        {
+          "id": "ch_011",
+          "title": "The Interrupt Traffic Jam",
+          "content_markdown": "Picture a 1976 factory controller or minicomputer juggling a spinning disk drive, three keyboard terminals, and urgent temperature sensors. Dozens of times each second, an external device shouts for immediate attention via a hardware interrupt, forcing the CPU to perform a **context switch**—pausing one job cleanly so another can run.\n\nOn a conventional processor with on-chip registers, every context switch creates a brief traffic jam. Before the interrupt routine can safely touch the registers, the CPU must copy all of them onto a RAM stack one by one, then copy them all back afterward. Even the Z80's clever shadow register bank only provided a single backup set, leaving deeper interrupts back at square one.\n\nBecause the TMS9900 already kept `R0` through `R15` in RAM, Texas Instruments turned that traffic jam into a single smooth lane change.",
+          "questions": [
+            {
+              "id": "q_021",
+              "prompt": "Why do conventional CPUs with on-chip registers face extra overhead during an interrupt context switch?",
+              "choices": [
+                "They must save active registers to a RAM stack before reusing them",
+                "They must power down their clock generator until the interrupt ends",
+                "They must copy the entire program from ROM into external memory",
+                "They must clear every flag in the ALU before answering a device"
+              ],
+              "correct_index": 0,
+              "explanation": "When registers live on silicon, an interrupt handler would overwrite the interrupted program's data unless the CPU first pushes those registers to a stack in RAM and pops them back afterward."
+            },
+            {
+              "id": "q_022",
+              "prompt": "What limitation did the Zilog Z80's shadow register bank face compared to the TMS9900's RAM workspaces?",
+              "choices": [
+                "Shadow registers could only hold 4-bit numbers during interrupts",
+                "Shadow registers could not be restored after an interrupt finished",
+                "The Z80 provided only one extra backup set of registers on silicon",
+                "The Z80 required external clock chips to swap into its shadow bank"
+              ],
+              "correct_index": 2,
+              "explanation": "The Z80's shadow bank gave programmers just one alternate register set on silicon, whereas the TMS9900 could define dozens of separate 32-byte workspaces anywhere in RAM."
+            }
+          ]
+        },
+        {
+          "id": "ch_012",
+          "title": "Two Words and a Single Leap: BLWP and RTWP",
+          "content_markdown": "TI's instant context-switch engine hinges on two memorable instructions: **`BLWP`** (*Branch and Load Workspace Pointer*) and **`RTWP`** (*Return with Workspace Pointer*). Instead of pointing directly at code, `BLWP` points to a **transfer vector**—a tiny two-word pair in memory where the first word holds the new `WP` and the second word holds the new `PC`.\n\nIn one seamless instruction, `BLWP` switches the CPU into that brand-new register workspace and automatically preserves the caller's exact state through **workspace linkage**: it drops the caller's old `WP` into the new workspace's `R13`, the caller's return `PC` into `R14`, and the caller's old `ST` into `R15`. The routine now owns a completely clean set of registers (`R0`–`R12`) with zero stack pushing!\n\nWhen the routine finishes, a single **`RTWP`** instruction copies `R15`, `R14`, and `R13` right back into `ST`, `PC`, and `WP`, snapping instantly back to the caller.",
+          "questions": [
+            {
+              "id": "q_023",
+              "prompt": "What two values are stored inside a TMS9900 transfer vector used by BLWP?",
+              "choices": [
+                "The caller's old accumulator value and the interrupt priority level",
+                "The new Workspace Pointer address and the new Program Counter address",
+                "The starting address of ROM and the total byte length of the routine",
+                "The lowest register index and the highest register index to preserve"
+              ],
+              "correct_index": 1,
+              "explanation": "A transfer vector is a two-word pair in memory containing the target routine's new WP (first word) and new PC (second word)."
+            },
+            {
+              "id": "q_024",
+              "prompt": "During a BLWP call, where does the TMS9900 automatically store the caller's old WP, PC, and ST for workspace linkage?",
+              "choices": [
+                "Inside registers R0, R1, and R2 of the caller's original workspace",
+                "Inside three hidden backup flip-flops wired beside the clock pins",
+                "At the very top of main memory in a fixed hardware stack frame",
+                "Inside registers R13, R14, and R15 of the newly activated workspace"
+              ],
+              "correct_index": 3,
+              "explanation": "BLWP automatically records the caller's old WP in R13, return PC in R14, and old ST in R15 of the new workspace so RTWP can restore all three in one instruction."
+            }
+          ]
+        },
+        {
+          "id": "ch_013",
+          "title": "Tracing a Live Context Switch",
+          "content_markdown": "Let's watch a live `BLWP` call step by step. Suppose our main program is cruising along with `WP = \u003e0100`, and at address `\u003e2000` it executes `BLWP @VEC`, where `@VEC` simply labels the memory address holding our two-word transfer vector: `\u003e0200` (new workspace) and `\u003e4000` (subroutine code).\n\nInstantly, the TMS9900 switches `WP` to `\u003e0200`, writes the old `WP` (`\u003e0100`) into the new `R13` at `\u003e021A` (26 bytes past `\u003e0200`), stores the next instruction address (`\u003e2004`) into `R14` at `\u003e021C`, saves `ST` into `R15` at `\u003e021E`, and jumps `PC` to `\u003e4000`. Notice that the main program's sixteen registers at `\u003e0100`–`\u003e011E` were never even touched!\n\nEven better, TI wired all **16 prioritized hardware interrupts** (levels 0 through 15) to use this exact same transfer-vector table sitting at the bottom of memory (`\u003e0000`–`\u003e003E`), making interrupt entry and `RTWP` return astonishingly fast.",
+          "questions": [
+            {
+              "id": "q_025",
+              "prompt": "In the walkthrough where BLWP switches WP from \u003e0100 to \u003e0200, what happens to the caller's registers stored at \u003e0100–\u003e011E?",
+              "choices": [
+                "They are copied byte by byte into addresses \u003e0200–\u003e021E first",
+                "They are cleared to zero so the new routine starts cleanly",
+                "They remain completely untouched in RAM while the new workspace runs",
+                "They are locked in read-only mode until the system reboots"
+              ],
+              "correct_index": 2,
+              "explanation": "Because BLWP simply points WP at a different 32-byte block (\u003e0200), the caller's original register workspace at \u003e0100 stays safely intact in RAM without copying a single byte."
+            },
+            {
+              "id": "q_026",
+              "prompt": "How did the TMS9900 handle its 16 prioritized hardware interrupt levels?",
+              "choices": [
+                "Each interrupt level looked up a two-word transfer vector at the bottom of memory",
+                "Each interrupt level triggered an automatic hardware push of R0 through R15",
+                "All 16 interrupts shared one fixed workspace located inside the clock chip",
+                "Only interrupt level 0 could switch workspaces while levels 1–15 halted the CPU"
+              ],
+              "correct_index": 0,
+              "explanation": "Hardware interrupt levels 0 through 15 each had their own two-word (WP, PC) transfer vector at addresses \u003e0000 through \u003e003E, performing the same instant workspace swap as BLWP."
+            }
+          ]
+        },
+        {
+          "id": "ch_014",
+          "title": "Wait—Where Is the Hardware Stack?",
+          "content_markdown": "Here is a surprise that trips up almost everyone coming from the Z80 or Motorola 6809: the TMS9900 has **no dedicated hardware stack pointer** at all! There is no `PUSH` or `POP` instruction built into the silicon.\n\nFor quick, everyday subroutines that don't need a whole fresh workspace, TI offered a lighter instruction called **`BL`** (*Branch and Link*). Instead of pushing the return address onto a stack, `BL` simply drops it into `R11`, and the subroutine returns by branching indirectly to the address stored inside `R11` (`B *R11`).\n\nThat's lightning fast for a single call—until Routine A calls Routine B, which overwrites `R11` and forgets how to get back to main! Likewise, if a `BLWP` routine ever called *itself* recursively (calling itself again before returning) using the same fixed transfer vector, it would clobber its own `R13`–`R15` linkage. To nest calls or write recursive code, TMS9900 programmers designated an ordinary register—by convention `R10`—as a software stack pointer.",
+          "questions": [
+            {
+              "id": "q_027",
+              "prompt": "What happens if a subroutine invoked with BL calls a second subroutine with BL without saving R11 first?",
+              "choices": [
+                "The CPU automatically allocates a brand-new 32-byte workspace in RAM",
+                "The hardware shifts the old return address down into register R12",
+                "The Status Register halts execution and triggers a stack-overflow trap",
+                "The second BL overwrites R11, erasing the original caller's return address"
+              ],
+              "correct_index": 3,
+              "explanation": "Because BL always writes the return address into R11 and the TMS9900 lacks a hardware stack, a nested BL call overwrites R11 unless software explicitly saves it first."
+            },
+            {
+              "id": "q_028",
+              "prompt": "How did TMS9900 programmers support deeply nested or recursive subroutines without a built-in hardware stack pointer?",
+              "choices": [
+                "By rewriting the program's transfer vectors inside read-only memory",
+                "By dedicating an ordinary workspace register like R10 as a software stack pointer",
+                "By disabling all 16 interrupt levels until every nested call returned",
+                "By splitting every recursive routine across sixteen separate interrupt levels"
+              ],
+              "correct_index": 1,
+              "explanation": "Without a hardware stack pointer, programmers adopted a software convention—commonly reserving R10—to manage a stack in RAM for saving return addresses and local state."
+            }
+          ]
+        },
+        {
+          "id": "ch_015",
+          "title": "Brilliant in 1976, Trapped by the Memory Wall",
+          "content_markdown": "History eventually judged TI's memory-to-memory gamble through a dramatic twist of timing. In 1976, a 3 MHz TMS9900 ticked once every 333 nanoseconds, while standard RAM chips responded in roughly 300 to 450 nanoseconds. Because external memory ran nearly as fast as the processor itself, keeping `R0`–`R15` in RAM barely slowed everyday math while making `BLWP`/`RTWP` context switches blazingly quick.\n\nWithin a decade, however, silicon transistors shrank and CPU clock speeds skyrocketed far faster than external DRAM access times. Computer architects call this widening gap between fast processor logic and slower off-chip memory the **memory wall**. Once on-chip registers became ten times faster than external RAM, crossing the memory bus for every single register access turned from a clever bargain into a severe speed penalty.\n\nYet in 1976, before that wall closed in, TI's saved silicon bought two rare minicomputer superpowers—what did TI spend those extra transistors on?",
+          "questions": [
+            {
+              "id": "q_029",
+              "prompt": "Why did storing general-purpose registers in external RAM make strong engineering sense in 1976?",
+              "choices": [
+                "Mid-1970s CPUs and RAM ran at comparable speeds, minimizing register-access penalties",
+                "External RAM chips in 1976 were already ten times faster than on-chip CPU logic",
+                "Software compilers in 1976 could not generate code for processors with on-chip registers",
+                "Only external RAM could retain 16-bit numbers during a four-phase clock cycle"
+              ],
+              "correct_index": 0,
+              "explanation": "In 1976, 3 MHz CPU cycle times and standard RAM access times were closely matched, so fetching registers from external RAM carried little speed penalty while saving silicon and accelerating context switches."
+            },
+            {
+              "id": "q_030",
+              "prompt": "What does the 'memory wall' refer to in computer architecture?",
+              "choices": [
+                "The physical ceramic barrier separating a CPU's address pins from its data pins",
+                "The strict 64-kilobyte addressing limit imposed by a 16-bit address bus",
+                "A hardware protection circuit that prevents programs from overwriting ROM",
+                "The growing speed gap between rapidly accelerating CPUs and slower off-chip RAM"
+              ],
+              "correct_index": 3,
+              "explanation": "The memory wall describes how processor clock speeds climbed far faster than external memory access speeds, penalizing architectures that rely heavily on off-chip memory trips."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_04",
+      "title": "4. Minicomputer Muscle on Silicon: Hardware MPY, DIV \u0026 XOP Traps",
+      "summary": "See where TI spent the silicon budget saved by moving registers into RAM: genuine unsigned 16-by-16 hardware multiply (MPY) producing 32-bit results across adjacent registers, and rare 32-by-16 hardware divide (DIV) returning both quotient and remainder in one instruction with overflow checks. Then explore Extended Operations (XOP), sixteen numbered software traps that hand an operand's address to a fresh handler workspace so older or smaller chips can emulate future hardware instructions.",
+      "introduced_terms": [
+        "double-word operand",
+        "hardware divider",
+        "Extended Operation (XOP)"
+      ],
+      "chunks": [
+        {
+          "id": "ch_016",
+          "title": "Beyond Shift-and-Add Loops",
+          "content_markdown": "If you wrote a game or payroll program on a Zilog Z80 in 1976 and needed to multiply two numbers, you hit a speed bump: the Z80 had no multiply or divide instructions at all. Programmers had to craft tedious software loops that shifted bits and added over and over. Two years later, the Motorola 6809 thrilled coders with an 8-by-8 hardware multiplier (`MUL`)—yet even the 6809 topped out at 8-bit inputs and still offered zero hardware division.\n\nTexas Instruments played in a different weight class. By keeping `R0`–`R15` out in external RAM, TI freed enough silicon and internal microcode (the tiny step-by-step control recipes built inside a CPU) on the 1976 TMS9900 to deliver real minicomputer arithmetic right out of the box.\n\nNot only could the TMS9900 multiply full 16-bit values in hardware—it could divide 32-bit numbers in a single instruction, a luxury almost unheard of on 1970s microchips.",
+          "questions": [
+            {
+              "id": "q_031",
+              "prompt": "How did the 1976 TMS9900's built-in arithmetic capabilities compare to the Zilog Z80 and Motorola 6809?",
+              "choices": [
+                "All three chips offered identical 16-bit hardware multiply and divide instructions",
+                "The TMS9900 omitted multiplication entirely in favor of faster text shifting",
+                "The 6809 included full 32-bit division while the TMS9900 handled only 8-bit math",
+                "The TMS9900 offered 16-bit multiply and 32-bit divide unmatched by 8-bit rivals"
+              ],
+              "correct_index": 3,
+              "explanation": "The Z80 lacked both hardware multiply and divide, and the 6809 had only an 8-by-8 multiply, whereas the TMS9900 featured 16-by-16 hardware multiply and 32-by-16 hardware divide."
+            },
+            {
+              "id": "q_032",
+              "prompt": "What architectural trade-off freed enough silicon room on the 1976 TMS9900 for built-in multiply and divide logic?",
+              "choices": [
+                "Eliminating the 16-bit ALU in favor of a 4-bit serial adder",
+                "Moving general-purpose registers R0–R15 off silicon into external RAM",
+                "Removing hardware interrupt support from the processor instruction set",
+                "Requiring an external math co-processor chip to run every addition"
+              ],
+              "correct_index": 1,
+              "explanation": "Offloading sixteen 16-bit registers into RAM workspaces conserved die area, allowing TI to spend its transistor budget on a full 16-bit datapath plus microcoded MPY and DIV."
+            }
+          ]
+        },
+        {
+          "id": "ch_017",
+          "title": "Pairing Registers for 32-Bit Precision",
+          "content_markdown": "Full 16-bit arithmetic immediately raises a storage problem: multiply two 16-bit unsigned numbers—say, $$50{,}000 \\times 50{,}000$$—and the answer climbs past two billion, bursting far outside a single 16-bit register's $$65{,}535$$ ceiling. TI solved this cleanly with a **double-word operand**, gluing two neighboring workspace registers (`Rd` and `Rd+1`) together to hold one 32-bit number.\n\nThe unsigned multiply instruction **`MPY`** multiplies any 16-bit source value by destination register `Rd`, then stores the upper 16 bits of the 32-bit product in `Rd` and the lower 16 bits in `Rd+1`.\n\nEven bolder was TI's genuine **hardware divider**—dedicated processor logic that performs binary long division automatically. The **`DIV`** instruction takes a 32-bit unsigned dividend spanning `Rd` and `Rd+1`, divides it by any 16-bit source divisor, and writes both the 16-bit quotient (`Rd`) and the 16-bit remainder (`Rd+1`) back in one instruction.",
+          "questions": [
+            {
+              "id": "q_033",
+              "prompt": "Why does the TMS9900's MPY instruction write its answer across two consecutive workspace registers?",
+              "choices": [
+                "Multiplying two 16-bit numbers can yield a 32-bit result too wide for one register",
+                "The TMS9900 splits every 16-bit answer into two 8-bit registers for backward compatibility",
+                "The first register stores the answer while the second stores a backup copy for interrupts",
+                "Each RAM workspace register can only hold positive numbers up to 255"
+              ],
+              "correct_index": 0,
+              "explanation": "The product of two 16-bit unsigned integers can require up to 32 bits, so MPY uses a double-word operand across Rd (high 16 bits) and Rd+1 (low 16 bits)."
+            },
+            {
+              "id": "q_034",
+              "prompt": "After a valid DIV instruction completes on the TMS9900, what values sit in registers Rd and Rd+1?",
+              "choices": [
+                "The original divisor in Rd and the original 32-bit dividend in Rd+1",
+                "The rounded floating-point answer in Rd and the sign bit in Rd+1",
+                "The 16-bit quotient in Rd and the 16-bit remainder in Rd+1",
+                "The upper half of the quotient in Rd and the lower half in Rd+1"
+              ],
+              "correct_index": 2,
+              "explanation": "DIV divides the 32-bit dividend in (Rd, Rd+1) by a 16-bit divisor and leaves the 16-bit integer quotient in Rd and the 16-bit remainder in Rd+1."
+            }
+          ]
+        },
+        {
+          "id": "ch_018",
+          "title": "Watching MPY and DIV in Action",
+          "content_markdown": "Let's walk through a concrete round trip with numbers you can check in your head. Suppose `R1` holds $$1{,}000$$ and `R2` holds $$100$$. When the CPU executes `MPY R1, R2`, it computes $$1{,}000 \\times 100 = 100{,}000$$. Since one 16-bit word wraps every $$65{,}536$$ ($$2^{16}$$), we split $$100{,}000 = 1 \\times 65{,}536 + 34{,}464$$. In roughly 52 clock cycles, the TMS9900 places `1` in `R2` (the high word) and `34,464` in `R3` (the low word).\n\nNow keep that exact 32-bit double-word `100,000` sitting in `R2` and `R3`, load `300` into `R4`, and run `DIV R4, R2`. Because $$100{,}000 = 300 \\times 333 + 100$$, the hardware divider finishes in roughly 92 to 124 cycles—far faster than a multi-hundred-cycle software loop—leaving quotient `333` in `R2` and remainder `100` in `R3`.",
+          "questions": [
+            {
+              "id": "q_035",
+              "prompt": "If R1 holds 1,000 and R2 holds 100, what values sit in R2 and R3 right after executing MPY R1, R2?",
+              "choices": [
+                "R2 holds 100,000 and R3 holds 0",
+                "R2 holds 1 and R3 holds 34,464",
+                "R2 holds 34,464 and R3 holds 1",
+                "R2 holds 1,000 and R3 holds 100"
+              ],
+              "correct_index": 1,
+              "explanation": "Since $$100{,}000 = 1 \\times 65{,}536 + 34{,}464$$, MPY writes the upper 16-bit word (1) into the destination register R2 and the lower 16-bit word (34,464) into R3."
+            },
+            {
+              "id": "q_036",
+              "prompt": "When dividing the 32-bit value 100,000 (in R2 and R3) by 300 (in R4) using DIV R4, R2, what does R3 hold afterward?",
+              "choices": [
+                "The integer quotient 333",
+                "The original divisor 300",
+                "The high word value 1",
+                "The integer remainder 100"
+              ],
+              "correct_index": 3,
+              "explanation": "Because $$100{,}000 \\div 300$$ equals 333 with a remainder of 100, DIV places the quotient (333) in R2 and the remainder (100) in R3."
+            }
+          ]
+        },
+        {
+          "id": "ch_019",
+          "title": "Overflow Guardrails and the XOP Trap Door",
+          "content_markdown": "Even great hardware math has sharp edges. First, both `MPY` and `DIV` on the original TMS9900 handled only **unsigned** (non-negative) integers—if you needed negative numbers, software had to track signs manually. Second, `DIV` guarded against impossible answers: if the divisor was zero, or if the high word `Rd` was greater than or equal to the divisor, the quotient could not fit in 16 bits. In that case, the TMS9900 safely aborted the divide without corrupting `Rd` and raised the Status Register's overflow flag.\n\nWhat about operations TI didn't wire into 1976 silicon, like floating-point (decimal-fraction) math or custom operating-system calls? TI added sixteen **Extended Operations (`XOP`)**—software traps numbered 0 through 15. Like `BLWP`, an `XOP` swaps workspaces through a fixed transfer-vector table (`\u003e0040`–`\u003e007E`), *and* automatically computes the source operand's effective memory address and drops it straight into the handler's `R11`!",
+          "questions": [
+            {
+              "id": "q_037",
+              "prompt": "What happens on the TMS9900 if a DIV instruction's divisor is zero or less than or equal to the dividend's high word Rd?",
+              "choices": [
+                "The CPU wraps the quotient silently and clears all Status Register flags",
+                "The processor automatically expands the quotient across three workspace registers",
+                "The CPU aborts the division, leaves the operand intact, and sets the overflow flag",
+                "The hardware switches into a built-in floating-point mode to compute a fraction"
+              ],
+              "correct_index": 2,
+              "explanation": "If the divisor is zero or less than or equal to Rd, the quotient cannot fit in 16 bits, so DIV aborts without corrupting Rd/Rd+1 and sets the Status Register overflow bit."
+            },
+            {
+              "id": "q_038",
+              "prompt": "Beyond switching workspaces like BLWP, what extra step does an Extended Operation (XOP) automatically perform for its handler routine?",
+              "choices": [
+                "It computes the source operand's effective address and places it into the handler's R11",
+                "It converts unsigned numbers into negative integers before entering the handler",
+                "It copies all sixteen caller registers directly into the handler's workspace",
+                "It pauses the four-phase clock until the external memory finishes refreshing"
+              ],
+              "correct_index": 0,
+              "explanation": "An XOP instruction works like a BLWP trap through vectors \u003e0040–\u003e007E, plus it resolves the instruction's source operand address and delivers it straight into the handler's R11."
+            }
+          ]
+        },
+        {
+          "id": "ch_020",
+          "title": "Software Today, Silicon Tomorrow",
+          "content_markdown": "Step back and see why `XOP` was such a smart minicomputer idea. Across the TI 990 family, an application could invoke `XOP 1` to run a floating-point square root or format text. On a budget single-chip TMS9900 machine, `XOP 1` trapped cleanly into a software routine via its transfer vector; on a high-end rack-mounted TI 990 model, custom hardware could recognize and execute that exact same opcode directly in silicon! Software ran unchanged across both tiers.\n\nBetween 16-by-16 `MPY`, 32-by-16 `DIV`, and extensible `XOP` traps, TI proved that its off-chip workspace gamble paid real dividends in computational muscle.\n\nSo far, we've watched the TMS9900 move 16-bit words across memory and crunch 32-bit numbers. Yet industrial controllers and home computers also spend huge amounts of time flipping tiny single-bit switches—an indicator lamp, a motor relay, a keyboard key. Why move a whole 16-bit word just to flip one bit?",
+          "questions": [
+            {
+              "id": "q_039",
+              "prompt": "Why was TI's Extended Operation (XOP) design valuable across a family of differently priced TI 990 computers?",
+              "choices": [
+                "It guaranteed every TI 990 model ran at the exact same clock frequency",
+                "It let low-end chips emulate in software what high-end models could run in hardware",
+                "It prevented programmers from writing unsigned MPY or DIV instructions",
+                "It replaced the need for external RAM workspaces on entry-level boards"
+              ],
+              "correct_index": 1,
+              "explanation": "XOP traps allowed identical machine code to run across product tiers: budget systems emulated the operation in a trap handler, while pricier systems could implement it directly in hardware."
+            },
+            {
+              "id": "q_040",
+              "prompt": "Which statement best captures how the TMS9900 handled arithmetic and future instruction extensions?",
+              "choices": [
+                "It omitted hardware division and relied on Z80-style prefix bytes for extensions",
+                "It restricted arithmetic to 8-bit bytes and banned software-trapped instructions",
+                "It combined unsigned hardware MPY and DIV with XOP software traps for missing operations",
+                "It built hardware decimal-fraction math onto silicon while skipping integer multiply"
+              ],
+              "correct_index": 2,
+              "explanation": "The TMS9900 provided genuine unsigned hardware MPY and DIV on silicon and used sixteen numbered XOP traps to let software cleanly emulate missing operations like floating-point math."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_05",
+      "title": "5. One Bit at a Time: The CRU Serial I/O Paradigm",
+      "summary": "Contrast byte-wide I/O ports and memory-mapped peripherals with TI's distinctive Communications Register Unit (CRU), a serial bus using just three dedicated pins and workspace register R12 to reach up to 4,096 individual input and output bits. Trace single-bit commands (SBO, SBZ, TB) and variable-width serial shifts (LDCR, STCR) in action across keyboards, relays, and industrial interfaces—and weigh pin-saving elegance against bulk transfer speed.",
+      "introduced_terms": [
+        "Communications Register Unit (CRU)",
+        "bit-addressable I/O",
+        "read-modify-write overhead"
+      ],
+      "chunks": [
+        {
+          "id": "ch_021",
+          "title": "Why Move Eight Bits to Flip One Switch?",
+          "content_markdown": "In the 8-bit world, CPUs talked to outside devices in one of two ways: byte-wide I/O ports (like the Z80's `IN` and `OUT` instructions) or memory-mapped I/O (like the Motorola 6809 treating hardware ports as ordinary memory addresses). Both approaches always moved a whole 8-bit byte at a time.\n\nImagine a factory controller—or a home computer—wired to eight unrelated switches packed into one 8-bit port: a warning lamp, a cassette motor, a printer strobe, and five keyboard lines. To turn on just the cassette motor without disturbing the other seven devices, an 8-bit CPU suffers **read-modify-write overhead**: it must read the entire byte, combine it with a bitmask to flip only one bit, and write the whole byte back.\n\nInherited from the TI 990 minicomputer, the TMS9900 offered a remarkably clean third option designed specifically for individual switches.",
+          "questions": [
+            {
+              "id": "q_041",
+              "prompt": "What causes read-modify-write overhead when an 8-bit CPU flips a single hardware control line on a shared byte-wide port?",
+              "choices": [
+                "The CPU must pause all interrupts while waiting for the power rail to settle",
+                "The CPU must read the full byte, mask one bit, and write the full byte back",
+                "The peripheral must translate every 8-bit byte into a 16-bit double-word operand",
+                "The program must copy the entire port table into external DRAM before writing"
+              ],
+              "correct_index": 1,
+              "explanation": "When eight devices share one byte-wide port, changing a single bit safely requires reading the current byte, modifying just the target bit with a mask, and writing the byte back."
+            },
+            {
+              "id": "q_042",
+              "prompt": "How did traditional Z80 I/O ports and Motorola 6809 memory-mapped I/O resemble each other despite using different instructions?",
+              "choices": [
+                "Both transferred data in full byte-wide chunks rather than addressing individual bits",
+                "Both required a dedicated 64-pin ceramic package to wire external keyboards",
+                "Both shifted every output signal serially across a single one-bit wire",
+                "Both stored hardware switch settings inside workspace register R12"
+              ],
+              "correct_index": 0,
+              "explanation": "Although the Z80 used dedicated port instructions and the 6809 used memory addresses, both communicated with peripherals in full 8-bit bytes rather than individual hardware bits."
+            }
+          ]
+        },
+        {
+          "id": "ch_022",
+          "title": "A Private Doorbell for Every Single Bit",
+          "content_markdown": "Texas Instruments called its third I/O path the **Communications Register Unit (`CRU`)**, a dedicated serial interface that gives the processor direct **bit-addressable I/O**—the ability to read or change any individual hardware line by its own bit address without touching its neighbors.\n\nThink of byte-wide I/O like mailing a letter to an eight-unit apartment building and asking all eight tenants to pass it around. The CRU instead wires a private doorbell straight to each individual switch.\n\nElectrically, the design was wonderfully thrifty. It needed only **three** dedicated CRU pins on the TMS9900: `CRUIN` to receive one bit, `CRUOUT` to send one bit, and `CRUCLK` to pulse an output latch. Teamed with 12 lines from the address bus, those three pins individually addressed up to $$2^{12} = 4{,}096$$ input bits and $$4{,}096$$ output bits, anchored from a base address stored inside workspace register **`R12`**.",
+          "questions": [
+            {
+              "id": "q_043",
+              "prompt": "How many individual input bits and output bits could the TMS9900's CRU address using its 12 address lines and three dedicated CRU pins?",
+              "choices": [
+                "Up to 64 input bits and 64 output bits",
+                "Up to 256 input bits and 256 output bits",
+                "Up to 1,024 input bits and 1,024 output bits",
+                "Up to 4,096 input bits and 4,096 output bits"
+              ],
+              "correct_index": 3,
+              "explanation": "Using 12 address lines ($$2^{12} = 4{,}096$$) alongside separate CRUIN and CRUOUT pins, the TMS9900 could individually address 4,096 input bits and 4,096 output bits."
+            },
+            {
+              "id": "q_044",
+              "prompt": "Which workspace register did the TMS9900 reserve to hold the base address for CRU bit-addressable I/O operations?",
+              "choices": [
+                "Register R0, right at the start of the active workspace",
+                "Register R10, alongside the software stack pointer",
+                "Register R12, anchoring offsets for CRU bit instructions",
+                "Register R15, shared directly with the saved Status Register"
+              ],
+              "correct_index": 2,
+              "explanation": "By hardware design, TMS9900 CRU instructions always use workspace register R12 as the base address for locating individual peripheral bits."
+            }
+          ]
+        },
+        {
+          "id": "ch_023",
+          "title": "SBO, SBZ, TB, and Shifting Multi-Bit Fields",
+          "content_markdown": "Watch how cleanly CRU code reads in practice. Suppose a system attaches a keyboard scanner and cassette recorder through TI's companion **TMS9901** programmable interface chip, and we load its CRU base address into `R12`.\n\nNeed to spin up the cassette motor wired to bit offset 6? One surgical instruction—**`SBO 6`** (*Set Bit to One*)—drives that exact pin high without disturbing any neighboring line. Ready to stop the tape? **`SBZ 6`** (*Set Bit to Zero*) drops it low. Want to check whether a key wired to bit offset 3 is pressed? **`TB 3`** (*Test Bit*) reads that single wire over `CRUIN` and places the result directly into the Status Register's Equal flag so the next line can branch immediately.\n\nWhat if a peripheral needs several bits—like a 7-bit character or a 14-bit timer count? **`LDCR`** (*Load Communications Register*) shifts 1 to 16 bits serially out through `CRUOUT`, while **`STCR`** (*Store Communications Register*) shifts 1 to 16 bits back in from `CRUIN`.",
+          "questions": [
+            {
+              "id": "q_045",
+              "prompt": "Which trio of TMS9900 CRU instructions handles setting, clearing, and reading a single hardware bit directly?",
+              "choices": [
+                "SBO, SBZ, and TB",
+                "BLWP, RTWP, and XOP",
+                "MPY, DIV, and LDCR",
+                "BL, STCR, and WP"
+              ],
+              "correct_index": 0,
+              "explanation": "SBO (Set Bit to One), SBZ (Set Bit to Zero), and TB (Test Bit) operate directly on a single CRU bit relative to the base address in R12."
+            },
+            {
+              "id": "q_046",
+              "prompt": "What do the CRU instructions LDCR and STCR accomplish when a peripheral needs more than a single control bit?",
+              "choices": [
+                "They switch the TMS9900 into an 8-bit Z80-compatible port mode",
+                "They copy an entire 32-byte workspace directly into external ROM",
+                "They bypass the CRU pins to send parallel 16-bit bursts over RAM",
+                "They serially shift between 1 and 16 bits out to or in from CRU lines"
+              ],
+              "correct_index": 3,
+              "explanation": "LDCR (Load Communications Register) serially outputs 1 to 16 bits over CRUOUT, while STCR (Store Communications Register) serially reads 1 to 16 bits from CRUIN."
+            }
+          ]
+        },
+        {
+          "id": "ch_024",
+          "title": "Pin Thrift vs. Bulk Speed",
+          "content_markdown": "If bit-addressable CRU I/O was so crisp and pin-thrifty, why didn't it replace parallel buses everywhere? Every engineering choice carries a trade-off. Because `LDCR` and `STCR` march bits one by one across a single serial wire—pulsing `CRUCLK` for each individual bit—transferring a full 16-bit value takes dozens of clock cycles.\n\nThat made the CRU unbeatable for low-cost, low-speed control: flipping relays, scanning keyboards, reading industrial limit switches, or talking to simple chips with almost zero glue logic. Even a bare 1-bit latch chip could connect right to the CRU! Yet high-speed video graphics or fast disk drives still needed parallel memory-mapped buses that moved whole bytes or words in a single beat.\n\nProgrammers also had to watch a subtle `LDCR`/`STCR` twist: transferring 1 to 8 bits automatically accessed a single byte operand, whereas transferring 9 to 16 bits switched to a full word-aligned 16-bit operand.",
+          "questions": [
+            {
+              "id": "q_047",
+              "prompt": "Why was the TMS9900's CRU bus poorly suited for streaming high-bandwidth video frames or fast disk blocks?",
+              "choices": [
+                "CRU pins were hardwired to read-only mode and could never send output",
+                "Serial bit-by-bit transfers took far more clock cycles than parallel word transfers",
+                "Using CRU instructions permanently cleared all sixteen registers in the workspace",
+                "The CRU bus could only operate when the external four-phase clock was paused"
+              ],
+              "correct_index": 1,
+              "explanation": "Because LDCR and STCR shift data one bit per pulse across a single serial wire, CRU excels at low-rate bit control but is far slower than parallel memory-mapped transfers for bulk data."
+            },
+            {
+              "id": "q_048",
+              "prompt": "How did LDCR and STCR change their operand behavior depending on the number of bits transferred?",
+              "choices": [
+                "Transfers of 1–8 bits used external RAM while 9–16 bits used ROM",
+                "Transfers of 1–8 bits sent outputs while 9–16 bits always read inputs",
+                "Transfers of 1–8 bits used byte operands while 9–16 bits used word operands",
+                "Transfers of 1–8 bits skipped R12 while 9–16 bits skipped the address bus"
+              ],
+              "correct_index": 2,
+              "explanation": "On the TMS9900, LDCR and STCR treat bit counts of 1 through 8 as byte-oriented operations and counts of 9 through 16 as 16-bit word-oriented operations."
+            }
+          ]
+        },
+        {
+          "id": "ch_025",
+          "title": "A 16-Bit Dream Meets Living-Room Reality",
+          "content_markdown": "Pause and survey the remarkable 1976 chip we have assembled across these first five sections. The TMS9900 brought a full 16-bit minicomputer architecture onto single-chip silicon: a non-multiplexed 16-bit data bus, relocatable RAM register workspaces, single-instruction `BLWP`/`RTWP` context switches, genuine unsigned 16-by-16 `MPY` and 32-by-16 `DIV`, extensible `XOP` traps, and surgical CRU bit-addressable I/O.\n\nOn paper, dropping this powerhouse into a consumer home computer in 1979 should have embarrassed every 8-bit rival from Apple, Atari, and Commodore. Imagine walking into a department store and seeing a genuine 16-bit minicomputer chip sitting next to 8-bit toys!\n\nYet when Texas Instruments actually shipped its famous home computers, reviewers and programmers were baffled to discover that everyday programs ran noticeably *slower* than on 8-bit machines. How could engineers take such a formidable 16-bit processor and accidentally tie both of its hands behind its back?",
+          "questions": [
+            {
+              "id": "q_049",
+              "prompt": "Which combination of features made the raw TMS9900 architecture look formidable on paper against 1970s 8-bit home-computer CPUs?",
+              "choices": [
+                "Single-voltage 40-pin packaging, a Direct Page register, and Z80 binary compatibility",
+                "Sixteen on-chip 32-bit registers, dual hardware stacks, and built-in DRAM refresh",
+                "Zero external support chips, shadow register banks, and 8-bit prefix-byte loops",
+                "A 16-bit data bus, fast BLWP switches, hardware MPY/DIV, and CRU I/O"
+              ],
+              "correct_index": 3,
+              "explanation": "With a true 16-bit data path, instant workspace context switching, hardware 16-by-16 multiply and 32-by-16 divide, and CRU bit I/O, the TMS9900 outclassed 8-bit CPUs on raw architectural features."
+            },
+            {
+              "id": "q_050",
+              "prompt": "What central paradox defines the transition from the TMS9900's chip architecture to Texas Instruments' home computers?",
+              "choices": [
+                "TI forgot to include the TMS9900 inside its home computers and shipped a 4-bit chip instead",
+                "Despite its genuine 16-bit TMS9900 CPU, TI's home computers felt slower than 8-bit rivals",
+                "Home-computer buyers rejected the TMS9900 solely because it lacked hardware multiplication",
+                "The TMS9900 ran too fast for televisions to display any text or graphics on screen"
+              ],
+              "correct_index": 1,
+              "explanation": "Although the TI-99/4 and TI-99/4A boasted a genuine 16-bit TMS9900 processor, surrounding system bottlenecks made everyday software feel surprisingly sluggish compared to 8-bit competitors."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_06",
+      "title": "6. The Cancelled TMS9985 \u0026 the TI-99/4's 8-Bit Chokepoint",
+      "summary": "Begin the cautionary tale of the TI-99/4 (1979) and TI-99/4A (1981): how TI designed its home computer around the planned 40-pin, 8-bit-bus TMS9985 with on-chip RAM, only to cancel the chip and drop the 64-pin TMS9900 onto a cost-cut 8-bit board. Follow every 16-bit word as an 8-bit bus multiplexer splits it into two slow byte cycles padded with wait states—leaving just 256 bytes of fast 16-bit scratchpad RAM as the CPU's lone express lane.",
+      "introduced_terms": [
+        "bus multiplexer",
+        "wait state",
+        "scratchpad RAM"
+      ],
+      "chunks": [
+        {
+          "id": "ch_026",
+          "title": "A Motherboard Built for a Ghost Chip",
+          "content_markdown": "When Texas Instruments unveiled the **TI-99/4** in 1979—and its sleeker, full-keyboard **TI-99/4A** successor in 1981—ads proudly celebrated the first 16-bit home computer. Yet the machine's biggest flaw began with a chip that never shipped.\n\nTI's Consumer Products Group had *not* designed the console around the bulky 64-pin TMS9900. Their blueprint centered on the planned **TMS9985**: an economical 40-pin cousin running the same 16-bit instruction set over an inexpensive 8-bit external data bus—crucially equipped with 256 bytes of fast 16-bit RAM built right onto the CPU die so register workspaces would never clog the narrow external bus.\n\nIn late 1978, silicon troubles forced TI to cancel the TMS9985. Unwilling to delay launch and redesign the entire 8-bit motherboard, engineers bolted the full 64-pin TMS9900 straight onto a circuit board never meant to feed it.",
+          "questions": [
+            {
+              "id": "q_051",
+              "prompt": "Which planned processor was the TI-99/4 motherboard originally designed to use before silicon problems forced its cancellation?",
+              "choices": [
+                "The 40-pin Zilog Z80 paired with a TI emulator",
+                "The Motorola 6809 paired with a custom bus adapter",
+                "The 40-pin TMS9985 with an 8-bit bus and on-chip RAM",
+                "The multi-board discrete logic CPU from the TI 990/10"
+              ],
+              "correct_index": 2,
+              "explanation": "TI originally engineered the home computer around the planned 40-pin, 8-bit-bus TMS9985 (which would have included 256 bytes of on-chip RAM) before cancelling it and substituting the TMS9900."
+            },
+            {
+              "id": "q_052",
+              "prompt": "Why would the planned TMS9985's 256 bytes of on-chip RAM have been so important on an 8-bit motherboard?",
+              "choices": [
+                "It would have kept register workspaces fast on silicon instead of crossing the narrow 8-bit bus",
+                "It would have stored entire video games without requiring plug-in cartridges or cassette tapes",
+                "It would have eliminated the need for a keyboard or television connection on the TI-99/4",
+                "It would have converted 16-bit TI instructions automatically into 8-bit Apple II programs"
+              ],
+              "correct_index": 0,
+              "explanation": "Because the 9900 architecture stores R0–R15 in RAM, keeping the register workspace inside fast on-chip 16-bit RAM would have shielded everyday register operations from the slower 8-bit external bus."
+            }
+          ]
+        },
+        {
+          "id": "ch_027",
+          "title": "Two Lanes Crammed Through a One-Lane Tollbooth",
+          "content_markdown": "Dropping a 16-bit TMS9900 onto an 8-bit board created an immediate plumbing crisis. Wiring full 16-bit memory across the entire console and its expansion ports would have doubled memory chip counts and blown the retail price budget. Instead, TI put a **bus multiplexer** between the CPU and almost the entire system.\n\nA **bus multiplexer** is a switching circuit that funnels a wide data path through a narrower one in multiple steps—like forcing a wide two-lane freight train to split its cargo through a single-lane tollbooth. Whenever the TMS9900 asked for a 16-bit word across the 8-bit bus, the multiplexer fetched the high byte first, latched it temporarily, fetched the low byte second, and finally handed the reassembled 16-bit word to the processor.\n\nWhile that two-step shuffle dragged on, the motherboard asserted **wait states**—forced pause cycles that froze the TMS9900 in place until the slower 8-bit bus finished delivering both halves.",
+          "questions": [
+            {
+              "id": "q_053",
+              "prompt": "What job did the 8-bit bus multiplexer perform inside the TI-99/4 and TI-99/4A?",
+              "choices": [
+                "It doubled the TMS9900's clock speed by merging two four-phase clocks together",
+                "It translated CRU serial bits directly into television color signals",
+                "It allowed two TMS9900 chips to share a single 64-pin ceramic socket",
+                "It split every 16-bit CPU memory transfer into two sequential 8-bit byte transfers"
+              ],
+              "correct_index": 3,
+              "explanation": "The bus multiplexer bridged the TMS9900's 16-bit data pins to the console's cheaper 8-bit bus by breaking every 16-bit word access into two consecutive 8-bit transfers."
+            },
+            {
+              "id": "q_054",
+              "prompt": "In microprocessor hardware, what is a wait state?",
+              "choices": [
+                "A software loop programmers write to pause a video game between levels",
+                "An extra idle clock cycle inserted to hold the CPU until slower memory responds",
+                "A low-power sleep mode that turns off the external power rails overnight",
+                "A backup register workspace reserved exclusively for level-15 interrupts"
+              ],
+              "correct_index": 1,
+              "explanation": "Wait states are hardware-enforced pause cycles that temporarily stall the CPU clock sequence so slower buses or memory chips have time to finish a transfer."
+            }
+          ]
+        },
+        {
+          "id": "ch_028",
+          "title": "Compounding the Wait-State Tax",
+          "content_markdown": "Now put two pieces of the puzzle together and watch the performance hit explode. On the TI-99/4 and 99/4A, every single 16-bit access crossing the 8-bit bus multiplexer incurred **four wait states** on top of the normal bus timing.\n\nOn a conventional CPU with on-chip registers, a wait-state bus mainly slows down fetching instructions and loading occasional variables. Remember, though, that the TMS9900's memory-to-memory architecture stores all sixteen registers `R0`–`R15` in RAM! If a program places its register workspace out in 8-bit expansion memory, even an ordinary register addition like `A R1, R4` triggers *four* separate 8-bit-multiplexed round trips: fetching the instruction, reading `R1`, reading `R4`, and writing `R4` back.\n\nWorse still, the TMS9900's internal bus logic often performed a read-before-write even on full word stores, adding yet another slow trip through the 8-bit tollbooth!",
+          "questions": [
+            {
+              "id": "q_055",
+              "prompt": "Why did the TI-99/4A's 4-wait-state 8-bit bus hurt the TMS9900 far more severely than it would hurt a conventional CPU with on-chip registers?",
+              "choices": [
+                "The TMS9900 had to reboot its four-phase clock after every wait state",
+                "Wait states disabled the TMS9900's hardware multiply and divide circuits",
+                "With R0–R15 in RAM, every register access paid the wait-state penalty",
+                "The bus multiplexer forced all 16-bit numbers to be recalculated as 8-bit sums"
+              ],
+              "correct_index": 2,
+              "explanation": "In a memory-to-memory CPU, ordinary register reads and writes are memory accesses—so placing a workspace behind the 4-wait-state 8-bit multiplexer slowed down every single register operation."
+            },
+            {
+              "id": "q_056",
+              "prompt": "In the example A R1, R4 with both code and workspace sitting in 8-bit expansion RAM, why do wait states pile up so rapidly?",
+              "choices": [
+                "Instruction fetch, reading R1 and R4, and writing R4 all cross the 8-bit bus",
+                "The CPU must read all sixteen registers R0 through R15 before adding any two of them",
+                "The 8-bit multiplexer converts every addition into sixteen separate CRU serial pulses",
+                "Each register value must be copied through ROM twice before entering the ALU"
+              ],
+              "correct_index": 0,
+              "explanation": "With code and workspace on the 8-bit bus, instruction fetch, both source/destination register reads, and the final writeback all suffer 8-bit multiplexing and 4-wait-state delays."
+            }
+          ]
+        },
+        {
+          "id": "ch_029",
+          "title": "A 256-Byte Express Lane: Fast Scratchpad RAM",
+          "content_markdown": "Mercifully, not *every* wire on the TI-99/4A motherboard passed through that sluggish 8-bit funnel. To stand in for the 256 bytes of on-chip RAM lost when the TMS9985 died, TI wired two tiny islands directly onto the TMS9900's true 16-bit bus with **zero wait states**: the console's 8 KB system ROM (`\u003e0000`–`\u003e1FFF`) and a tiny **256 bytes of fast 16-bit scratchpad RAM** (`\u003e8300`–`\u003e83FF`).\n\n**Scratchpad RAM** is a small patch of high-speed, directly connected memory meant for the CPU's hottest working data. On the TI-99/4A, those 256 bytes were pure gold. Because one TMS9900 register workspace needs only 32 bytes, putting your workspace inside `\u003e8300`–`\u003e83FF` let `R0`–`R15` run at full native 16-bit, zero-wait-state speed—bypassing the 8-bit multiplexer completely!\n\nStill, 256 bytes is tiny—barely enough for a few workspaces, system pointers, and a handful of critical variables.",
+          "questions": [
+            {
+              "id": "q_057",
+              "prompt": "How much fast, zero-wait-state 16-bit scratchpad RAM did TI wire directly onto the TI-99/4A's 16-bit CPU bus?",
+              "choices": [
+                "32 bytes, enough for exactly one workspace",
+                "256 bytes, standing in for the cancelled TMS9985's on-chip RAM",
+                "16 kilobytes, holding all user programs at full 16-bit speed",
+                "64 kilobytes, covering the entire TMS9900 address space"
+              ],
+              "correct_index": 1,
+              "explanation": "TI wired just 256 bytes of zero-wait-state 16-bit scratchpad RAM (at \u003e8300–\u003e83FF) directly to the 16-bit bus as an external substitute for the cancelled TMS9985's on-chip RAM."
+            },
+            {
+              "id": "q_058",
+              "prompt": "What immediate advantage did a program gain by placing its 32-byte register workspace inside the TI-99/4A's scratchpad RAM?",
+              "choices": [
+                "It doubled the size of every register from 16 to 32 bits",
+                "It doubled the width of the CRU serial peripheral output pins",
+                "It let hardware interrupts run without needing two-word transfer vectors",
+                "Every register read and write bypassed the wait-state 8-bit multiplexer"
+              ],
+              "correct_index": 3,
+              "explanation": "Because scratchpad RAM sat directly on the un-multiplexed 16-bit bus with zero wait states, placing a register workspace there restored full-speed native register accesses."
+            }
+          ]
+        },
+        {
+          "id": "ch_030",
+          "title": "Wait—Where Did the Other 16 Kilobytes Go?",
+          "content_markdown": "Take a breath and review the first layer of TI's cautionary tale. A single cancelled chip—the 40-pin TMS9985—pushed Texas Instruments into squeezing a full 64-pin TMS9900 behind an 8-bit bus multiplexer that sliced every 16-bit transfer in two and padded it with four wait states. Only the 8 KB console ROM and 256 bytes of fast 16-bit scratchpad RAM escaped the chokepoint.\n\nYet if you picked up a TI-99/4A box at Sears or Toys 'R' Us in 1981, bold letters on the front promised **'16K RAM'** right out of the box—matching the Atari 400 and dwarfing the Commodore VIC-20's 5 KB!\n\nWait a second: if the TMS9900 only had 256 bytes of RAM wired to its own CPU bus, where on earth were those 16,384 bytes of advertised user memory sitting? The answer leads straight to one of the most ingenious—and most awkwardly wired—chips inside the console.",
+          "questions": [
+            {
+              "id": "q_059",
+              "prompt": "Which two memory regions inside an unexpanded TI-99/4A sat directly on the TMS9900's un-multiplexed 16-bit bus?",
+              "choices": [
+                "The 8 KB console ROM and the 256-byte fast scratchpad RAM",
+                "The 16 KB of advertised user DRAM and the plug-in cartridge slot",
+                "The cassette tape buffer and the external printer expansion port",
+                "The entire 64 KB address map except for the bottom 256 bytes"
+              ],
+              "correct_index": 0,
+              "explanation": "Only the 8 KB console ROM (\u003e0000–\u003e1FFF) and the 256 bytes of scratchpad RAM (\u003e8300–\u003e83FF) connected directly to the 16-bit zero-wait-state bus."
+            },
+            {
+              "id": "q_060",
+              "prompt": "What puzzle arises when comparing the TI-99/4A's advertised '16K RAM' with the CPU's direct 256-byte scratchpad RAM?",
+              "choices": [
+                "The box misprinted 256 bytes as 16 kilobytes due to a hexadecimal typo",
+                "The remaining 16 KB sat inside read-only cartridges that users could not edit",
+                "The console's 16 KB user RAM was not wired to the CPU bus",
+                "The TMS9900's 15-bit address bus was incapable of addressing more than 256 bytes"
+              ],
+              "correct_index": 2,
+              "explanation": "Although the TI-99/4A contained 16 KB of dynamic RAM, that memory was not directly wired to the TMS9900's address bus—it lived behind another specialized chip inside the console."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_07",
+      "title": "7. Sixteen Kilobytes Behind Glass: The TMS9918A VDP Bottleneck",
+      "summary": "Meet the TMS9918 and TMS9918A Video Display Processor—a standout graphics chip with colorful tile screens and 32 hardware sprites that went on to power classics like the MSX and ColecoVision—and see how TI's penny-pinching turned it into a memory bottleneck. Discover why the TI-99/4A's advertised 16 KB of user RAM was wired exclusively behind the VDP instead of the CPU bus, forcing the TMS9900 to shuttle program bytes one at a time through indirect video ports.",
+      "introduced_terms": [
+        "Video Display Processor (VDP)",
+        "hardware sprite",
+        "indirect video RAM"
+      ],
+      "chunks": [
+        {
+          "id": "ch_031",
+          "title": "A Star Graphics Chip Given an Impossible Side Job",
+          "content_markdown": "Open a TI-99/4A and you will spot a chip that genuinely deserved every ounce of praise it received: the **TMS9918A** (upgraded from the 1979 TI-99/4's TMS9918). Designed right inside Texas Instruments, it was so capable and affordable that rival companies later snapped it up to power the ColecoVision console, Sega's SG-1000, and the entire MSX home-computer family.\n\nYet inside TI's own home computer, bean-counters handed this stellar graphics chip an awkward second job. Rather than pay for a separate 16-kilobyte bank of dynamic RAM attached directly to the TMS9900 processor, TI wired the console's **entire 16 KB of user RAM** exclusively to the video chip!\n\nThat single cost-cutting shortcut saved a handful of dollars per console—and trapped the TMS9900 behind an invisible wall of glass.",
+          "questions": [
+            {
+              "id": "q_061",
+              "prompt": "Why did Texas Instruments wire the TI-99/4A's 16 KB of dynamic RAM exclusively to the TMS9918A video chip rather than directly to the CPU?",
+              "choices": [
+                "To cut manufacturing costs by avoiding a second bank of RAM on the CPU bus",
+                "Because the TMS9900 lacked enough address pins to reach 16 kilobytes",
+                "Because dynamic RAM could not store 16-bit numbers without a video signal",
+                "To prevent third-party keyboards from reading memory through CRU ports"
+              ],
+              "correct_index": 0,
+              "explanation": "To save component and board costs, TI avoided giving the TMS9900 its own 16 KB bank of CPU DRAM and forced the system to share the 16 KB attached to the TMS9918A video chip."
+            },
+            {
+              "id": "q_062",
+              "prompt": "What later hardware adoption demonstrated that the TMS9918A itself was a highly respected graphics chip despite the TI-99/4A's memory issues?",
+              "choices": [
+                "IBM selected the TMS9918A as the main processor inside its PCs",
+                "Motorola licensed the TMS9918A to expand the 6809's Direct Page RAM",
+                "Zilog adopted the TMS9918A to replace the Z80's DRAM refresh counter",
+                "Systems like the ColecoVision, Sega SG-1000, and MSX built graphics around it"
+              ],
+              "correct_index": 3,
+              "explanation": "The TMS9918A became an industry favorite outside TI, driving vibrant graphics in the ColecoVision, Sega SG-1000, and the MSX standard—where those machines also gave their CPUs direct main RAM."
+            }
+          ]
+        },
+        {
+          "id": "ch_032",
+          "title": "Sprites, Tiles, and the Vault Receptionist",
+          "content_markdown": "The TMS9918A was a self-contained **Video Display Processor (`VDP`)**—a specialized co-processor that handled television scan timing, built-in DRAM refresh, 15 vivid colors, grid-based tile backgrounds, and full bitmap graphics on the 99/4A. Best of all, it supported up to 32 **hardware sprites**: independent movable graphic shapes drawn cleanly over the background by video silicon without forcing the CPU to erase and redraw background pixels.\n\nThe trouble was **indirect video RAM**—memory owned privately by the VDP that does not appear on the CPU's own address bus.\n\nPicture storing all your company's filing cabinets inside a locked glass vault tended by a busy receptionist. You cannot walk in and grab a folder yourself; you have to step up to a tiny mail slot, hand over a slip with the exact drawer number, and ask the receptionist to pass you one page at a time. That was how the TMS9900 had to touch its own 16 KB of user RAM!",
+          "questions": [
+            {
+              "id": "q_063",
+              "prompt": "What key visual advantage did the TMS9918A's 32 hardware sprites give game developers?",
+              "choices": [
+                "They expanded the CPU's direct scratchpad memory from 256 bytes to 32 kilobytes",
+                "Video silicon drew independent movable objects over backgrounds without manual erasing",
+                "They converted monochrome vector lines automatically into 3D wireframe shapes",
+                "They allowed the CPU to execute 32 separate BASIC programs at the same time"
+              ],
+              "correct_index": 1,
+              "explanation": "Hardware sprites let the VDP overlay up to 32 independently positioned shapes on top of the background automatically, sparing the CPU from constantly erasing and redrawing scenery."
+            },
+            {
+              "id": "q_064",
+              "prompt": "What made the TI-99/4A's 16 KB of RAM 'indirect video RAM' from the TMS9900's point of view?",
+              "choices": [
+                "It could only store monochrome screen characters and refused numeric values",
+                "It vanished completely whenever the television was switched off",
+                "It sat behind the VDP and used narrow I/O port transfers",
+                "It connected directly to the CPU's 16-bit bus but ran in reverse byte order"
+              ],
+              "correct_index": 2,
+              "explanation": "Indirect video RAM is wired privately to the VDP's own memory bus rather than the CPU's address bus, forcing the processor to read and write bytes indirectly through VDP ports."
+            }
+          ]
+        },
+        {
+          "id": "ch_033",
+          "title": "Passing Every Byte Through a One-Byte Slot",
+          "content_markdown": "Watch what the TMS9900 actually had to do just to read a single byte sitting at 14-bit address `\u003e1234` inside the TI-99/4A's 16 KB VDP RAM (since $$2^{14} = 16{,}384$$ bytes). Normally, a processor puts an address on its address pins and pulls back a full 16-bit word in one shot.\n\nNot here! Because the VDP sat behind the console's slow 8-bit bus as a pair of memory-mapped ports, the TMS9900 had to execute a multi-step ritual: first, write the low address byte (`\u003e34`) to the VDP address port (`\u003e8C02`); second, write the high address byte (`\u003e12`, plus a read/write mode bit) to `\u003e8C02`; third, read the resulting single byte from the VDP data port (`\u003e8800`)—or write a byte to `\u003e8C00`.\n\nMercifully, the VDP automatically bumped its internal address pointer up by one after each byte, helping sequential bulk copies. Every random variable lookup, however, meant re-sending a brand-new two-byte address all over again!",
+          "questions": [
+            {
+              "id": "q_065",
+              "prompt": "To read a single byte from a new random address inside the TI-99/4A's VDP RAM, what sequence did the TMS9900 have to follow?",
+              "choices": [
+                "Place the 14-bit address on its address bus and fetch a full 16-bit word directly",
+                "Shift the 14-bit address serially across the CRU pins using LDCR and STCR",
+                "Copy the entire 16 KB video bank into the 256-byte scratchpad RAM first",
+                "Write both address bytes to the VDP port, then read the data port"
+              ],
+              "correct_index": 3,
+              "explanation": "Accessing a random VDP RAM byte required writing the low and high bytes of the target address to the VDP address port (\u003e8C02) before reading or writing one byte via the VDP data port."
+            },
+            {
+              "id": "q_066",
+              "prompt": "What built-in VDP convenience made copying a contiguous block of bytes much faster than jumping between random VDP addresses?",
+              "choices": [
+                "The VDP widened its port to 16 bits automatically during block copies",
+                "The VDP auto-incremented its internal address pointer after each byte read or write",
+                "The VDP temporarily handed its 16 KB DRAM pins straight to the TMS9900",
+                "The VDP skipped screen drawing whenever the CPU started a memory transfer"
+              ],
+              "correct_index": 1,
+              "explanation": "After each read or write through its data port, the TMS9918A automatically incremented its internal address pointer by one, letting sequential streams avoid resending two-byte addresses."
+            }
+          ]
+        },
+        {
+          "id": "ch_034",
+          "title": "Dropped Bytes and Code That Could Not Run",
+          "content_markdown": "Trapping user memory behind a graphics chip triggered two startling side effects. First came strict timing contention: while painting active picture lines onto a television, the TMS9918A stayed furiously busy reading its own DRAM to fetch pixels and refresh memory rows. If fast native CPU code pushed consecutive bytes to the VDP port without inserting a tiny pause—just a few microseconds (millionths of a second)—the VDP simply missed the request and silently dropped the byte!\n\nThe second consequence was even bigger. A processor's Program Counter (`PC`) can only fetch native machine instructions from memory wired directly to the CPU's own address bus. Because the 16 KB of VDP RAM was completely invisible to the TMS9900's `PC`, an unexpanded TI-99/4A **could not execute native TMS9900 machine code from its 16 KB of built-in RAM**!\n\nTo run sizable assembly programs out of RAM, owners had to purchase an expensive external 32 KB CPU-bus memory expansion.",
+          "questions": [
+            {
+              "id": "q_067",
+              "prompt": "What happened on a TI-99/4A if fast native CPU code streamed bytes to the TMS9918A too quickly during active screen display?",
+              "choices": [
+                "The busy VDP could miss the port transfer and drop bytes silently",
+                "The VDP automatically increased the TMS9900's clock speed to keep pace",
+                "The television screen switched permanently into high-resolution text mode",
+                "The TMS9900 triggered a hardware interrupt to pause the video refresh"
+              ],
+              "correct_index": 0,
+              "explanation": "Because the VDP shared its DRAM bandwidth between scanning out television pixels and answering CPU port accesses, writing too quickly during active display could overrun the VDP and lose bytes."
+            },
+            {
+              "id": "q_068",
+              "prompt": "Why could an unexpanded TI-99/4A NOT execute native TMS9900 machine-code programs directly from its built-in 16 KB of RAM?",
+              "choices": [
+                "TI wired a hardware fuse that blocked machine code whenever BASIC was active",
+                "The 16 KB RAM chips were read-only and could never store user-written bytes",
+                "The CPU's Program Counter could not fetch instructions from indirect VDP RAM",
+                "The TMS9900 could only run native instructions stored inside CRU registers"
+              ],
+              "correct_index": 2,
+              "explanation": "Native CPU instructions must reside on the processor's directly addressable memory bus; since the built-in 16 KB sat behind the VDP's I/O ports, the TMS9900's PC could not execute code directly from it."
+            }
+          ]
+        },
+        {
+          "id": "ch_035",
+          "title": "If the CPU Can't Run 16 KB RAM, How Does TI BASIC Work?",
+          "content_markdown": "Look at the architectural irony we just uncovered. Texas Instruments engineered a gem of a graphics chip—the TMS9918A Video Display Processor, complete with 32 hardware sprites and vibrant tile graphics—and then undermined its own flagship computer by forcing that video chip to guard all 16 KB of user RAM behind a one-byte port.\n\nNotice how the two bottlenecks stack together: every trip to the VDP ports first squeezed through the 8-bit wait-state bus multiplexer from Section 6, and then waited at the VDP's one-byte-at-a-time mail slot!\n\nWait a minute, though. If an unexpanded TI-99/4A has only 256 bytes of direct CPU RAM and cannot run native TMS9900 instructions out of its 16 KB of VDP RAM, how on earth did millions of families type in and run **TI BASIC** programs straight out of the box—and why did those programs crawl at such an infamous pace?",
+          "questions": [
+            {
+              "id": "q_069",
+              "prompt": "How did the TI-99/4A's 8-bit bus multiplexer and indirect VDP RAM interact when the CPU accessed user memory?",
+              "choices": [
+                "The VDP bypassed the 8-bit multiplexer completely using the 16-bit scratchpad bus",
+                "Every VDP access crossed the slow 8-bit bus one byte at a time",
+                "The bus multiplexer automatically cached all 16 KB of VDP RAM inside CPU registers",
+                "Wait states disappeared whenever the CPU wrote addresses to the VDP port"
+              ],
+              "correct_index": 1,
+              "explanation": "The two bottlenecks compounded: the VDP's memory-mapped ports sat on the wait-state-heavy 8-bit bus, and every user-RAM access still required multi-step, byte-at-a-time VDP port transfers."
+            },
+            {
+              "id": "q_070",
+              "prompt": "Which statement best captures the architectural paradox of the TMS9918A inside the TI-99/4A?",
+              "choices": [
+                "It provided zero graphics features and functioned solely as a DRAM refresh counter",
+                "It outperformed the TMS9900 CPU so heavily that TI removed the CPU in later models",
+                "It prevented the console from displaying more than two monochrome colors on television",
+                "A standout graphics chip was forced to double as a slow RAM bottleneck"
+              ],
+              "correct_index": 3,
+              "explanation": "The TMS9918A was an excellent graphics processor with 32 hardware sprites, but making it sole custodian of the console's 16 KB RAM turned everyday user-memory access into a severe bottleneck."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_08",
+      "title": "8. Double Interpretation vs. Scratchpad Assembly: Unlocking Hidden Speed",
+      "summary": "Solve the mystery of why TI BASIC felt sluggish on a true 16-bit CPU: TI stored its compact GPL (Graphics Programming Language) bytecode inside proprietary auto-incrementing GROM chips, so TI BASIC ran as an interpreter written in GPL that was itself interpreted by console ROM while reading programs from VDP RAM. Contrast this double-interpreted crawl with native assembly programmers who placed their register workspaces and inner loops in the 256-byte fast 16-bit scratchpad RAM—proving how fast the TMS9900 truly was.",
+      "introduced_terms": [
+        "Graphics Read-Only Memory (GROM)",
+        "bytecode interpreter",
+        "double interpretation"
+      ],
+      "chunks": [
+        {
+          "id": "ch_036",
+          "title": "The Embarrassing Counting-Loop Benchmark",
+          "content_markdown": "In 1981, computer magazines loved running a dead-simple speed test on new home computers: type a tiny BASIC loop counting from 1 to 1,000 and time it with a stopwatch. Buyers walking into stores expected Texas Instruments' 'true 16-bit' TI-99/4A to demolish 8-bit rivals like the Apple II, Atari 800, and Commodore VIC-20.\n\nInstead, the stopwatch delivered a shock. Simple **TI BASIC** loops often ran *five to ten times slower* on the TI-99/4A than on humble 1 MHz 8-bit machines! Fans were baffled, and critics quickly whispered that the TMS9900 must be a fake or sluggish 16-bit chip.\n\nThey blamed the wrong culprit. To find out why TI BASIC crawled like molasses, we have to look past the CPU and peel back two hidden software layers resting on yet another unusual TI memory chip.",
+          "questions": [
+            {
+              "id": "q_071",
+              "prompt": "What surprising result appeared when early 1980s reviewers timed simple BASIC counting loops on the TI-99/4A against 8-bit competitors?",
+              "choices": [
+                "TI BASIC finished ten times faster than every 8-bit machine on the market",
+                "TI BASIC could not run counting loops without a plug-in math co-processor",
+                "TI BASIC ran several times slower than BASIC on 8-bit Apple IIs",
+                "TI BASIC matched 8-bit computers identically because all BASICs share one clock"
+              ],
+              "correct_index": 2,
+              "explanation": "Despite the TI-99/4A's 16-bit TMS9900 processor, everyday TI BASIC benchmarks frequently ran five to ten times slower than on 8-bit competitors."
+            },
+            {
+              "id": "q_072",
+              "prompt": "Why was blaming the raw TMS9900 CPU for TI BASIC's slowness a misconception?",
+              "choices": [
+                "The slowdown came from surrounding console memory bottlenecks and layered software design",
+                "The TI-99/4A did not actually contain a TMS9900 processor inside its case",
+                "TI deliberately cut the TMS9900's clock speed to 100 kilohertz during BASIC loops",
+                "The TMS9900 lacked an addition instruction capable of counting from 1 to 1,000"
+              ],
+              "correct_index": 0,
+              "explanation": "The TMS9900 itself was a capable 16-bit CPU; TI BASIC's sluggishness stemmed from the console's indirect memory plumbing and how TI structured its BASIC software."
+            }
+          ]
+        },
+        {
+          "id": "ch_037",
+          "title": "Pin-Saving GROMs and the GPL Bytecode Layer",
+          "content_markdown": "To keep ROM chips tiny, cheap, and proprietary, TI invented **Graphics Read-Only Memory (`GROM`)**—special 16-pin memory chips with their own built-in auto-incrementing address counter. Just like the VDP's indirect RAM, the TMS9900 could not execute native machine code directly from a GROM; it had to send a two-byte address to a GROM port and pull data out one byte at a time across the 8-bit bus!\n\nInside the TI-99/4A's three built-in GROMs (18 KB total) lived code written not in native TMS9900 instructions, but in **GPL** (*Graphics Programming Language*)—a compact, chip-independent shorthand designed to pack features tightly and ease future CPU transitions.\n\nBecause the TMS9900 didn't speak GPL natively, the 8 KB console ROM ran a **bytecode interpreter**: a translator program that reads compact virtual instructions one by one and executes matching native CPU routines on the fly—like a live translator reading shorthand aloud step by step.",
+          "questions": [
+            {
+              "id": "q_073",
+              "prompt": "How did Texas Instruments' Graphics Read-Only Memory (GROM) chips differ from ordinary CPU-bus ROM chips?",
+              "choices": [
+                "GROMs wired directly to the 16-bit zero-wait-state bus for instant execution",
+                "GROMs used an internal address counter and streamed single bytes through ports",
+                "GROMs allowed home users to erase and rewrite system code with ultraviolet light",
+                "GROMs stored only sprite color palettes and could never hold program code"
+              ],
+              "correct_index": 1,
+              "explanation": "TI's proprietary 16-pin GROMs acted like auto-incrementing port-mapped storage—saving pins and protecting cartridges, but delivering data only one byte at a time through ports."
+            },
+            {
+              "id": "q_074",
+              "prompt": "What role did the GPL bytecode interpreter inside the TI-99/4A's 8 KB console ROM play?",
+              "choices": [
+                "It compiled BASIC code permanently into native TMS9900 machine code before running",
+                "It drove the four-phase external clock signals for the 64-pin TMS9900 chip",
+                "It replaced the TMS9918A whenever the user plugged in a monochrome monitor",
+                "It fetched compact GPL instructions from GROMs and executed matching native CPU steps"
+              ],
+              "correct_index": 3,
+              "explanation": "Because the TMS9900 could not execute GPL natively, a native bytecode interpreter in the 8 KB console ROM read each GPL instruction from GROM and carried it out."
+            }
+          ]
+        },
+        {
+          "id": "ch_038",
+          "title": "Double Interpretation: A Translator Translating a Translator",
+          "content_markdown": "Now watch the full chain reaction—a textbook case of **double interpretation**, where one interpreter runs on top of a second interpreter!\n\nOn an Apple II or Commodore 64, the built-in BASIC interpreter was written directly in native 6502 machine code, reading the user's program straight out of fast CPU-bus RAM. On the TI-99/4A, **TI BASIC itself was written in GPL bytecode** inside slow serial GROMs!\n\nFollow what happened to a single line like `10 X = X + 1`: first, the TMS9900 executed the native **GPL interpreter** in console ROM; second, that GPL interpreter fetched TI BASIC's GPL instructions **one byte at a time from slow GROMs** across the 8-bit wait-state bus; third, those GPL steps implemented the **TI BASIC interpreter**, which fetched the user's BASIC tokens (compact numeric codes for keywords like `PRINT` or `FOR`) and variable `X` **one byte at a time from indirect VDP RAM**! Two stacked interpreters plus two port-mapped bottlenecks slowed every single BASIC line to a crawl.",
+          "questions": [
+            {
+              "id": "q_075",
+              "prompt": "What two nested software layers created 'double interpretation' whenever a user ran a TI BASIC program on the TI-99/4A?",
+              "choices": [
+                "A native ROM GPL interpreter running a TI BASIC interpreter written in GPL bytecode",
+                "A Z80 hardware emulator running inside a 6809 Direct Page operating system",
+                "Two identical copies of native TMS9900 BASIC running simultaneously on two CPUs",
+                "A CRU serial driver translating BASIC keywords into four-phase clock pulses"
+              ],
+              "correct_index": 0,
+              "explanation": "TI BASIC was written in GPL bytecode inside GROMs, so running a user's BASIC program required the native ROM GPL interpreter to interpret the BASIC interpreter, which in turn interpreted the user's BASIC code."
+            },
+            {
+              "id": "q_076",
+              "prompt": "Where did an unexpanded TI-99/4A store the user's typed TI BASIC program and variables while double interpretation ran?",
+              "choices": [
+                "Directly inside the 256-byte fast 16-bit scratchpad RAM",
+                "Inside writable sectors of the 16-pin GROM cartridges",
+                "Inside the indirect 16 KB VDP RAM, read one byte at a time",
+                "Inside the TMS9900's sixteen on-chip silicon registers"
+              ],
+              "correct_index": 2,
+              "explanation": "With only 256 bytes of direct CPU RAM, TI BASIC stored user programs and variables inside the TMS9918A's 16 KB indirect video RAM, adding VDP port bottlenecks on top of GROM fetches."
+            }
+          ]
+        },
+        {
+          "id": "ch_039",
+          "title": "Unleashing the Beast Inside 256 Bytes of Scratchpad",
+          "content_markdown": "If you ever doubted whether the TMS9900 itself was truly fast, all you had to do was pop in a native assembly cartridge—like TI's silky-smooth side-scrolling space shooter *Parsec*, or the *Mini Memory* and *Editor/Assembler* programming cartridges—and watch the exact same console transform overnight!\n\nAssembly programmers tossed GROMs, GPL, and TI BASIC completely out the window. Better yet, they mastered the TI-99/4A's ultimate secret weapon: placing their **32-byte register workspace**—and even their hottest, tightest inner loops—right inside the **256 bytes of zero-wait-state 16-bit scratchpad RAM** (`\u003e8300`–`\u003e83FF`)!\n\nWith `R0`–`R15` suddenly running at full native 16-bit speed, zero wait states, genuine `MPY`/`DIV` math, and 32 hardware sprites gliding across the TMS9918A screen, games ran at silky 60-frames-per-second arcade smoothness. The TMS9900 was never slow—its default software plumbing had simply buried it alive!",
+          "questions": [
+            {
+              "id": "q_077",
+              "prompt": "What signature optimization did skilled TI-99/4A assembly programmers use to unlock the TMS9900's true 16-bit speed?",
+              "choices": [
+                "Rewriting their games in GPL bytecode so GROM chips could accelerate sprites",
+                "Storing their register workspaces inside VDP RAM for automatic pointer increments",
+                "Disabling the TMS9918A video chip so the CPU could borrow its clock crystal",
+                "Placing their register workspace and hot loops in the 256-byte fast scratchpad RAM"
+              ],
+              "correct_index": 3,
+              "explanation": "Putting the 32-byte workspace and tight loops inside the 256-byte zero-wait-state 16-bit scratchpad RAM bypassed the 8-bit multiplexer, GROMs, and double interpretation completely."
+            },
+            {
+              "id": "q_078",
+              "prompt": "What did smooth native assembly games like Parsec prove about the TI-99/4A's reputation for sluggish performance?",
+              "choices": [
+                "Only expensive external math co-processors could run arcade action on the console",
+                "The TMS9900 silicon was genuinely fast once freed from BASIC's layered bottlenecks",
+                "The TMS9900 ran fastest when executing double-interpreted code from GROM chips",
+                "Arcade graphics worked on the 99/4A only by shrinking every sprite to one bit"
+              ],
+              "correct_index": 1,
+              "explanation": "Fast native games like Parsec demonstrated that the TMS9900 and TMS9918A were a potent pair whenever software bypassed GPL/GROM double interpretation and used scratchpad workspaces."
+            }
+          ]
+        },
+        {
+          "id": "ch_040",
+          "title": "Fast Silicon, Locked Doors",
+          "content_markdown": "At last, the entire hardware-and-software mystery of the TI-99/4 and TI-99/4A snaps into sharp focus. Three compounding layers—an 8-bit wait-state bus multiplexer born from the cancelled TMS9985, 16 KB of indirect VDP RAM behind a one-byte slot, and TI BASIC double-interpreted from GPL bytecode in slow GROMs—masked a genuinely formidable 16-bit CPU that sang the moment assembly coders moved their workspaces into 256 bytes of fast scratchpad RAM.\n\nWait a second, though! Remember how resourceful hobbyists and independent game studios—the 'bedroom coders' of the Z80 and 6502 eras—squeezed miracles out of far quirkier computers once they got their hands on assembly language? Why didn't an army of independent cartridge makers flood toy shelves with blazing native TMS9900 games for the TI-99/4A?\n\nBecause Texas Instruments hadn't just built architectural bottlenecks—it had built corporate walls around the cartridge slot itself.",
+          "questions": [
+            {
+              "id": "q_079",
+              "prompt": "Which trio of compounding bottlenecks best explains why out-of-the-box TI BASIC felt so slow on the TI-99/4A?",
+              "choices": [
+                "Triple power rails, four-phase clocks, and upside-down bit numbering",
+                "Hardware MPY overflow, missing hardware stacks, and slow CRU keyboard scans",
+                "The 8-bit wait-state multiplexer, indirect VDP user RAM, and GROM/GPL double interpretation",
+                "64-pin ceramic packaging, 32 hardware sprites, and overlapping register workspaces"
+              ],
+              "correct_index": 2,
+              "explanation": "The TI-99/4A's sluggish BASIC performance resulted from stacking the 8-bit wait-state bus, byte-at-a-time indirect VDP RAM, and double-interpreted GPL/GROM execution."
+            },
+            {
+              "id": "q_080",
+              "prompt": "Why does the contrast between TI BASIC and scratchpad assembly point toward a business puzzle as well as an engineering one?",
+              "choices": [
+                "Even though native assembly was fast, corporate barriers still limited independent 99/4A software",
+                "Assembly programming was impossible on the 99/4A because TI never sold an assembler",
+                "Independent studios avoided the 99/4A solely because they disliked 16-bit multiplication",
+                "Fast scratchpad assembly only worked on special laboratory models never sold in stores"
+              ],
+              "correct_index": 0,
+              "explanation": "Scratchpad assembly proved fast software was completely achievable on the TI-99/4A, raising the question of how TI's strict cartridge gatekeeping held back independent developers."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_09",
+      "title": "9. Walled Cartridges, the 1983 Price War \u0026 TI's Sudden Exit",
+      "summary": "Step back from motherboard buses to examine the business strategy that sealed the TI-99/4A's fate: proprietary GROM-based Solid State Software cartridges, strict third-party gatekeeping, and late-1983 v2.2 console changes built to lock out pure-ROM third-party games. Trace how Commodore's fierce 1983 home-computer price war drove the 99/4A down to 99 dollars—below manufacturing cost—racking up staggering losses and triggering TI's abrupt October 1983 exit despite millions of machines sold.",
+      "introduced_terms": [
+        "platform gatekeeping",
+        "hardware lockout",
+        "below-cost pricing"
+      ],
+      "chunks": [
+        {
+          "id": "ch_041",
+          "title": "A Computer Treated Like a Walled Appliance",
+          "content_markdown": "By 1982, the TI-99/4A looked poised for mainstream stardom. It had sharp brushed-aluminum styling, a full typewriter keyboard, vibrant TMS9918A sprites, an eye-catching Speech Synthesizer add-on, and comedian Bill Cosby pitching it in prime-time commercials across America.\n\nYet Texas Instruments approached software totally differently from open hobbyist platforms like the Apple II, ZX Spectrum, or Commodore 64. Those rivals published full technical manuals and welcomed bedroom coders and independent studios, knowing that a flood of outside games sold more machines.\n\nTI instead viewed the 99/4A like a razor handle whose profits would flow from selling proprietary razor blades: TI-manufactured plug-in **Solid State Software** cartridges. Early on, TI kept technical internals tightly guarded and resisted outside cartridge makers—leaving buyers wondering why hit arcade ports showed up everywhere except on their sleek 16-bit console.",
+          "questions": [
+            {
+              "id": "q_081",
+              "prompt": "How did Texas Instruments' early software ecosystem strategy differ from that of open rivals like the Apple II and ZX Spectrum?",
+              "choices": [
+                "TI gave away free blank ROM cartridges to encourage home hobbyist publishing",
+                "TI guarded technical details closely to steer software profits through its own cartridges",
+                "TI relied exclusively on cassette software written by independent bedroom coders",
+                "TI shipped complete source code for its console ROM inside every retail box"
+              ],
+              "correct_index": 1,
+              "explanation": "Whereas open platforms published technical details to attract third-party developers, TI initially treated the 99/4A as a closed ecosystem centered on its own proprietary Solid State Software cartridges."
+            },
+            {
+              "id": "q_082",
+              "prompt": "What business analogy best describes TI's original plan for earning steady profits from the TI-99/4A platform?",
+              "choices": [
+                "Renting out home computers by the hour through local telephone exchanges",
+                "Giving away free software in order to sell expensive external printers",
+                "Licensing the TMS9900 design to rival toy companies for open cloning",
+                "Selling the console as a razor handle while profiting from proprietary cartridge blades"
+              ],
+              "correct_index": 3,
+              "explanation": "TI followed a razor-and-blades strategy, intending to collect high-margin profits from proprietary plug-in cartridges after placing consoles in family living rooms."
+            }
+          ]
+        },
+        {
+          "id": "ch_042",
+          "title": "Gatekeeping Tightens Into the v2.2 Lockout",
+          "content_markdown": "TI's strict control over who could publish software—known as **platform gatekeeping**—hinged partly on those proprietary 16-pin GROM chips we met in Section 8. Only Texas Instruments manufactured GROMs, making unauthorized copies hard to build and giving TI heavy leverage over licensing fees.\n\nEventually, clever outside publishers like Atari's **Atarisoft** division found a clean workaround: they skipped GROMs completely and shipped pure-ROM cartridges packed with blazing native TMS9900 assembly ports of arcade blockbusters like *Donkey Kong*, *Defender*, and *Pac-Man*!\n\nRather than celebrating hit games that boosted console demand, TI responded in late 1983 with a **hardware lockout**—a deliberate technical barrier engineered to block unauthorized accessories. On its cost-reduced beige **v2.2** console revision, TI altered the startup ROM scanner to ignore cartridges lacking a proprietary TI GROM identification header, locking out Atarisoft's hits and alienating its own loyal owners.",
+          "questions": [
+            {
+              "id": "q_083",
+              "prompt": "How did independent publishers like Atarisoft initially bypass Texas Instruments' proprietary GROM bottleneck to ship hit games?",
+              "choices": [
+                "They built pure-ROM cartridges running native TMS9900 assembly without GROM chips",
+                "They manufactured bootleg GROM chips inside modified TMS9918A video processors",
+                "They streamed arcade games serially through the cassette port using CRU pulses",
+                "They persuaded Commodore to build an adapter converting 6502 cartridges directly"
+              ],
+              "correct_index": 0,
+              "explanation": "Because the TI-99/4A cartridge port also accepted standard CPU-bus ROM chips, publishers like Atarisoft bypassed GROMs entirely and shipped fast native TMS9900 assembly games on pure ROM."
+            },
+            {
+              "id": "q_084",
+              "prompt": "What did the late-1983 'v2.2' TI-99/4A console revision change to enforce a hardware lockout against unauthorized cartridges?",
+              "choices": [
+                "It physically narrowed the cartridge slot so outside plastic shells could not fit",
+                "It removed the 256-byte scratchpad RAM so native assembly games crashed on launch",
+                "It modified the startup ROM menu to ignore pure-ROM cartridges lacking a TI GROM",
+                "It encrypted every TMS9900 opcode with a daily password typed by the user"
+              ],
+              "correct_index": 2,
+              "explanation": "The v2.2 console's revised startup scanner refused to recognize cartridges that did not contain a proprietary TI GROM, blocking unlicensed pure-ROM releases like Atarisoft's titles."
+            }
+          ]
+        },
+        {
+          "id": "ch_043",
+          "title": "The 1983 Price War and Below-Cost Bleeding",
+          "content_markdown": "Even while TI fought third-party cartridges, a far deadlier storm slammed into retail shelves: the **1983 home-computer price war**. Jack Tramiel at Commodore—whose company owned MOS Technology's silicon factories outright—slashed prices ruthlessly on the 8-bit VIC-20 and the runaway hit Commodore 64.\n\nWatch TI's price cliff unfold across just two years. Launched in 1981 at **525 dollars**, the TI-99/4A tumbled under rebates and markdowns to **199 dollars**, then **149 dollars**, and by mid-1983 to **99 dollars**. That plunged TI straight into **below-cost pricing**—selling hardware for less than the factory cost of building and shipping it.\n\nHere, every motherboard compromise from Sections 1 and 6 came back to collect its bill. A bulky 64-pin TMS9900, triple-voltage power supply, four-phase clock chip, 8-bit bus multiplexer, and extra glue chips cost far more to manufacture than Commodore's streamlined single-voltage 8-bit design.",
+          "questions": [
+            {
+              "id": "q_085",
+              "prompt": "Why could Commodore sustain brutal 1983 price cuts far more comfortably than Texas Instruments could on the TI-99/4A?",
+              "choices": [
+                "Commodore sold its computers without keyboards or power cords included",
+                "Commodore owned its chip factories and built a simpler single-voltage board",
+                "Commodore skipped retail stores and shipped consoles solely to universities",
+                "Commodore used an inexpensive 4-bit calculator processor inside the C64"
+              ],
+              "correct_index": 1,
+              "explanation": "Commodore owned MOS Technology and built streamlined single-voltage 8-bit boards, whereas TI's 99/4A carried costly 64-pin TMS9900 silicon, multi-rail power circuitry, and bus-multiplexer glue logic."
+            },
+            {
+              "id": "q_086",
+              "prompt": "What does 'below-cost pricing' mean in the context of the 99-dollar TI-99/4A during the 1983 price war?",
+              "choices": [
+                "Selling each computer for less than it cost TI to manufacture and distribute",
+                "Charging consumers less than the price of a single Solid State Software cartridge",
+                "Lowering prices only after factory efficiency dropped unit costs below 99 dollars",
+                "Setting retail prices below the original 1979 launch price while staying profitable"
+              ],
+              "correct_index": 0,
+              "explanation": "Below-cost pricing occurs when a manufacturer sells a product for less than its own production and distribution expenses—meaning every unit shipped creates a direct financial loss."
+            }
+          ]
+        },
+        {
+          "id": "ch_044",
+          "title": "Dying at Peak Popularity: October 28, 1983",
+          "content_markdown": "Here is the cruelest twist of the TI-99/4A story: Texas Instruments did *not* abandon home computers because shoppers ignored them! At 99 dollars, the TI-99/4A became a runaway bargain, flying off store shelves at the fastest pace in its history and eventually reaching roughly **2.8 million units** sold.\n\nUnder below-cost pricing, however, soaring sales volume turned into a financial nightmare. Every extra computer shipped into a family living room widened the hole in TI's balance sheet, and weak third-party software momentum could not close the gap. In the third quarter of 1983 alone, TI recorded a shocking **330-million-dollar financial write-off**, pushing cumulative consumer-computer losses past **600 million dollars**.\n\nOn **October 28, 1983**, TI stunned Wall Street, retailers, and nearly three million owners by announcing its immediate exit from the home-computer market—triggering a frantic 49-dollar clearance frenzy and cancelling its next-generation TI-99/8 prototype.",
+          "questions": [
+            {
+              "id": "q_087",
+              "prompt": "Why did surging sales of the 99-dollar TI-99/4A in 1983 actually hasten Texas Instruments' exit from home computing?",
+              "choices": [
+                "High demand exhausted the world supply of ceramic 64-pin DIP sockets",
+                "Regulators ordered TI to stop selling computers once it passed two million units",
+                "Consumers bought consoles purely to harvest the TMS9918A video chips for televisions",
+                "Because each unit sold below cost, higher sales volume multiplied TI's financial losses"
+              ],
+              "correct_index": 3,
+              "explanation": "With every 99-dollar console losing money on manufacturing and distribution, exploding unit demand only magnified TI's losses—culminating in over 600 million dollars of red ink."
+            },
+            {
+              "id": "q_088",
+              "prompt": "What abrupt corporate announcement did Texas Instruments make on October 28, 1983?",
+              "choices": [
+                "It purchased Commodore International to end the 1983 price war permanently",
+                "It opened the TI-99/4A architecture and waived all GROM cartridge royalties",
+                "It exited the home-computer business entirely after massive consumer-division losses",
+                "It recalled all 2.8 million TI-99/4A consoles to swap out their 8-bit multiplexers"
+              ],
+              "correct_index": 2,
+              "explanation": "After taking a 330-million-dollar quarterly charge and losing more than 600 million dollars overall, TI shocked the industry on October 28, 1983 by quitting the home-computer market."
+            }
+          ]
+        },
+        {
+          "id": "ch_045",
+          "title": "A Quiet Redemption Already Waiting in the Wings",
+          "content_markdown": "Looking back across the TI-99/4A's rise and fall delivers a timeless lesson in computing history: silicon never lives in a vacuum. A chip's real-world fate depends on the motherboard around it, the software layers stacked atop it, and whether the company behind it welcomes or walls off outside builders. Platform gatekeeping, the v2.2 hardware lockout, and below-cost losses during the 1983 price war abruptly closed TI's home-computer chapter.\n\nYet if you think the story of TI's 9900 architecture ended in 49-dollar department-store clearance bins, think again! Two full years *before* that October 1983 exit, TI's semiconductor engineers had quietly unveiled a sleek, redesigned 40-pin descendant of the TMS9900.\n\nIt fixed the packaging bulk, the three power rails, the external four-phase clock, the slow off-chip registers, *and* the unsigned-only math—delivering a bittersweet late redemption that would power two cult-classic machines.",
+          "questions": [
+            {
+              "id": "q_089",
+              "prompt": "Which combination of business factors most directly sealed the commercial end of the TI-99/4A in October 1983?",
+              "choices": [
+                "High retail prices, lack of television ads, and incompatible keyboards",
+                "A lawsuit from Intel over 8080 mnemonics combined with an oil embargo",
+                "Too many competing TI home-computer models cannibalizing each other's profits",
+                "Restrictive cartridge gatekeeping paired with unsustainable below-cost price-war losses"
+              ],
+              "correct_index": 3,
+              "explanation": "TI's restrictive cartridge gatekeeping slowed third-party momentum while Commodore's 1983 price war trapped the costly 99/4A motherboard in deep below-cost losses."
+            },
+            {
+              "id": "q_090",
+              "prompt": "Why does the October 1983 exit of the TI-99/4A NOT mark the architectural end of TI's 9900 processor family?",
+              "choices": [
+                "TI's semiconductor division had already created a streamlined 40-pin successor fixing the 9900's flaws",
+                "TI secretly kept selling the original 64-pin TI-99/4A under a new name through 1995",
+                "Commodore adopted the 64-pin TMS9900 as the main processor inside the Commodore 64",
+                "Government contracts forced TI to put the original 1976 TMS9900 into every school desktop"
+              ],
+              "correct_index": 0,
+              "explanation": "Before TI exited home computers, its chip engineers had already released a sleek 40-pin descendant that resolved nearly every hardware bottleneck of the original TMS9900."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_10",
+      "title": "10. Late Redemption: The 40-Pin TMS9995, Tomy Tutor \u0026 Geneve 9640",
+      "summary": "Conclude with the engineering vindication that arrived just too late for the 99/4A: the 1981 TMS9995, shrinking the architecture into a single-supply 40-pin DIP with 256 bytes of fast 16-bit RAM right on silicon, instruction prefetching, and signed hardware multiply and divide (MPYS and DIVS). Follow its legacy through the cancelled TI-99/8, Japan's quirky Tomy Tutor (Pyūta), and the enthusiast-built 1987 Myarc Geneve 9640—synthesizing what TI's bold Memory-to-Memory experiment teaches us before meeting the next 16-bit contenders.",
+      "introduced_terms": [
+        "on-chip workspace RAM",
+        "instruction prefetch queue",
+        "signed hardware arithmetic"
+      ],
+      "chunks": [
+        {
+          "id": "ch_046",
+          "title": "The Chip the TI-99/4 Needed All Along",
+          "content_markdown": "Released in 1981—ironically the very same year the TI-99/4A launched—the **TMS9995** fulfilled every broken promise of the cancelled TMS9985 and then went dramatically further. Looking at it beside the 1976 TMS9900 feels like watching a clumsy first prototype grow into a polished race car.\n\nFirst, TI swept away every electrical headache from Section 1. Out went the towering 64-pin ceramic slab, the triple power supplies, and the external four-phase clock chip! The TMS9995 fit cleanly inside a compact **40-pin DIP**, ran on a single $$+5\\,\\text{V}$$ supply, and packed its own clock oscillator (timing-pulse circuit) right on silicon, driven by a simple 12 MHz crystal resonator yielding a brisk 3 MHz internal clock.\n\nYes, it used an economical 8-bit external data bus to keep pin counts and board costs down—yet astonishingly, it ran roughly **two and a half to three times faster** than the 16-bit-bus TMS9900! How on earth could an 8-bit-bus chip lap its 16-bit ancestor?",
+          "questions": [
+            {
+              "id": "q_091",
+              "prompt": "Which set of original TMS9900 hardware headaches did the 1981 TMS9995 eliminate completely?",
+              "choices": [
+                "16-bit registers, BLWP context switches, and the CRU serial I/O pins",
+                "Word-aligned addressing, interrupt transfer vectors, and 16-bit arithmetic",
+                "The 64-pin package, triple power rails, and external four-phase clock chip",
+                "Compatibility with existing TI 990 software and binary machine instructions"
+              ],
+              "correct_index": 2,
+              "explanation": "The TMS9995 shrank into a standard 40-pin DIP powered by a single $$+5\\,\\text{V}$$ rail with an integrated clock oscillator, eliminating the 64-pin bulk, triple voltages, and external 4-phase clock."
+            },
+            {
+              "id": "q_092",
+              "prompt": "What counterintuitive performance result did the 40-pin TMS9995 achieve compared to the 64-pin TMS9900 at the same 3 MHz internal clock?",
+              "choices": [
+                "Despite its 8-bit external bus, it ran roughly two to three times faster",
+                "Because it used an 8-bit external bus, it ran at exactly half the TMS9900's speed",
+                "It matched the TMS9900 cycle for cycle while cutting transistor count to 500",
+                "It ran faster only when executing double-interpreted GPL bytecode from GROMs"
+              ],
+              "correct_index": 0,
+              "explanation": "Through smarter internal architecture, on-chip 16-bit RAM, and instruction prefetching, the 8-bit-bus TMS9995 dramatically outperformed the 16-bit-bus TMS9900 at matching internal clock speeds."
+            }
+          ]
+        },
+        {
+          "id": "ch_047",
+          "title": "On-Chip Workspace RAM and Prefetch Speed",
+          "content_markdown": "The secret behind the TMS9995's breathtaking speed came from two brilliant additions right on the CPU die. First, TI built **256 bytes of fast 16-bit on-chip workspace RAM** directly inside the processor! Remember the memory wall from Section 3 and the scratchpad lifeline from Section 6? Putting 256 bytes of full-width, zero-wait-state RAM right on silicon meant a program's active `R0`–`R15` register workspace *never had to cross the external 8-bit bus at all*—giving you instant `BLWP`/`RTWP` workspace swaps *and* on-chip register speed!\n\nSecond, TI added a one-word **instruction prefetch queue**—a small on-chip buffer that quietly fetches the *next* instruction word from memory while the CPU is still busy executing the current one. Combined with cutting out the TMS9900's redundant read-before-write bus cycles, the TMS9995 kept its internal 16-bit ALU constantly fed, slashing instruction cycle counts roughly in half!",
+          "questions": [
+            {
+              "id": "q_093",
+              "prompt": "How did integrating 256 bytes of 16-bit on-chip workspace RAM solve the classic weakness of TI's memory-to-memory architecture?",
+              "choices": [
+                "It forced programs to abandon Workspace Pointers and use a single 8-bit accumulator",
+                "It kept active R0–R15 register workspaces inside silicon at full 16-bit zero-wait-state speed",
+                "It allowed the CPU to store an entire 16 KB video framebuffer inside the 40-pin package",
+                "It automatically turned external 8-bit expansion boards into 32-bit buses"
+              ],
+              "correct_index": 1,
+              "explanation": "With 256 bytes of 16-bit RAM directly on the die, the active 32-byte workspace ran at full on-chip speed without crossing the slower external 8-bit bus."
+            },
+            {
+              "id": "q_094",
+              "prompt": "What job does the TMS9995's instruction prefetch queue perform to accelerate program execution?",
+              "choices": [
+                "It pre-loads an entire 64 KB cartridge into RAM during startup",
+                "It compresses 16-bit instructions into 4-bit nibbles before saving to RAM",
+                "It sends CRU serial outputs ahead while the CPU waits on memory",
+                "It fetches the next instruction word while executing the current instruction"
+              ],
+              "correct_index": 3,
+              "explanation": "The one-word instruction prefetch queue overlaps fetching the upcoming instruction with executing the current instruction, keeping the 16-bit datapath busy even over an 8-bit bus."
+            }
+          ]
+        },
+        {
+          "id": "ch_048",
+          "title": "Signed Math (MPYS/DIVS) and Catching Future Opcodes",
+          "content_markdown": "TI didn't stop at raw speed—it polished the instruction set too. Remember Section 4's snag where the TMS9900's `MPY` and `DIV` could only crunch positive (unsigned) integers? The TMS9995 added true **signed hardware arithmetic**: processor instructions that natively handle positive and negative numbers (using two's-complement binary, the standard bit pattern for negative integers) without awkward software sign-fixing.\n\nWith **`MPYS`** (*Signed Multiply*), multiplying $$-12 \\times 25$$ natively yielded $$-300$$ across a 32-bit double-word register pair; with **`DIVS`** (*Signed Divide*), dividing negative 32-bit totals returned signed quotients and remainders automatically!\n\nOn top of that, TI built in **Macro Instruction Detect (`MID`)**—an automatic hardware trap that caught any undefined opcode and handed control cleanly to a trap workspace. Alongside `XOP`, `MID` let future software emulate brand-new instructions safely without crashing, and TI even tossed in a built-in 16-bit programmable timer right inside the chip.",
+          "questions": [
+            {
+              "id": "q_095",
+              "prompt": "What arithmetic limitation of the original 1976 TMS9900 did the TMS9995's MPYS and DIVS instructions directly fix?",
+              "choices": [
+                "The original TMS9900 had no hardware multiply or divide instructions of any kind",
+                "The original TMS9900 could only multiply and divide 8-bit single-byte numbers",
+                "The original TMS9900's MPY and DIV handled only unsigned positive numbers",
+                "The original TMS9900 returned quotients but discarded every division remainder"
+              ],
+              "correct_index": 2,
+              "explanation": "The TMS9900's MPY and DIV only supported unsigned integers; the TMS9995 added signed hardware arithmetic (MPYS and DIVS) to handle positive and negative numbers natively."
+            },
+            {
+              "id": "q_096",
+              "prompt": "What happened on the TMS9995 when the processor encountered an undefined instruction opcode?",
+              "choices": [
+                "It halted permanently until the user cycled the single 5-volt power rail",
+                "Its Macro Instruction Detect (MID) hardware trapped cleanly to a handler workspace",
+                "It silently ignored the opcode and cleared the 256-byte on-chip workspace RAM",
+                "It switched automatically into an undocumented 8-bit Z80 compatibility mode"
+              ],
+              "correct_index": 1,
+              "explanation": "The TMS9995's Macro Instruction Detect (MID) automatically trapped undefined opcodes into a dedicated workspace handler, allowing safe software emulation of new instructions."
+            }
+          ]
+        },
+        {
+          "id": "ch_049",
+          "title": "From the Tomy Tutor to the Cult-Classic Geneve 9640",
+          "content_markdown": "Because TI abandoned home computers in October 1983—scrapping its own TMS9995-powered **TI-99/8** ('Armadillo') prototype—few families ever met the TMS9995 under a Texas Instruments badge. Yet two unforgettable computers proved what the chip could do.\n\nFirst came the quirky **Tomy Tutor** (launched in Japan in 1982 as the *Tomy Pyūta*, built with Matsushita and sold in the U.S. in 1983). Pairing a zippy TMS9995 with the TMS9918A VDP and a delightful built-in drawing mode, it showcased nimble 16-bit hardware—though cramped BASIC quirks and the brutal 1983 market crash kept sales small.\n\nTrue fan redemption arrived in 1987 with the **Myarc Geneve 9640**: a legendary third-party single-board computer that plugged straight into a TI-99/4A's Peripheral Expansion Box (its desktop cabinet for add-on cards and drives)! Packing a 3 MHz-internal TMS9995, **512 KB of direct CPU-bus RAM**, a next-generation Yamaha V9938 graphics chip, and its multitasking **MDOS** operating system, the Geneve 9640 finally unleashed the lightning-fast TI-99 machine enthusiasts had dreamed about all along.",
+          "questions": [
+            {
+              "id": "q_097",
+              "prompt": "Which 1982 Japanese home computer—sold in the United States in 1983—paired the TMS9995 CPU with the TMS9918A graphics processor?",
+              "choices": [
+                "The Tomy Tutor home computer",
+                "The Sharp Game Boy handheld",
+                "The Tandy TRS-80 Color Computer",
+                "The Commodore VIC-20 home computer"
+              ],
+              "correct_index": 0,
+              "explanation": "Designed with Matsushita and marketed by Japanese toy giant Tomy, the Tomy Pyūta (sold in the U.S. as the Tomy Tutor) combined a TMS9995 CPU with the TMS9918A VDP."
+            },
+            {
+              "id": "q_098",
+              "prompt": "Why do TI-99/4A enthusiasts celebrate the 1987 Myarc Geneve 9640 as the ultimate redemption of the 9900 architecture?",
+              "choices": [
+                "It replaced the TMS9995 with a 6502 so owners could play Commodore 64 games",
+                "It forced every program to run inside double-interpreted GROM cartridges",
+                "It restored the original 64-pin ceramic TMS9900 and triple power supplies",
+                "It paired a TMS9995 with 512 KB direct RAM, upgraded graphics, and MDOS"
+              ],
+              "correct_index": 3,
+              "explanation": "Plugging into the TI-99/4A's expansion box, the Myarc Geneve 9640 finally freed the TMS9995 from the old console's bottlenecks with 512 KB of direct RAM, upgraded Yamaha graphics, and MDOS."
+            }
+          ]
+        },
+        {
+          "id": "ch_050",
+          "title": "Lessons from TI's Bold Detour—and the 16-Bit Wave Ahead",
+          "content_markdown": "Step back and appreciate the full arc we just traveled from 1976 to 1987. Texas Instruments took one of the earliest and boldest leaps into single-chip 16-bit computing—shrinking a real minicomputer onto silicon, trading on-chip registers for instant `BLWP`/`RTWP` RAM workspaces, gifting programmers genuine `MPY`/`DIV` arithmetic and bit-addressable CRU I/O, and ultimately perfecting the formula inside the nimble 40-pin TMS9995.\n\nAlong the way, the TI-99/4A taught every future systems designer two unforgettable truths: first, brilliant silicon can be strangled by mismatched bus plumbing, indirect memory, and closed software walls; second, as processors outpace external RAM, fast on-chip storage becomes priceless.\n\nWhile TI explored its daring Memory-to-Memory road, rivals at Intel, Zilog, and Motorola were racing down a very different 16-bit highway—keeping rich register files right inside silicon. Next in this Quest Arc, we'll see how those competing 16-bit contenders bridged the 8-to-16 divide and reshaped personal computing forever.",
+          "questions": [
+            {
+              "id": "q_099",
+              "prompt": "What central computer-engineering lesson connects the TMS9900's 1976 memory-to-memory design, the TI-99/4A's bottlenecks, and the TMS9995's on-chip RAM?",
+              "choices": [
+                "16-bit microprocessors always run slower than 8-bit chips regardless of bus design",
+                "A CPU's real-world speed depends tightly on memory-bus balance and fast on-chip storage",
+                "Serial bit-addressable I/O is the fastest method for driving color video displays",
+                "Hardware lockouts guarantee commercial victory even during steep retail price wars"
+              ],
+              "correct_index": 1,
+              "explanation": "The TI-9900 family's journey illustrates that great CPU features cannot shine behind choked memory buses—and that bringing fast workspace RAM onto silicon (as in the TMS9995) transforms performance."
+            },
+            {
+              "id": "q_100",
+              "prompt": "How did the next wave of rival 16-bit microprocessors from Intel, Zilog, and Motorola fundamentally differ from TI's original TMS9900 register strategy?",
+              "choices": [
+                "They eliminated registers completely and stored all variables behind video processors",
+                "They adopted TI's Workspace Pointer and kept every register inside external RAM",
+                "They kept generous general-purpose register files right on silicon instead of RAM",
+                "They restricted themselves to 64-pin packages with external four-phase clocks"
+              ],
+              "correct_index": 2,
+              "explanation": "Unlike TI's Memory-to-Memory bet on RAM-resident register workspaces, the competing 16-bit architectures from Intel, Zilog, and Motorola kept rich register files directly on the CPU die."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

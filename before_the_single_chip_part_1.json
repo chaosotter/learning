@@ -1,0 +1,1688 @@
+{
+  "id": "before_the_single_chip_part_1",
+  "title": "Before the Single Chip I: Stored Programs, Index Registers \u0026 IBM System/360 (1944–1964)",
+  "summary": "Part 1 of the 'Before the Single Chip' Quest Arc: a relaxed, generalist-friendly 100-question journey through the pre-integrated-circuit architectural breakthroughs that shaped modern computing—from plugboards, the Harvard Mark I, and the 1945 EDVAC stored-program concept through EDSAC's mercury delay lines, Manchester's B-line index registers, and the 36-bit IBM 701/704 mainframes behind FORTRAN and Lisp's 'CAR'/'CDR'. Building smoothly on the register, byte, and instruction foundations of the PDP-11 series while explaining every pre-1965 machine from first principles, learners trace IBM's early-1960s incompatibility crisis and unpack IBM System/360's landmark separation of Instruction Set Architecture from hardware implementation, 8-bit big-endian memory windows, Wilkes-inspired microcode emulation, and hardware protection—synthesizing the architectural DNA future silicon designers inherited.",
+  "topic_prompt": "Teach Part 1 of the 'Before the Single Chip' Quest Arc at a relaxed, generalist-friendly, one-idea-per-chunk conversational pace (~14 concepts across 10 sections / 50 chunks) that remains architecturally substantive. Assume the learner already knows registers, memory addresses, bytes, little-endian ordering, and instruction basics from pdp_11_part_1 and pdp_11_part_2—do NOT rehash PDP-11 fundamentals—but explain every pre-1965 machine and IBM System/360 cleanly from first principles. Cover: (1) plugboards and Harvard Mark I's split instruction/data paths vs. the 1945 EDVAC stored-program concept, why unified memory enabled assemblers and compilers, and the resulting Von Neumann bottleneck vs. Harvard trade-off; (2) Maurice Wilkes's EDSAC (1949), mercury delay-line memory, the single-accumulator 1-address model, and why looping over arrays originally forced programmers to write fragile self-modifying code; (3) the Manchester Mark 1's invention of 'B-lines' (index registers) by Williams and Kilburn, hardware effective-address calculation, and how indexing unlocked clean read-only loops; (4) commercial binary scientific mainframes—the 36-bit IBM 701 and IBM 704 (magnetic core memory, three subtractive 15-bit index registers, hardware floating-point, and how the 704 enabled FORTRAN while its 36-bit address and decrement word fields left 'CAR'/'CDR' fossils in Lisp); (5) the early-1960s software incompatibility crisis across IBM's separate 7090, 1401, and 1620 lines; (6) IBM System/360 (1964) explained cleanly from first principles—Gene Amdahl, Gerrit Blaauw, and Fred Brooks separating a stable Instruction Set Architecture (ISA) from diverse hardware implementations spanning an 8-bit internal Model 30 to a 64-bit Model 75; (7) System/360's register and memory model: sixteen 32-bit general-purpose registers, big-endian byte ordering (briefly contrasted with the PDP-11), base-plus-index-plus-12-bit-displacement addressing ($$2^{12} = 4096$$ byte windows inside a $$2^{24}$$ byte 16 MB address space), and cementing the power-of-two 8-bit byte; (8) Maurice Wilkes's 1951 microprogramming concept realized at industrial scale in System/360's read-only control stores, letting cheap narrow hardware execute a full 32-bit ISA and even emulate older IBM 1401/7094 machines; and (9) System/360's Program Status Word (PSW), supervisor vs. problem modes, memory protection keys, and precise interrupts—synthesizing the pre-IC architectural DNA that future silicon designers inherited.",
+  "tag_path": [
+    "History",
+    "History of Technology",
+    "Microprocessor History"
+  ],
+  "prerequisite_ids": [
+    "pdp_11_part_1",
+    "pdp_11_part_2"
+  ],
+  "vetting_summary": "Conducted a sequential college-freshman generalist review across all 50 chunks and 100 multiple-choice questions in section_01.json through section_10.json, verifying relaxed one-idea-per-chunk pacing, balanced A-D choice lengths, strict prerequisite alignment with pdp_11_part_1 and pdp_11_part_2, and valid double-dollar LaTeX/JSON escaping. Refined 17 chunks and 19 questions to eliminate subtle unexplained jargon, remove premature forward references inside distractors, wrap a plain-text equation in double-dollar math delimiters, and diversify answer-index sequences across sections.",
+  "created_at": "2026-11-19T23:17:02Z",
+  "sections": [
+    {
+      "id": "sec_01",
+      "title": "1. Plugboards, the Harvard Mark I \u0026 the Stored-Program Leap (1944–1945)",
+      "summary": "Contrasts early plugboard-wired machines and the Harvard Mark I's separate paper-tape instruction and relay data paths with the 1945 EDVAC report's unified stored-program concept. Explains from first principles why storing instructions as ordinary numbers in the same memory as data unlocked assemblers and compilers, while introducing the classic trade-off between the Von Neumann bottleneck and split Harvard paths.",
+      "introduced_terms": [
+        "Harvard architecture (split instruction and data paths)",
+        "stored-program concept (1945 EDVAC)",
+        "Von Neumann bottleneck"
+      ],
+      "chunks": [
+        {
+          "id": "ch_001",
+          "title": "Rewiring the Brain: Plugboards and the Harvard Mark I",
+          "content_markdown": "Picture an early 1940s calculating room where changing a computer's task meant hours of physical labor. On early electronic machines and tabulators, operators programmed a job by unplugging and reconnecting hundreds of patch cables across a **plugboard**—a removable switchboard panel wired like an old telephone exchange. Even Howard Aiken's towering 1944 **Harvard Mark I**, a 51-foot electromechanical calculator built with IBM, kept its instructions far away from its working numbers. It read program steps sequentially from a punched paper tape while storing numbers separately inside mechanical counter wheels and electrical relays (electrically flipped switches).\n\nBecause instructions and data lived in two completely separate physical worlds with independent pathways, engineers later dubbed this split layout a **Harvard architecture**. Reading the next instruction from tape while simultaneously shifting a number in mechanical counters felt tidy and safe from accidental tampering. Yet it left early pioneers with a nagging puzzle: how could a machine switch tasks quickly—or ever help write and translate its own programs—if instructions were trapped outside its working memory?",
+          "questions": [
+            {
+              "id": "q_001",
+              "prompt": "How did the 1944 Harvard Mark I keep its program instructions and working numbers organized?",
+              "choices": [
+                "It stored both instructions and working numbers together inside one shared bank of counters.",
+                "It kept both instructions and working numbers inside one pool of magnetic core rings.",
+                "It fed instructions from punched paper tape while keeping numbers in separate mechanical counters.",
+                "It routed instructions through telephone switches while holding numbers on punched paper tape."
+              ],
+              "correct_index": 2,
+              "explanation": "The Harvard Mark I used a split layout—later called a Harvard architecture—reading instructions from punched paper tape while storing data separately in mechanical counter wheels and relays."
+            },
+            {
+              "id": "q_002",
+              "prompt": "Why was reprogramming an early plugboard-controlled machine such a slow, labor-intensive ordeal?",
+              "choices": [
+                "Operators had to unplug and rewire hundreds of physical cables to define new tasks.",
+                "Operators had to melt and recast brass gear teeth whenever an equation changed.",
+                "Operators had to wait hours for automatic paper-tape punches to copy new scripts.",
+                "Operators had to replace every vacuum tube before starting a different mathematical formula."
+              ],
+              "correct_index": 0,
+              "explanation": "Plugboard-controlled machines encoded their logic in physical wire connections, so switching to a new calculation required manually unplugging and re-routing hundreds of patch cables."
+            }
+          ]
+        },
+        {
+          "id": "ch_002",
+          "title": "The 1945 EDVAC Leap: Storing Code as Numbers",
+          "content_markdown": "In June 1945, mathematician John von Neumann circulated an incomplete manuscript that reshaped computing forever: the *First Draft of a Report on the EDVAC*, synthesizing ideas developed with engineers J. Presper Eckert and John Mauchly at the University of Pennsylvania. The report articulated the **stored-program concept**: stop treating instructions as physical patch wires or external paper strips, and instead encode them as ordinary binary numbers sitting inside the exact same electronic memory that holds your data.\n\nImagine a chef's notebook where both the recipe steps and the pantry inventory share the same numbered pages. To switch from baking bread to making soup, you do not rebuild the kitchen—you simply erase those pages and jot down a fresh sequence of numbered steps. Inside an EDVAC-style machine (often called a Von Neumann architecture), the processor fetches an instruction number from a memory address, decodes what operation those bits mean, executes it on data from other addresses, and advances forward. Reprogramming suddenly dropped from days of rewiring to seconds of loading memory.",
+          "questions": [
+            {
+              "id": "q_003",
+              "prompt": "What core shift defined the 1945 EDVAC stored-program concept?",
+              "choices": [
+                "Splitting arithmetic circuits across separate rooms to prevent electrical overheating during long runs.",
+                "Replacing binary numbers with decimal dials so engineers could inspect results directly.",
+                "Moving program instructions onto external paper tapes to protect them from accidental erasure.",
+                "Encoding program instructions as ordinary numbers inside the same memory that holds data."
+              ],
+              "correct_index": 3,
+              "explanation": "The EDVAC stored-program concept placed binary-encoded instructions into the same unified electronic memory as numerical data, letting the machine switch tasks simply by loading new memory contents."
+            },
+            {
+              "id": "q_004",
+              "prompt": "In the chef's notebook analogy, what advantage of unified stored-program memory stands out most clearly?",
+              "choices": [
+                "Multiple chefs can simultaneously read ingredients and recipe steps over independent corridors.",
+                "Changing tasks means writing new numbers into memory instead of rewiring physical hardware.",
+                "Separating recipes from ingredients guarantees that no calculation can ever corrupt instructions.",
+                "Mechanical gears automatically adapt their speed to match the length of every recipe."
+              ],
+              "correct_index": 1,
+              "explanation": "Just as erasing and writing new pages avoids rebuilding a kitchen, unified stored-program memory lets a computer adopt a completely new job simply by loading different instruction numbers."
+            }
+          ]
+        },
+        {
+          "id": "ch_003",
+          "title": "When Programs Write Programs: Assemblers and Compilers",
+          "content_markdown": "Putting instructions and data into one unified memory did far more than save operators from sore fingers—it sparked the birth of modern software. Walk through what happens when a programmer wants to type human-friendly abbreviations like `ADD` instead of memorizing raw binary bit patterns.\n\nUnder a stored-program design, a translator program—such as an **assembler** (which maps short symbolic names directly to numeric machine instructions) or a **compiler** (which converts full mathematical formulas into machine code)—reads the programmer's text as ordinary input data. It computes the matching binary instruction numbers, writes those freshly minted numbers into empty memory addresses, and then hands control over to the first address it just filled. Because unified memory draws no physical wall between data and code, the CPU cheerfully begins executing the numbers that the translator just treated as output data. On a strict paper-tape Harvard machine where programs could not write into instruction storage, a computer could never translate and immediately run brand-new code it had just produced.",
+          "questions": [
+            {
+              "id": "q_005",
+              "prompt": "Why did unified stored-program memory make assemblers and compilers naturally practical?",
+              "choices": [
+                "A translator can output numeric instructions as data that the CPU directly executes.",
+                "Unified memory automatically translates handwritten mathematical formulas into machine code without software.",
+                "Separate paper tapes prevented early CPUs from carrying out basic binary addition steps.",
+                "Unified memory doubled the physical wiring available for connecting printers and operator keyboards."
+              ],
+              "correct_index": 0,
+              "explanation": "Because unified memory stores code and data identically, an assembler or compiler can treat generated machine instructions as ordinary output data and then jump to them for execution."
+            },
+            {
+              "id": "q_006",
+              "prompt": "In the walkthrough, what critical handoff occurs right after an assembler writes binary codes into memory?",
+              "choices": [
+                "An operator punches those binary codes onto brass cards for permanent storage.",
+                "The hardware physically swaps the memory chips into a dedicated instruction cabinet.",
+                "Control jumps to those addresses, and the CPU executes them as instructions.",
+                "The assembler locks memory permanently so no future program can overwrite it."
+              ],
+              "correct_index": 2,
+              "explanation": "Once the translator finishes writing numeric machine codes into memory as data, the processor simply shifts control to that starting address and executes those exact words as live instructions."
+            }
+          ]
+        },
+        {
+          "id": "ch_004",
+          "title": "The Price of Unity: The Von Neumann Bottleneck",
+          "content_markdown": "Unified memory sounds like pure magic, so here is the catch: when instructions and data live in the same memory behind a single shared pathway to the processor, they have to take turns. Computer scientist John Backus later coined a vivid name for this traffic jam—the **Von Neumann bottleneck**.\n\nPicture a one-lane bridge connecting a blazingly fast factory (the processor) to a huge warehouse (unified memory). Even if the factory workers can multiply numbers in a blink, every instruction must cross that bridge first, and then the data it needs must cross the exact same bridge afterward. They cannot travel side by side at the same instant. Notice the twist: the older **Harvard architecture** avoids that specific bridge jam because its separate instruction and data paths let the processor fetch the next instruction while simultaneously reading or writing data. Unified memory won for flexible general-purpose computing, yet split paths never lost their appeal wherever steady, collision-free traffic mattered most.",
+          "questions": [
+            {
+              "id": "q_007",
+              "prompt": "What causes the Von Neumann bottleneck in a unified stored-program computer?",
+              "choices": [
+                "Mechanical relays wear out faster when storing binary instructions instead of decimal numbers.",
+                "Instructions and data must take turns traveling over the same shared memory pathway.",
+                "Assemblers consume all available memory space before user data can be loaded safely.",
+                "Processors cannot decode binary numbers unless a human operator flips front-panel switches."
+              ],
+              "correct_index": 1,
+              "explanation": "In a classic Von Neumann design, both instructions and data share one memory and one pathway to the CPU, creating contention because they cannot be fetched over separate lanes simultaneously."
+            },
+            {
+              "id": "q_008",
+              "prompt": "What specific performance advantage does a split Harvard architecture retain over a classic Von Neumann design?",
+              "choices": [
+                "It lets programs overwrite their own instruction tape instantly while running mathematical loops.",
+                "It eliminates the need for binary encoding by running equations directly in base ten.",
+                "It removes the need for a processor by computing answers inside memory directly.",
+                "It allows fetching the next instruction while simultaneously reading or writing program data."
+              ],
+              "correct_index": 3,
+              "explanation": "With physically independent pathways for instructions and data, a Harvard machine can fetch an upcoming instruction at the exact same time it reads or writes a data value."
+            }
+          ]
+        },
+        {
+          "id": "ch_005",
+          "title": "From Paper Blueprint to Working Metal",
+          "content_markdown": "By late 1945, the EDVAC draft had handed engineers around the world a defining architectural trade-off. Stepping away from wired plugboards and split Harvard paths meant embracing one shared memory for both code and numbers—accepting the traffic limits of the Von Neumann bottleneck in exchange for breathtaking flexibility. A single computer could transform itself in an instant from a physics solver to a code translator simply by loading fresh numbers into memory.\n\nYet an elegant blueprint on paper is one thing; building a reliable, working stored-program computer in the late 1940s was an adventure of an entirely different order. Early designers had no memory chips—not even magnetic core rings yet. They had to coax whatever laboratory physics they could find into keeping binary bits alive, while keeping processor circuitry tiny enough not to fail every five minutes. Next, we cross the Atlantic to Cambridge, England, where Maurice Wilkes turned the EDVAC vision into a daily scientific workhorse—and promptly hit a surprisingly stubborn programming puzzle.",
+          "questions": [
+            {
+              "id": "q_009",
+              "prompt": "Which statement best captures the core engineering trade-off between Harvard and Von Neumann designs?",
+              "choices": [
+                "Von Neumann prioritizes flexible code-as-data unity, while Harvard prioritizes separate simultaneous pathways.",
+                "Von Neumann prioritizes fixed mechanical counters, while Harvard prioritizes programmable electronic memory.",
+                "Von Neumann eliminates memory traffic jams, while Harvard enables automatic software compilers.",
+                "Von Neumann requires punched paper tapes, while Harvard requires hand-wired copper plugboards."
+              ],
+              "correct_index": 0,
+              "explanation": "Unified Von Neumann memory grants immense flexibility by treating code and data uniformly, whereas split Harvard paths sacrifice that unity to allow simultaneous instruction and data traffic."
+            },
+            {
+              "id": "q_010",
+              "prompt": "Why was implementing the 1945 EDVAC blueprint physically challenging for late-1940s engineers?",
+              "choices": [
+                "Mathematicians had not yet figured out how to represent numbers in binary form.",
+                "Government patents barred European universities from constructing machines that used unified program memory.",
+                "Engineers lacked cheap, reliable electronic memory and had to keep CPU circuits minimal.",
+                "Early compilers generated programs far too complex for vacuum-tube arithmetic units to execute."
+              ],
+              "correct_index": 2,
+              "explanation": "Before magnetic core rings or semiconductor chips existed, engineers had to invent unconventional physical memory devices and keep vacuum-tube processor logic small enough to stay reliable."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_02",
+      "title": "2. EDSAC, Mercury Delay Lines \u0026 Self-Modifying Loops (1949)",
+      "summary": "Explores Maurice Wilkes's Cambridge EDSAC (1949), the first practical stored-program computer built for regular service, unpacking its acoustic mercury delay-line memory and single-accumulator 1-address instruction model from first principles. Walks through why stepping across an array without dedicated indexing hardware forced early programmers to treat their own instructions as editable numbers, creating fragile self-modifying code.",
+      "introduced_terms": [
+        "mercury delay-line memory",
+        "1-address accumulator model",
+        "self-modifying code"
+      ],
+      "chunks": [
+        {
+          "id": "ch_006",
+          "title": "Maurice Wilkes and Cambridge's Practical Workhorse",
+          "content_markdown": "In the summer of 1946, British physicist Maurice Wilkes sailed to Philadelphia for a landmark lecture series on the EDVAC design and returned to Cambridge University with a clear-eyed mission. Instead of chasing the fastest experimental machine on earth, he wanted a stored-program computer dependable enough for ordinary scientists to use every day. On May 6, 1949, his **EDSAC**—the Electronic Delay Storage Automatic Calculator—ran its very first job, printing a crisp table of squares from 0 to 99.\n\nBecause Wilkes prized daily reliability over raw flash, he stripped EDSAC's circuitry down to the barest essentials. It offered no bank of general-purpose registers like the later PDP-11, nor did it possess fast random-access memory that could fetch any address on demand. Even so, Cambridge researchers quickly lined up to compute genetics models, chemical structures, and radio-astronomy maps. That early triumph raises two vivid questions: how do you keep hundreds of binary words alive in 1949, and how do you program a loop on such spartan hardware?",
+          "questions": [
+            {
+              "id": "q_011",
+              "prompt": "What guiding engineering goal set Maurice Wilkes's 1949 EDSAC apart from rival experimental projects?",
+              "choices": [
+                "Maximizing raw calculation speed regardless of hardware stability or daily uptime.",
+                "Building a practical, conservative stored-program computer for regular scientific service.",
+                "Replacing binary arithmetic entirely with decimal gears inherited from mechanical calculators.",
+                "Pioneering massive banks of general-purpose registers before testing basic memory storage."
+              ],
+              "correct_index": 1,
+              "explanation": "Wilkes intentionally kept EDSAC conservative and compact so it could enter steady daily service for Cambridge scientists rather than remain a fragile speed experiment."
+            },
+            {
+              "id": "q_012",
+              "prompt": "What milestone did EDSAC achieve when it began operating at Cambridge in May 1949?",
+              "choices": [
+                "It became the first computer to translate algebraic formulas with a high-level compiler.",
+                "It became the first computer to replace vacuum tubes with commercial transistor boards.",
+                "It became the first computer to connect multiple universities over telephone modems.",
+                "It became the first practical stored-program computer to enter regular computing service."
+              ],
+              "correct_index": 3,
+              "explanation": "EDSAC's May 1949 debut marked the first time a practical stored-program computer went into regular, ongoing service for everyday scientific users."
+            }
+          ]
+        },
+        {
+          "id": "ch_007",
+          "title": "Storing Bits as Sound Waves: Mercury Delay-Line Memory",
+          "content_markdown": "How do you store binary words years before magnetic core memory enters commercial use? Wilkes turned to a wartime radar technique called **mercury delay-line memory**. Picture a five-foot steel tube filled with liquid mercury, sealed at both ends with vibrating quartz crystals. One crystal converts an electrical pulse (a `1` bit) or pause (a `0` bit) into a tiny ultrasonic ripple gliding down the liquid metal. Because sound travels vastly slower than electricity, hundreds of binary pulses can march down a single tube single-file like commuters on a moving walkway.\n\nWhen each acoustic ripple reaches the far crystal, it converts back into electricity, passes through an amplifier that sharpens its fading shape, and loops right back into the entry crystal to begin another lap. EDSAC mounted 32 such mercury tubes, holding 1,024 short 17-bit words (or 512 long 35-bit words). The catch? Like waiting for your suitcase on an airport baggage carousel, the processor could only read or write an address during the exact instant its circulating pulses drifted past the exit crystal.",
+          "questions": [
+            {
+              "id": "q_013",
+              "prompt": "How did EDSAC's mercury delay-line memory physically keep binary bits alive?",
+              "choices": [
+                "By cycling acoustic pulses repeatedly through tubes of liquid mercury and reshaping them.",
+                "By magnetizing tiny iron rings suspended inside oil-filled glass storage tanks.",
+                "By punching microscopic holes continuously into spinning loops of steel-backed paper tape.",
+                "By trapping static electric charges permanently inside sealed blocks of solid quartz."
+              ],
+              "correct_index": 0,
+              "explanation": "Mercury delay lines converted binary bits into ultrasonic sound waves traveling through liquid mercury, amplifying and recirculating them continuously from the exit crystal back to the entrance."
+            },
+            {
+              "id": "q_014",
+              "prompt": "Why does an airport baggage carousel make a fitting analogy for reading mercury delay-line memory?",
+              "choices": [
+                "Every stored bit is tagged with a bright color so operators can spot errors visually.",
+                "Bits stay frozen in place until the processor physically rotates the steel tube.",
+                "The processor must wait until the target address's circulating bits pass the exit crystal.",
+                "Memory holds only one binary word at a time before emptying completely onto paper."
+              ],
+              "correct_index": 2,
+              "explanation": "Because bits circulated serially through the mercury tube in a fixed order, EDSAC could not jump instantly to an arbitrary address and had to wait for the desired word to arrive at the end crystal."
+            }
+          ]
+        },
+        {
+          "id": "ch_008",
+          "title": "The 1-Address Accumulator Model in Action",
+          "content_markdown": "To keep EDSAC's vacuum-tube count low, Wilkes designed its processor around a **1-address accumulator model**. Instead of offering many interchangeable registers, nearly every arithmetic instruction centered on one dedicated scratchpad register—the accumulator—so each instruction only had to specify an operation code (shortened to **opcode**, the bits telling the CPU which action to perform) and *one* memory address.\n\nWalk through adding two numbers stored at memory addresses 100 and 101, then saving their sum at address 102. First, an instruction clears the accumulator and loads the value from address 100. Second, an `ADD 101` instruction fetches the number at 101 and adds it straight into the accumulator—the accumulator itself is implied, never named in the instruction bits. Third, `STORE 102` copies the total out to address 102. Each short EDSAC instruction fit into 17 bits: 5 bits for the opcode, 1 spare bit, 10 bits for the memory address, and 1 length bit (short or long word). Clean and frugal—until you want to add a list of a hundred numbers instead of two.",
+          "questions": [
+            {
+              "id": "q_015",
+              "prompt": "Why is EDSAC's instruction design called a 1-address accumulator model?",
+              "choices": [
+                "The entire computer can store only one memory address at any given instant.",
+                "Every program may jump to only one fixed address before halting automatically.",
+                "Each mercury tube contains exactly one accumulator paired with one dedicated address.",
+                "Each instruction names one memory address while implicitly using the single accumulator."
+              ],
+              "correct_index": 3,
+              "explanation": "In a 1-address accumulator model, instructions carry just one explicit memory address because the processor's single accumulator serves implicitly as the other input value and destination."
+            },
+            {
+              "id": "q_016",
+              "prompt": "On EDSAC, what sequence of steps adds the numbers at addresses 100 and 101 and saves the result at 102?",
+              "choices": [
+                "Send addresses 100, 101, and 102 together in a single three-address instruction.",
+                "Load 100 into the accumulator, add 101 to it, then store to 102.",
+                "Copy 100 directly onto 101 in memory, then read 102 into the accumulator.",
+                "Place 100 and 101 in separate registers, then multiply them into address 102."
+              ],
+              "correct_index": 1,
+              "explanation": "Because every arithmetic operation works against the single accumulator with one memory address at a time, EDSAC loads 100, adds 101 into the accumulator, and stores the total at 102."
+            }
+          ]
+        },
+        {
+          "id": "ch_009",
+          "title": "The Loop Trap: Fragile Self-Modifying Code",
+          "content_markdown": "Now try summing an array of 100 numbers sitting at addresses 200 through 299 on EDSAC. You cannot write 100 separate instructions (`ADD 200`, `ADD 201`, and so on)—that single task would devour nearly a tenth of the machine's entire memory! Naturally, you want a compact loop that repeats one `ADD` instruction 100 times. Here is the trap: the target address (`200`) is hardcoded right inside that instruction's bits, and EDSAC has no extra hardware register to shift it.\n\nCambridge programmers escaped by exploiting Section 1's stored-program principle in a daring trick called **self-modifying code**. Inside the loop, right after running `ADD 200`, the program loaded *that very `ADD 200` instruction word itself* into the accumulator as an ordinary number, added `1` to its address field to turn it into `ADD 201`, and wrote the altered instruction right back over its own slot in memory! It worked, yet it was painfully fragile. Forget to reset `ADD 299` back to `ADD 200` before calling the routine again, or miscount by one, and the program silently scrambled itself.",
+          "questions": [
+            {
+              "id": "q_017",
+              "prompt": "Why did EDSAC programmers resort to self-modifying code just to sum an array of 100 numbers?",
+              "choices": [
+                "The instruction's address field was fixed, and no hardware register could offset it.",
+                "Mercury delay lines automatically erased every instruction immediately after the CPU read it.",
+                "EDSAC lacked conditional branch instructions capable of jumping backward to repeat a loop.",
+                "The single accumulator could only hold values between zero and ninety-nine at once."
+              ],
+              "correct_index": 0,
+              "explanation": "Because EDSAC had no hardware indexing register to offset an instruction's fixed address field, looping across consecutive array elements required adding 1 directly to the stored instruction word itself."
+            },
+            {
+              "id": "q_018",
+              "prompt": "What made self-modifying array loops so notoriously fragile and error-prone to debug?",
+              "choices": [
+                "Rewriting instructions inside mercury delay tubes caused the liquid metal to overheat rapidly.",
+                "Modified instructions automatically switched from binary machine format into incompatible decimal character codes.",
+                "The program altered its own instructions in memory, risking corruption if not reset.",
+                "Every self-modifying step permanently locked the central accumulator against all future addition operations."
+              ],
+              "correct_index": 2,
+              "explanation": "Because the running loop literally rewrote its own instructions in memory, forgetting to restore them or drifting off by one could corrupt the code into unintended operations."
+            }
+          ]
+        },
+        {
+          "id": "ch_010",
+          "title": "Lessons from Cambridge and the Hunger for Clean Loops",
+          "content_markdown": "EDSAC proved that the stored-program concept was far more than a clever paper theory—it could power daily scientific discovery using acoustic mercury delay-line memory and a lean 1-address accumulator processor. Wilkes and his colleagues even pioneered practical libraries of **subroutines** (reusable mini-programs) on punched paper tape, sparing scientists from rewriting common math calculations from scratch every week.\n\nYet self-modifying code revealed an uncomfortable crack in that early model. Treating instructions as editable numbers was a superpower *before* a program ran, when loaders or assemblers prepared code in memory. Doing it *during* every pass of a loop, however, turned everyday array processing into a nerve-racking juggling act. Even worse, a routine that rewrote its own instructions could not easily be shared or paused cleanly because its stored code changed shape mid-flight. Just 150 miles northwest of Cambridge, another British engineering team was wrestling with the exact same loop problem—and was about to add one small hardware register that would leave loop instructions untouched forever.",
+          "questions": [
+            {
+              "id": "q_019",
+              "prompt": "What major software-sharing headache did self-modifying loops create even when programmers coded them carefully?",
+              "choices": [
+                "Subroutines stored on punched paper tape could never be loaded into mercury tubes.",
+                "Self-modifying loops prevented the CPU from performing subtraction or storing final results.",
+                "Every single loop iteration required an operator to reload the whole machine manually.",
+                "Running a routine mutated its own stored instructions, preventing clean, safe code reuse."
+              ],
+              "correct_index": 3,
+              "explanation": "When executing a routine modifies its own instructions in memory, sharing, interrupting, or re-running that routine safely becomes treacherous unless every altered instruction is carefully restored."
+            },
+            {
+              "id": "q_020",
+              "prompt": "How did treating instructions as data differ between loading a program and running a self-modifying loop?",
+              "choices": [
+                "Loading required separate paper tapes, whereas self-modifying loops relied on hardwired plugboards.",
+                "Loading wrote code once beforehand, whereas self-modifying loops altered live instructions repeatedly.",
+                "Loading worked only on Harvard machines, whereas self-modifying loops worked on calculators.",
+                "Loading changed only data addresses, whereas self-modifying loops left memory completely untouched."
+              ],
+              "correct_index": 1,
+              "explanation": "Program loaders and assemblers generate or place instructions once before execution starts, whereas self-modifying loops continually rewrite live instructions while the program is actively running."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_03",
+      "title": "3. Manchester Mark 1 \u0026 the Invention of 'B-Lines' (1949)",
+      "summary": "Follows Frederic Williams and Tom Kilburn at Manchester University as they eliminate self-modifying loops on the 1949 Manchester Mark 1 by adding 'B-lines'—the world's first index registers. Traces how on-the-fly hardware effective-address calculation adds an index value to an instruction's address inside the CPU without touching memory, unlocking clean, reusable, read-only loops.",
+      "introduced_terms": [
+        "B-line (index register)",
+        "effective-address calculation"
+      ],
+      "chunks": [
+        {
+          "id": "ch_011",
+          "title": "Manchester's Glowing Screens and the Loop Headache",
+          "content_markdown": "At the University of Manchester in 1948, electrical engineers Frederic Williams and Tom Kilburn solved the early electronic memory problem in a completely different way from Cambridge's mercury tubes. Instead of cycling acoustic pulses through liquid metal, they stored glowing dots and dashes of electric charge on the glass faces of cathode-ray tubes—essentially repurposed radar screens—allowing the processor to read any word nearly instantly rather than waiting for a carousel to spin around. Their small test machine, nicknamed the Manchester 'Baby,' ran the world's first electronic stored program in June 1948.\n\nBy April 1949, Williams and Kilburn had expanded that prototype into the full-scale **Manchester Mark 1**. Yet the moment mathematicians began writing real table-lookup and matrix routines for it, they ran straight into the exact same nuisance plaguing EDSAC: stepping across an array still forced programmers to rewrite their own instructions in memory on every loop pass. Kilburn and his team asked a brilliantly clean hardware question: what if the CPU itself adjusted an instruction's address *after* fetching it, leaving main memory completely untouched?",
+          "questions": [
+            {
+              "id": "q_021",
+              "prompt": "How did Williams and Kilburn's Manchester memory differ from EDSAC's mercury delay lines?",
+              "choices": [
+                "It stored bits as magnetized iron rings woven onto copper wire grids.",
+                "It punched bits sequentially onto steel ribbons fed through mechanical brass readers.",
+                "It stored electric-charge dots on cathode-ray tubes for nearly instant word access.",
+                "It circulated focused light pulses continuously through coiled glass optical delay lines."
+              ],
+              "correct_index": 2,
+              "explanation": "Williams and Kilburn used cathode-ray tubes to hold electric-charge spots representing bits, giving random access to any stored word without waiting for acoustic pulses to circulate."
+            },
+            {
+              "id": "q_022",
+              "prompt": "Even with faster cathode-ray tube memory, what programming headache still initially troubled the Manchester Mark 1?",
+              "choices": [
+                "Walking through arrays still required rewriting loop instructions directly inside main memory.",
+                "Programs could not jump backward because cathode-ray screens erased instructions immediately.",
+                "Binary arithmetic failed whenever numbers exceeded the width of one paper tape.",
+                "Operators still had to rewire copper plugboards between every single array element."
+              ],
+              "correct_index": 0,
+              "explanation": "Faster random-access memory did not solve the fixed-address problem: without indexing hardware, looping through array entries still forced fragile self-modifying code."
+            }
+          ]
+        },
+        {
+          "id": "ch_012",
+          "title": "The 'B-Line' Breakthrough: Inventing the Index Register",
+          "content_markdown": "On the Manchester Mark 1, the accumulator was called the 'A-tube,' and the control register tracking the current instruction address was called the 'C-tube.' So when Williams and Kilburn wired in a tiny new register dedicated to shifting memory addresses, they naturally nicknamed it the **B-tube**—or, more famously, the **B-line**, the ancestor of every modern **index register**.\n\nImagine reading a printed street map where the first house on Oak Street is labeled 'House 200.' Instead of painting over '200' with correction fluid and scribbling '201,' '202,' and '203' directly onto your pristine map, you simply carry a sliding bookmark counting how many doors down the block you have walked (`0`, `1`, `2`, `3`). Your eyes read the fixed number on the map (`200`), mentally add the bookmark's offset (`3`), and walk straight to House 203. On the Manchester Mark 1, the **B-line** served as that sliding hardware bookmark: a dedicated register holding an offset that the CPU automatically combined with an instruction's address before reading memory.",
+          "questions": [
+            {
+              "id": "q_023",
+              "prompt": "What job did a 'B-line'—the world's first index register—perform on the Manchester Mark 1?",
+              "choices": [
+                "It translated human-readable arithmetic formulas directly into binary machine opcodes.",
+                "It doubled the total capacity of the machine's cathode-ray tube memory.",
+                "It permanently replaced the main accumulator for all addition and subtraction.",
+                "It held a numeric offset combined automatically with an instruction's address."
+              ],
+              "correct_index": 3,
+              "explanation": "A B-line stored an integer offset that the processor automatically combined with an instruction's fixed address field, letting loops march through arrays without editing code in memory."
+            },
+            {
+              "id": "q_024",
+              "prompt": "Why did Manchester engineers originally call this new hardware register a 'B-line' or 'B-tube'?",
+              "choices": [
+                "Because it stored binary values exclusively in base-two rather than decimal format.",
+                "Because it sat alongside the accumulator ('A-tube') and control register ('C-tube').",
+                "Because it served strictly as a backup accumulator whenever vacuum tubes failed.",
+                "Because it connected directly to British post-office telegraph lines for output."
+              ],
+              "correct_index": 1,
+              "explanation": "Manchester already named its accumulator the 'A-tube' and its control register the 'C-tube,' so the new modification register naturally took the letter 'B.'"
+            }
+          ]
+        },
+        {
+          "id": "ch_013",
+          "title": "Hardware Effective-Address Calculation Step by Step",
+          "content_markdown": "Watch the Manchester Mark 1 sum that same 100-element array at addresses 200 through 299—this time *without* altering a single bit of the stored program. First, the program places `0` into the B-line. Inside the loop sits one fixed, unchanging instruction: `ADD 200, B`, meaning 'fetch the number at address 200 *plus* whatever is currently inside the B-line, and add it to the accumulator.'\n\nWhen the CPU fetches `ADD 200, B`, it never writes back to the instruction's slot in memory. Instead, inside its own internal circuitry, it performs **effective-address calculation**: a built-in adder combines the instruction's fixed base address (`200`) with the B-line's live value on the fly. On pass one (`B = 0`), the hardware computes $$200 + 0 = 200$$ and reads address 200. Next, a short instruction bumps the B-line up by `1` and loops back. On pass two (`B = 1`), the CPU fetches the exact same untouched `ADD 200, B` word, computes $$200 + 1 = 201$$, and continues cleanly through $$200 + 99 = 299$$.",
+          "questions": [
+            {
+              "id": "q_025",
+              "prompt": "During hardware effective-address calculation for `ADD 200, B`, where does the updated target address exist?",
+              "choices": [
+                "Temporarily inside the CPU's internal circuits, leaving the stored instruction untouched.",
+                "Permanently written over the original `ADD 200, B` word inside main memory.",
+                "Punched onto an external paper-tape buffer waiting for the next loop cycle.",
+                "Stored inside the accumulator alongside the running sum of the array values."
+              ],
+              "correct_index": 0,
+              "explanation": "Effective-address calculation adds the base address and B-line value inside the processor's own hardware during execution, so the instruction sitting in memory never changes."
+            },
+            {
+              "id": "q_026",
+              "prompt": "Suppose `ADD 200, B` runs inside a loop when the B-line holds `37`. Which memory address does the hardware read?",
+              "choices": [
+                "Address `37`, because the B-line completely overrides the base address `200`.",
+                "Address `200`, because hardware only applies the B-line during store instructions.",
+                "Address `237`, computed on the fly by adding `200` and `37`.",
+                "Address `163`, computed on the fly by subtracting `37` from `200`."
+              ],
+              "correct_index": 2,
+              "explanation": "Hardware effective-address calculation adds the instruction's base address (200) and the B-line index (37) inside the CPU to access address 237."
+            }
+          ]
+        },
+        {
+          "id": "ch_014",
+          "title": "Clean Read-Only Loops and a Subtle Hardware Twist",
+          "content_markdown": "Look at what just disappeared from the programmer's worry list. When our 100-step loop finishes, the `ADD 200, B` instruction sitting in memory still reads `ADD 200, B`—pristine and unchanged. Indexing unlocked **read-only loop code**: instructions no longer mutated themselves as they ran. A subroutine could be called ten times in a row, paused mid-flight, or shared safely without requiring awkward repair instructions to restore mangled addresses afterward.\n\nHere is a charming historical twist that reveals how brand-new the idea was in 1949: the Manchester Mark 1 actually added the B-line to the *entire* fetched instruction word inside the CPU, not just its address bits! Normally the B-line held a small offset touching only the address portion, yet clever Manchester programmers noticed they could occasionally place bits higher up in the B-line to tweak an operation code on the fly too. Later machines sensibly restricted index registers strictly to address calculation, keeping instruction meaning crisp and predictable while preserving Williams and Kilburn's breakthrough.",
+          "questions": [
+            {
+              "id": "q_027",
+              "prompt": "What major software benefit did hardware indexing immediately unlock compared to EDSAC-style loops?",
+              "choices": [
+                "Programs could run directly from paper tape without needing any electronic memory.",
+                "Processors no longer needed an accumulator to perform addition on array elements.",
+                "Compilers could shrink every 100-element array down into a single binary word.",
+                "Loop instructions stayed clean and read-only in memory, enabling safe repeated reuse."
+              ],
+              "correct_index": 3,
+              "explanation": "Because the B-line held the changing loop offset, stored instructions remained intact and read-only, making routines far easier to debug, reset, and reuse."
+            },
+            {
+              "id": "q_028",
+              "prompt": "What unusual quirk of the original 1949 Manchester Mark 1 B-line was later narrowed in subsequent computers?",
+              "choices": [
+                "It could only hold negative numbers, forcing loops to run strictly backward.",
+                "It added the B-line to the entire fetched instruction, not just addresses.",
+                "It required human operators to increment the offset manually between loop passes.",
+                "It worked only on odd memory addresses while skipping every even address."
+              ],
+              "correct_index": 1,
+              "explanation": "The Manchester Mark 1 added the B-line across the full fetched instruction word, which could even alter opcodes; later computers narrowed index registers strictly to computing effective addresses."
+            }
+          ]
+        },
+        {
+          "id": "ch_015",
+          "title": "From University Lab Trick to Permanent CPU DNA",
+          "content_markdown": "With one small extra register and an internal adder, Williams and Kilburn reshaped programming forever. EDSAC had proven that stored programs could work reliably every day; the Manchester Mark 1 proved that stored programs did not have to rewrite themselves just to walk across a list of numbers. By keeping a fixed base address inside each instruction, storing the changing step inside a **B-line (index register)**, and merging them via **effective-address calculation**, Manchester contributed a piece of architectural DNA inherited by almost every processor built since.\n\nUp through 1950, however, virtually every stored-program computer remained a bespoke laboratory creation hand-built by university teams in Cambridge, Manchester, or Philadelphia. Now a commercial wave was cresting. Aircraft designers, weather modelers, and national laboratories wanted factory-produced scientific machines—computers with far wider binary words, sturdier memory than glowing glass tubes, effortless handling of astronomical and tiny fractions, and multiple index registers ready straight off the assembly line. Next, IBM enters electronic computing and builds the defining scientific mainframes of the 1950s.",
+          "questions": [
+            {
+              "id": "q_029",
+              "prompt": "How did the Manchester Mark 1 change the relationship between an instruction's stored address and the memory slot actually accessed?",
+              "choices": [
+                "It replaced stored instruction addresses with rotating mechanical counter dials inside memory.",
+                "It forced every instruction to read two fixed adjacent memory slots simultaneously.",
+                "It kept the stored base address fixed while adding a register offset dynamically.",
+                "It stored all array addresses on a dedicated external tape separate from instructions."
+              ],
+              "correct_index": 2,
+              "explanation": "The Manchester Mark 1 decoupled the fixed base address encoded in memory from the moving offset stored in the B-line, combining them dynamically inside the processor."
+            },
+            {
+              "id": "q_030",
+              "prompt": "What broader industry transition followed the late-1940s university breakthroughs at Cambridge and Manchester?",
+              "choices": [
+                "Moving from one-off academic prototypes toward standardized, factory-built commercial scientific mainframes.",
+                "Abandoning electronic stored programs in favor of faster mechanical punch-card tabulators.",
+                "Returning to plugboard wiring so industrial customers could avoid training programmers.",
+                "Shrinking entire room-sized vacuum-tube computers immediately onto single-chip silicon microprocessors."
+              ],
+              "correct_index": 0,
+              "explanation": "Once academic prototypes proved stored programs and hardware indexing worked, aerospace and research customers demanded standardized, mass-produced commercial scientific mainframes."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_04",
+      "title": "4. Commercial 36-Bit Mainframes: The IBM 701 \u0026 IBM 704 (1952–1955)",
+      "summary": "Moves from university prototypes to commercial binary scientific mainframes, tracing the 36-bit IBM 701 and its landmark successor, the IBM 704. Explains from first principles how the 704 combined reliable magnetic core memory, hardware floating-point arithmetic for vast scientific ranges, and three subtractive 15-bit index registers into the blueprint for 1950s scientific computing.",
+      "introduced_terms": [
+        "36-bit binary mainframe (IBM 701 and 704)",
+        "hardware floating-point arithmetic",
+        "subtractive 15-bit index registers"
+      ],
+      "chunks": [
+        {
+          "id": "ch_016",
+          "title": "IBM Goes Electronic: The 36-Bit IBM 701",
+          "content_markdown": "For decades, IBM had dominated electromechanical punch-card tabulators rather than electronic stored-program computers. When the Korean War erupted in 1950, aircraft companies and defense laboratories urgently asked for serious electronic number-crunchers. IBM answered in 1952 with its first commercial scientific stored-program computer: the **IBM 701**, originally nicknamed the 'Defense Calculator.'\n\nUnlike narrow 17-bit university machines, the 701 introduced IBM's **36-bit binary mainframe** word—wide enough to hold either two compact 18-bit instructions or a single high-precision number spanning roughly ten decimal digits. Nineteen 701s shipped to aerospace firms, national labs, and universities. Yet early users quickly voiced three sharp frustrations. First, the 701 still relied on fussy cathode-ray tube memory like Manchester's, which suffered charge 'read-around' errors if a loop hit one spot too often. Second, it shipped with *no* index registers, pushing programmers straight back to self-modifying loops! Third, it performed only whole-number fixed-point arithmetic, forcing scientists to track decimal points painstakingly by hand. IBM's engineers listened closely—and went straight back to the drawing board.",
+          "questions": [
+            {
+              "id": "q_031",
+              "prompt": "Why did the 1952 IBM 701 adopt a wide 36-bit binary word length?",
+              "choices": [
+                "To mimic the exact 36-column width of standard 1950s paper accounting ledgers.",
+                "To hold high-precision scientific numbers or pack two 18-bit instructions per word.",
+                "To guarantee direct binary compatibility with Cambridge's 17-bit EDSAC software library.",
+                "To divide neatly into four separate 9-bit decimal accounting digits for payrolls."
+              ],
+              "correct_index": 1,
+              "explanation": "A 36-bit binary word gave scientists roughly ten decimal digits of numerical precision while also neatly holding a pair of 18-bit instructions."
+            },
+            {
+              "id": "q_032",
+              "prompt": "Which trio of customer complaints pushed IBM to design a major successor to the 701?",
+              "choices": [
+                "Slow punch-card printers, missing keyboards, and high electricity bills in winter.",
+                "Excessively tiny words, slow compilers, and incompatible magnetic tape drives.",
+                "Unreliable mercury tubes, awkward decimal instructions, and overly expensive floating-point units.",
+                "Temperamental CRT memory, missing index registers, and fixed-point-only whole-number arithmetic."
+              ],
+              "correct_index": 3,
+              "explanation": "IBM 701 users struggled with finicky cathode-ray tube memory, the absence of index registers for clean loops, and having to scale decimal points manually in fixed-point math."
+            }
+          ]
+        },
+        {
+          "id": "ch_017",
+          "title": "The 1954 IBM 704: Core Memory and Hardware Floating-Point",
+          "content_markdown": "IBM's answer—announced in May 1954 and delivered starting in late 1955—was the landmark **IBM 704**, widely celebrated as the first mass-produced scientific mainframe (over 120 were built). While keeping the 701's 36-bit binary word, architect Gene Amdahl and his team transformed the internals. First, they discarded finicky cathode-ray tubes in favor of **magnetic core memory**—the rugged grids of magnetized ferrite rings you met on the PDP-11, now entering commercial mainframe production at scale, giving fast, rock-solid random access that refused to drift or fade.\n\nSecond, the 704 debuted built-in **hardware floating-point arithmetic**. Picture scientific notation like $$6.02 \\times 10^{23}$$ or $$1.6 \\times 10^{-19}$$: instead of writing slow software routines to babysit the decimal point during every multiplication, the 704 divided each 36-bit word into a 1-bit sign, an 8-bit exponent (tracking where the binary point 'floats'), and a 27-bit fraction. Dedicated floating-point circuits let physicists combine astronomical and subatomic values in a single hardware instruction with zero manual scaling.",
+          "questions": [
+            {
+              "id": "q_033",
+              "prompt": "What major practical problem did built-in hardware floating-point arithmetic solve for IBM 704 scientists?",
+              "choices": [
+                "It handled vastly different numerical scales automatically without manual decimal-point tracking.",
+                "It converted binary numbers into English text before printing scientific research papers.",
+                "It eliminated the need for main memory by storing equations inside registers.",
+                "It allowed programs to run without ever using binary exponents or fractions."
+              ],
+              "correct_index": 0,
+              "explanation": "Hardware floating-point automatically tracked both a fraction and an exponent inside each 36-bit word, freeing scientists from manually scaling numbers of wildly different magnitudes."
+            },
+            {
+              "id": "q_034",
+              "prompt": "How did the IBM 704 physically upgrade the main memory technology used on the earlier IBM 701?",
+              "choices": [
+                "It replaced magnetic core rings with acoustic liquid-mercury delay tubes.",
+                "It replaced punched paper tapes with glowing cathode-ray storage screens.",
+                "It replaced temperamental cathode-ray tubes with reliable magnetic core memory.",
+                "It replaced vacuum-tube accumulators with compact silicon random-access memory chips."
+              ],
+              "correct_index": 2,
+              "explanation": "The IBM 704 made reliable magnetic core memory standard, eliminating the charge-drift headaches of the 701's cathode-ray storage tubes."
+            }
+          ]
+        },
+        {
+          "id": "ch_018",
+          "title": "Three 15-Bit Index Registers—With a Subtractive Twist",
+          "content_markdown": "To banish self-modifying loops for good, the IBM 704 equipped programmers with **three 15-bit index registers** (named A, B, and C, spanning up to $$2^{15} = 32,768$$ words of memory). Because each instruction now occupied a full 36-bit word instead of half a word, a 3-bit 'tag' field had plenty of room to specify which index register to apply.\n\nHere comes the IBM 704's unforgettable quirk: its index registers were **subtractive index registers**! Rather than *adding* the index register to an instruction's address field, the 704's hardware *subtracted* it: $$\\text{effective address} = \\text{address} - \\text{index}$$. Walk through reading a 10-element array sitting at addresses 1000 through 1009. You aim the instruction's address field just past the array at `1010` and load `10` into index register A. On pass one, hardware computes $$1010 - 10 = 1000$$. A dedicated loop instruction then steps register A down by `1` to `9` and jumps back while nonzero—reading $$1010 - 9 = 1001$$, then `1002`, cleanly down to $$1010 - 1 = 1009$$.",
+          "questions": [
+            {
+              "id": "q_035",
+              "prompt": "On the IBM 704, an instruction names address `1010` and selects an index register currently holding `4`. Which memory address does the hardware access?",
+              "choices": [
+                "Address `1014`, because all hardware index registers always add their contents.",
+                "Address `1010`, because index registers only modify floating-point exponents, not addresses.",
+                "Address `4`, because a nonzero index register completely replaces the base address.",
+                "Address `1006`, because the 704 subtracts the index register from the address."
+              ],
+              "correct_index": 3,
+              "explanation": "Because the IBM 704 used subtractive index registers, its hardware computed the effective address as 1010 minus 4, yielding address 1006."
+            },
+            {
+              "id": "q_036",
+              "prompt": "Why did having three separate index registers help 1950s scientific programmers so much?",
+              "choices": [
+                "Each register could store one full 36-bit floating-point number during complex equations.",
+                "Programs could track multiple nested array indices simultaneously without swapping registers constantly.",
+                "Three registers automatically tripled the clock speed of the magnetic core memory.",
+                "Hardware required three identical copies of every address to prevent bit errors."
+              ],
+              "correct_index": 1,
+              "explanation": "Scientific matrix math often loops over rows, columns, and result tables at the same time, so three independent index registers kept nested loops clean and fast."
+            }
+          ]
+        },
+        {
+          "id": "ch_019",
+          "title": "Why Count Down? The Thrift Behind Subtractive Indexing",
+          "content_markdown": "At first glance, subtracting an index register looks backward—why didn't Gene Amdahl's team simply add it like Manchester's B-line? The answer reflects 1950s vacuum-tube thrift. Counting *down* toward zero makes checking whether a loop has finished remarkably cheap in hardware! Testing whether a register equals zero only asks if every bit is `0`—no need to store a separate upper-limit number and run a full comparison on every pass.\n\nEven better, the 704's loop instructions paired the index step and countdown test into one crisp move, letting programmers still sweep *forward* from element `1000` to `1009` by counting the index register down from `10` to `1`. Another quirky fingerprint lingered in the 3-bit tag field: because each bit wired directly to one index register (`A`, `B`, `C`), turning on *two* tag bits did not add those registers—hardware merged them via a **bitwise logical OR** (setting each bit to `1` if *either* register had a `1` there) before subtracting! Few programs relied on that oddity, yet it shows how closely early behavior echoed raw wiring.",
+          "questions": [
+            {
+              "id": "q_037",
+              "prompt": "What practical hardware advantage motivated the IBM 704's countdown-based subtractive index registers?",
+              "choices": [
+                "Checking whether a countdown reached zero was much simpler than comparing arbitrary limits.",
+                "Vacuum-tube adders could only perform subtraction and completely lacked binary addition circuits.",
+                "Magnetic core memory could only read addresses in strictly descending numerical order.",
+                "Subtracting indices prevented floating-point numbers from overflowing the machine's 36-bit accumulator register."
+              ],
+              "correct_index": 0,
+              "explanation": "Detecting zero in binary requires far less circuitry than comparing a counter against an arbitrary upper bound, making countdown loops fast and hardware-efficient."
+            },
+            {
+              "id": "q_038",
+              "prompt": "How did the IBM 704 behave if a programmer accidentally set more than one bit in an instruction's 3-bit index tag field?",
+              "choices": [
+                "The processor halted immediately with a fatal hardware tag-conflict error signal.",
+                "The processor automatically summed all selected index registers before subtracting them.",
+                "The processor took the bitwise logical OR of those selected index registers.",
+                "The processor ignored the tag field entirely and used the raw address."
+              ],
+              "correct_index": 2,
+              "explanation": "Rather than adding multiple index registers or signaling an error, the 704's wiring combined multiple selected index registers using a bitwise logical OR before subtracting."
+            }
+          ]
+        },
+        {
+          "id": "ch_020",
+          "title": "The First Commercial Blueprint for Scientific Computing",
+          "content_markdown": "Pause and appreciate how rapidly computer architecture matured in the decade after the 1945 EDVAC draft. The IBM 704 fused a wide **36-bit binary mainframe** word with dependable magnetic core memory, **hardware floating-point arithmetic**, and **three subtractive 15-bit index registers**. For the first time, over a hundred universities, aircraft plants, and research centers owned the *exact same* factory-built electronic computer—allowing distant engineers to trade tested subroutines through pioneering user groups like SHARE, founded in 1955.\n\nJust as crucially, the IBM 704 arrived right as programmers were aching to escape tedious hand-coded binary instructions. Skeptics in 1954 insisted that no automatic translator could ever produce machine code fast enough to rival a skilled human assembly coder. Yet inside the 704's floating-point unit, its three index registers, and the exact way its 36-bit words sliced up address bits sat the hardware ingredients that would mold two of history's most influential programming languages. Next, we see how one 1954 mainframe left living fossils inside software still written today.",
+          "questions": [
+            {
+              "id": "q_039",
+              "prompt": "What new collaborative milestone became possible once over a hundred labs owned identical IBM 704 machines?",
+              "choices": [
+                "Customers could run EDSAC and Harvard Mark I paper tapes without modification.",
+                "Different organizations could finally exchange and reuse programs through shared user groups.",
+                "Scientists no longer needed binary memory because every lab switched to decimal.",
+                "Programmers stopped writing loops because 36-bit words held entire arrays at once."
+              ],
+              "correct_index": 1,
+              "explanation": "Standardized commercial production meant labs across the country shared one hardware design, launching collaborative software-sharing groups such as SHARE in 1955."
+            },
+            {
+              "id": "q_040",
+              "prompt": "Which trio of architectural features cemented the IBM 704 as the defining 1950s scientific mainframe?",
+              "choices": [
+                "Mercury delay lines, plugboard wiring panels, and a single 17-bit accumulator.",
+                "Cathode-ray tube storage, fixed-point arithmetic, and self-modifying array loop hardware.",
+                "Split Harvard paper tapes, mechanical relays, and hand-wired copper plugboards.",
+                "Magnetic core memory, hardware floating-point arithmetic, and three 15-bit index registers."
+              ],
+              "correct_index": 3,
+              "explanation": "Combining reliable magnetic core memory, built-in floating-point circuits, and three 15-bit subtractive index registers turned the 36-bit IBM 704 into the archetype of 1950s scientific mainframes."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_05",
+      "title": "5. How the IBM 704 Shaped FORTRAN \u0026 Lisp's 'CAR'/'CDR' (1954–1958)",
+      "summary": "Examines how the IBM 704's physical architecture directly molded two foundational programming languages: John Backus's FORTRAN compiler, which leaned on the 704's hardware floating-point and three index registers to match hand-tuned assembly, and John McCarthy's Lisp, whose iconic 'CAR' and 'CDR' list operators preserve the 704's 36-bit Address and Decrement word fields as living architectural fossils.",
+      "introduced_terms": [
+        "FORTRAN optimizing compiler (1957)",
+        "address and decrement word fields",
+        "CAR and CDR (Lisp hardware fossils)"
+      ],
+      "chunks": [
+        {
+          "id": "ch_021",
+          "title": "The Skeptics' Bet: Could a Machine Write Fast Code?",
+          "content_markdown": "In late 1953, young IBM programmer John Backus sent a bold memo to his manager. Half the expense of operating an IBM 701 was not buying vacuum tubes or electricity—it was paying skilled mathematicians to hand-translate physics equations into raw binary instructions and then hunt down endless subtle bugs. Backus proposed an automatic translator that would let scientists write familiar algebraic formulas like `X = A + B * C` and have the computer generate fast machine code itself.\n\nAlmost every seasoned programmer scoffed at the plan. Earlier 'automatic coding' tools on fixed-point machines ran five to ten times slower than hand-written assembly, because software had to simulate floating-point arithmetic and clumsy array loops step by step. Backus knew his project would fail unless its generated code rivaled a master human programmer's speed. His secret ally arrived in 1954: the new IBM 704, whose built-in hardware floating-point circuits and three index registers completely transformed the economics of automatic translation.",
+          "questions": [
+            {
+              "id": "q_041",
+              "prompt": "Why did veteran 1950s programmers doubt John Backus's proposal for an automatic formula translator?",
+              "choices": [
+                "They believed IBM 704 magnetic core memory could not hold alphabetical text characters.",
+                "They feared automatic translators would physically wear out vacuum tubes much too quickly.",
+                "Scientists preferred rewiring plugboard cables rather than typing equations onto punch cards.",
+                "Earlier automatic coding tools ran far slower than carefully hand-written assembly routines."
+              ],
+              "correct_index": 3,
+              "explanation": "Early translators carried heavy software overhead for simulating floating-point math and loops, convincing veteran coders that automatic translation could never match hand-tuned assembly speed."
+            },
+            {
+              "id": "q_042",
+              "prompt": "What economic bottleneck motivated Backus to pitch an automatic formula translator in late 1953?",
+              "choices": [
+                "Paying programmers to hand-code and debug machine instructions rivaled hardware operating costs.",
+                "Purchasing liquid mercury for acoustic delay lines consumed most corporate computing budgets.",
+                "Shipping giant paper tapes between research labs delayed scientific projects by months.",
+                "Replacing broken mechanical counter wheels forced machines offline every single afternoon."
+              ],
+              "correct_index": 0,
+              "explanation": "Backus realized that human labor spent hand-coding and debugging raw machine instructions had become roughly half the total cost of running a scientific mainframe."
+            }
+          ]
+        },
+        {
+          "id": "ch_022",
+          "title": "FORTRAN (1957): Built Around the IBM 704's Hardware",
+          "content_markdown": "After three intense years of engineering, Backus's ten-person team shipped the **FORTRAN optimizing compiler** (short for *Formula Translation*) in April 1957—tailored exclusively for the IBM 704. Why did FORTRAN succeed where earlier translators stumbled? Because the 704's silicon-free vacuum-tube hardware met the compiler halfway! Whenever a physicist typed `Y = A * X + B`, FORTRAN did not have to splice in slow software math routines—it simply emitted single native 704 floating-point instructions.\n\nEven more impressively, the FORTRAN team obsessed over squeezing maximum speed from the 704's three 15-bit index registers. Imagine packing a craftsman's tool belt that holds exactly three pockets: the compiler analyzed nested `DO` loops, decided which array counters belonged inside those three precious hardware registers, and arranged instructions so loop indices stayed in fast registers instead of shuttling back and forth to core memory. To the industry's amazement, compiled FORTRAN programs ran nearly as fast as expert hand-coded assembly while slashing human programming effort dramatically.",
+          "questions": [
+            {
+              "id": "q_043",
+              "prompt": "How did the IBM 704's hardware directly help the 1957 FORTRAN compiler match hand-tuned assembly speed?",
+              "choices": [
+                "It translated typed algebraic formulas directly inside magnetic core memory without software.",
+                "It supplied dozens of general-purpose registers so compilers never had to optimize loop counters.",
+                "It provided native floating-point instructions and three index registers for tight compiled loops.",
+                "It eliminated loops entirely by executing entire mathematical arrays in a single clock."
+              ],
+              "correct_index": 2,
+              "explanation": "Built-in floating-point hardware eliminated slow math emulation, and three hardware index registers allowed FORTRAN's optimizer to emit tight, fast array loops."
+            },
+            {
+              "id": "q_044",
+              "prompt": "What key optimization problem did the FORTRAN compiler solve around the IBM 704's three index registers?",
+              "choices": [
+                "Converting three 15-bit binary index registers into floating-point decimal exponent counters.",
+                "Deciding which loop counters belonged in those three registers to minimize memory traffic.",
+                "Rewriting stored loop instructions inside core memory after every single array pass.",
+                "Splitting floating-point fractions evenly across the three index registers during multiplication."
+              ],
+              "correct_index": 1,
+              "explanation": "Because the IBM 704 had only three index registers, FORTRAN analyzed loop nesting to keep the most heavily used counters inside registers rather than constantly spilling them to memory."
+            }
+          ]
+        },
+        {
+          "id": "ch_023",
+          "title": "Inside a 36-Bit Word: The Address and Decrement Fields",
+          "content_markdown": "FORTRAN was not the only historic language molded directly by the IBM 704's hardware. To see the second one, zoom in on a single 36-bit IBM 704 loop-control word (known as 'Type A' format). Rather than storing one giant integer, the 704 sliced those 36 bits into four crisp compartments: a 3-bit **prefix** (the opcode), a 15-bit **decrement** field, a 3-bit **tag** (selecting an index register), and a 15-bit **address** field. Check the arithmetic: $$3 + 15 + 3 + 15 = 36$$ bits!\n\nWhy did the 704 pack *two* 15-bit numerical slots—both **address and decrement word fields**—inside one single word? Because a countdown loop instruction needed two numbers simultaneously: the 15-bit *decrement* told hardware how much to subtract from the selected index register, while the 15-bit *address* told hardware where to branch next! Since 15 bits could point to any of the 704's $$2^{15} = 32,768$$ memory words, every 36-bit word happened to contain two full-sized memory-pointer pockets sitting side by side.",
+          "questions": [
+            {
+              "id": "q_045",
+              "prompt": "How did an IBM 704 Type A instruction word divide its 36 bits into four fields?",
+              "choices": [
+                "A 3-bit prefix, 15-bit decrement, 3-bit tag, and 15-bit address field.",
+                "Four equal 9-bit character slots holding four decimal digits per word.",
+                "A 1-bit sign, 8-bit exponent, 12-bit counter, and 15-bit fraction field.",
+                "Two 18-bit half-instructions each carrying a separate floating-point exponent and fraction."
+              ],
+              "correct_index": 0,
+              "explanation": "The 704's Type A word split 36 bits into a 3-bit prefix, 15-bit decrement, 3-bit index tag, and 15-bit address ($$3 + 15 + 3 + 15 = 36$$)."
+            },
+            {
+              "id": "q_046",
+              "prompt": "Why did the IBM 704's 15-bit address and 15-bit decrement fields turn out to hold two full memory pointers?",
+              "choices": [
+                "Because the machine's core memory held only 15 words of data total.",
+                "Because every instruction automatically doubled 15-bit numbers into 30-bit physical addresses.",
+                "Because 15 bits spanned the machine's entire $$2^{15} = 32,768$$ word address space.",
+                "Because programmers stored half of each pointer on magnetic tape reels instead."
+              ],
+              "correct_index": 2,
+              "explanation": "With a 32,768-word address space ($$2^{15}$$), each 15-bit field inside a single 36-bit word was wide enough to store a complete memory address."
+            }
+          ]
+        },
+        {
+          "id": "ch_024",
+          "title": "Lisp's 'CAR' and 'CDR': 1958 Hardware Fossils Still Alive Today",
+          "content_markdown": "In 1958, MIT mathematician John McCarthy was creating **Lisp**, a pioneering language for artificial intelligence built around linked lists of symbols rather than grids of numbers. Every link in a Lisp list is a two-pointer pair (a 'cons cell'): the first pointer points to the current item, and the second pointer points to the remainder of the list.\n\nImplementing Lisp on MIT's IBM 704, McCarthy's colleague Steve Russell spotted an irresistible shortcut! Why burn *two* 36-bit words for every tiny list link when a single 704 word already offered two 15-bit pointer slots—the Address field and the Decrement field—paired with fast hardware instructions to extract each half? They tucked the first pointer into the Address field and the second into the Decrement field, naming the two operations **CAR** (*Contents of the Address part of Register*) and **CDR** (*Contents of the Decrement part of Register*). Nearly seven decades after the IBM 704 retired, programmers still type `car` and `cdr`—living linguistic fossils of a 1954 register layout!",
+          "questions": [
+            {
+              "id": "q_047",
+              "prompt": "Where do the unusual names 'CAR' and 'CDR' in the Lisp programming language come from?",
+              "choices": [
+                "Abbreviations for Cambridge Academic Register and Computer Delay-line Reader on EDSAC.",
+                "Acronyms for Compiled Array Routine and Conditional Data Return inside early FORTRAN.",
+                "Shortened names of two MIT graduate students who built the first compiler.",
+                "Contents of the Address and Decrement parts of an IBM 704 register."
+              ],
+              "correct_index": 3,
+              "explanation": "CAR and CDR stood for 'Contents of the Address part of Register' and 'Contents of the Decrement part of Register,' referencing the two 15-bit halves of an IBM 704 word."
+            },
+            {
+              "id": "q_048",
+              "prompt": "Why did MIT's early Lisp implementation pack a two-pointer list node into just one 36-bit IBM 704 word?",
+              "choices": [
+                "Because the 704 prohibited storing pointers in two consecutive magnetic core addresses.",
+                "Because one word already held two 15-bit fields with fast hardware extraction.",
+                "Because Lisp restricted every list to contain strictly numeric floating-point exponents only.",
+                "Because packing two pointers forced the 704's hardware to automatically sort lists."
+              ],
+              "correct_index": 1,
+              "explanation": "Since both the Address and Decrement fields were 15 bits wide—matching the 704's address space—and had dedicated extraction instructions, one 36-bit word neatly held an entire two-pointer list link."
+            }
+          ]
+        },
+        {
+          "id": "ch_025",
+          "title": "When One Machine's Quirks Become Software's Habit",
+          "content_markdown": "Look at the twin legacies of one 1954 mainframe. On the numerical side, the IBM 704's floating-point unit and three subtractive index registers enabled the **FORTRAN optimizing compiler** to rival hand-crafted assembly, launching high-level scientific programming. On the symbolic side, the **address and decrement word fields** of its 36-bit word etched **CAR and CDR** permanently into computer science vocabulary. Early software did not float neutrally above hardware—it molded itself tightly around the exact registers, bit slices, and quirks of the machine beneath it.\n\nAnd hidden inside that tight embrace ticked an industry-wide time bomb. As computer makers raced ahead in the late 1950s—replacing hot vacuum tubes with cool solid-state transistors—they did not build one shared architecture. Instead, they rolled out separate, bespoke machines tailored to scientists, banks, and small engineering offices, each speaking its own incompatible binary or decimal dialect. Next, we watch that proliferation boil over into a corporate compatibility crisis.",
+          "questions": [
+            {
+              "id": "q_049",
+              "prompt": "What broader lesson do FORTRAN and Lisp's `CAR`/`CDR` both illustrate about 1950s computing?",
+              "choices": [
+                "Early high-level languages completely ignored underlying hardware details to remain machine-independent.",
+                "Both languages failed commercially until magnetic core memory was replaced by delay lines.",
+                "Early programming languages molded themselves closely around specific quirks of underlying hardware.",
+                "Scientific and artificial-intelligence programmers refused to run software on binary mainframes."
+              ],
+              "correct_index": 2,
+              "explanation": "FORTRAN's loop optimizer targeted the 704's three index registers and floating-point hardware, while Lisp's CAR/CDR directly mirrored the 704's Address and Decrement word fields."
+            },
+            {
+              "id": "q_050",
+              "prompt": "What looming industry problem grew out of tying valuable software closely to specific bespoke hardware designs?",
+              "choices": [
+                "Upgrading to a newer or different computer family risked breaking existing software investments.",
+                "Transistors could not execute binary floating-point instructions originally written for vacuum tubes.",
+                "Compilers automatically erased their own source code whenever magnetic core memory filled up.",
+                "Universities lost the ability to share programs once user groups stopped meeting."
+              ],
+              "correct_index": 0,
+              "explanation": "When programs depended deeply on one machine's word size, registers, and encodings, moving up to a faster or different model meant expensive, risky software rewrites."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_06",
+      "title": "6. IBM's Early-1960s Incompatibility Crisis: 7090, 1401 \u0026 1620 (1959–1963)",
+      "summary": "Diagnoses the software incompatibility crisis that gripped early-1960s computing as IBM sold completely separate, mutually incompatible product lines—the transistorized 36-bit binary 7090 for science, the wildly popular variable-length decimal 1401 for business, and the low-cost decimal 1620 for small labs. Shows why outgrowing a machine forced customers to throw away working programs and peripherals, pushing IBM toward a radical rethink.",
+      "introduced_terms": [
+        "IBM 7090 (transistorized 36-bit binary line)",
+        "variable-length decimal architecture (IBM 1401 and 1620)",
+        "software incompatibility crisis"
+      ],
+      "chunks": [
+        {
+          "id": "ch_026",
+          "title": "One Company, Seven Worlds: The Late-1950s Split",
+          "content_markdown": "By 1960, electronic computers had outgrown university basements to become the daily nervous system of airlines, insurance giants, banks, and spaceflight labs. Compact, cool-running transistors had replaced glowing vacuum tubes, slashing heat and boosting speed. Yet step inside a major American corporation in 1961 and you would witness a startling scene: the aerospace engineers upstairs and the payroll clerks downstairs often leased two IBM computers that could not share a single program, a single data tape, or even the same line printer!\n\nWhy would one manufacturer build mutually incompatible computers? Because 1950s engineers assumed 'scientific computing' and 'business data processing' were two irreconcilable worlds. Scientists crunched binary floating-point equations inside fixed-width words, whereas banks shuffled names, street addresses, and penny-exact decimal invoices of unpredictable lengths. IBM built a separate, specialized architecture for each niche—creating a sprawling patchwork of incompatible lines that soon threatened to tie both customers and IBM itself in knots.",
+          "questions": [
+            {
+              "id": "q_051",
+              "prompt": "Why did IBM initially build completely separate computer architectures for scientists and for business offices?",
+              "choices": [
+                "Engineers believed scientific binary math and commercial decimal paperwork demanded different hardware.",
+                "Antitrust laws legally prohibited businesses from running binary arithmetic on commercial machines.",
+                "Business offices refused to adopt transistors and insisted on keeping vacuum-tube calculators.",
+                "Scientific computers lacked magnetic core memory and could not store alphabetical text."
+              ],
+              "correct_index": 0,
+              "explanation": "In the 1950s, engineers treated fixed-word binary floating-point math and variable-length decimal record processing as fundamentally separate workloads requiring distinct machine designs."
+            },
+            {
+              "id": "q_052",
+              "prompt": "What surprising sight confronted visitors at many large corporations around 1961?",
+              "choices": [
+                "One single mainframe running identical software across both payroll and aerospace departments.",
+                "Engineers unplugging copper patch cables to run FORTRAN programs on mechanical tabulators.",
+                "Identical desktop microcomputers replacing every room-sized mainframe across engineering and finance.",
+                "Different departments owning IBM computers unable to share programs, tapes, or printers."
+              ],
+              "correct_index": 3,
+              "explanation": "Because IBM sold distinct scientific and commercial computer lines with incompatible instruction sets and device interfaces, departments inside the same company could not share software or peripherals."
+            }
+          ]
+        },
+        {
+          "id": "ch_027",
+          "title": "The Scientific Flagship vs. the Decimal Best-Sellers",
+          "content_markdown": "Meet three iconic IBM machines that all debuted in 1959, each speaking an incompatible native language. At the summit sat the **IBM 7090 (transistorized 36-bit binary line)**—the solid-state successor to the IBM 704. Running roughly six times faster than its vacuum-tube ancestor, the 7090 guided NASA's Mercury flights and blazed through FORTRAN physics, yet cost millions of dollars and handled variable text records clumsily.\n\nDown in everyday business offices, IBM struck gold with the **IBM 1401**, a runaway commercial hit selling over 10,000 systems. Instead of rigid 36-bit binary words, the 1401 used a **variable-length decimal architecture**: core memory stored individual 6-bit characters, each accompanied by a 'word mark' bit marking where any field—whether a 3-digit code or a 40-character customer name—started and ended. Meanwhile, for budget-conscious labs unable to afford a 7090, IBM offered the quirky **IBM 1620**, another variable-length decimal machine that skipped hardware addition circuits altogether and instead looked up decimal addition tables stored right inside core memory!",
+          "questions": [
+            {
+              "id": "q_053",
+              "prompt": "How did the IBM 1401's variable-length decimal architecture organize data in memory compared to the 36-bit IBM 7090?",
+              "choices": [
+                "It packed every customer name tightly into fixed 36-bit floating-point binary words.",
+                "It stored individual characters using word-mark bits to mark flexible field boundaries.",
+                "It held all business invoices exclusively inside circulating acoustic mercury delay lines.",
+                "It locked every payroll field to a rigid 16-bit little-endian binary integer."
+              ],
+              "correct_index": 1,
+              "explanation": "Rather than fixed 36-bit binary words, the IBM 1401 addressed individual characters in memory and used special word-mark bits to delimit fields of arbitrary length."
+            },
+            {
+              "id": "q_054",
+              "prompt": "How did the low-cost IBM 1620 perform arithmetic without dedicated hardware adder circuits?",
+              "choices": [
+                "By offloading every equation over phone lines to a remote IBM 7090.",
+                "By converting decimal digits back into mechanical counter wheels behind the cabinet.",
+                "By consulting stored decimal addition and multiplication lookup tables in core memory.",
+                "By asking operators to enter pre-computed sums through front-panel toggle switches."
+              ],
+              "correct_index": 2,
+              "explanation": "To keep hardware costs low, the IBM 1620 omitted binary adder circuits and performed decimal math by looking up digit pairs inside arithmetic tables kept in core memory."
+            }
+          ]
+        },
+        {
+          "id": "ch_028",
+          "title": "The Customer Upgrade Trap in Real Life",
+          "content_markdown": "Picture yourself running a booming regional bank in 1962. Two years earlier, you leased an affordable IBM 1401, hired twenty programmers, and invested hundreds of thousands of dollars crafting dependable checking, loan, and payroll software tuned to the 1401's word-mark instructions and 6-bit character codes. Business doubles—and suddenly your 1401 runs around the clock and still falls behind!\n\nYou phone IBM to step up to a bigger commercial computer, or to unify your accounting workloads with your analytics team's 7090. Instantly, the **software incompatibility crisis** slams into you like a brick wall. The larger IBM machine speaks a different instruction set, uses different character encodings, formats magnetic tapes differently, and even requires different electrical connections for printers and card readers! Upgrading does not mean wheeling out an old cabinet and plugging in a faster one. It means rewriting years of trusted software from scratch, retraining your entire staff, and scrapping perfectly healthy peripherals—while hoping your bank's ledgers survive the transition.",
+          "questions": [
+            {
+              "id": "q_055",
+              "prompt": "What happened in the early 1960s when a bank outgrew its IBM 1401 and tried upgrading to a larger computer line?",
+              "choices": [
+                "Its 1401 programs automatically ran twice as fast on the larger machine.",
+                "A simple switch on the console converted 1401 binaries into 7090 code.",
+                "Only the physical printer cables changed while all existing software worked unchanged.",
+                "It had to rewrite working software, retrain staff, and replace incompatible peripherals."
+              ],
+              "correct_index": 3,
+              "explanation": "Because IBM's product lines did not share instruction sets, character codes, or peripheral interfaces, outgrowing an IBM 1401 forced expensive software rewrites, retraining, and hardware replacements."
+            },
+            {
+              "id": "q_056",
+              "prompt": "Why did customers hesitate to switch even between two IBM machines from different product lines?",
+              "choices": [
+                "IBM charged legal royalties whenever customers ran the same program on newer hardware.",
+                "Different instruction sets, character codes, and device interfaces made migrations risky and costly.",
+                "Larger IBM machines completely abandoned magnetic core memory in favor of cathode-ray tubes.",
+                "Programmers were forbidden to write compilers for machines outside academic university laboratories."
+              ],
+              "correct_index": 1,
+              "explanation": "Migrating across incompatible architectures threatened working business operations and demanded costly reprogramming, staff retraining, and new peripherals."
+            }
+          ]
+        },
+        {
+          "id": "ch_029",
+          "title": "Not Just a Customer Headache—IBM's Own Internal Chaos",
+          "content_markdown": "Here is the twist that forced executive action: the **software incompatibility crisis** was hurting *IBM itself* just as badly as its customers! By 1961, IBM was juggling seven separate, mutually incompatible computer families (including the 7090, 1401, 1620, 7070, and 7080 lines). Whenever IBM's software teams built a fresh compiler, sorting utility, or operating tool, they had to write, test, and maintain *seven distinct versions* of it.\n\nHardware divisions drowned in identical duplication. Every product line ran its own engineering group, spare-parts catalog, and bespoke set of tape drives, printers, and disk units—forcing IBM factories to manufacture nearly identical peripherals in half a dozen incompatible variations. Worse yet, eager rivals like Honeywell and RCA spotted a golden opening: if an overwhelmed 1401 bank already had to rewrite all its programs to upgrade, why stay tied to IBM at all? Alarmed executives convened a secret late-1961 task force—the **SPREAD** committee (short for *Systems Programming, Research, Engineering, and Development*)—to design an escape route before competitors tore IBM's customer base apart.",
+          "questions": [
+            {
+              "id": "q_057",
+              "prompt": "Why did supporting seven incompatible computer families create an internal crisis inside IBM itself?",
+              "choices": [
+                "IBM had to duplicate compilers, operating tools, and peripheral designs across every line.",
+                "IBM ran out of ferrite rings because decimal machines consumed vastly more core.",
+                "IBM engineers refused to work on transistorized hardware once vacuum tubes were retired.",
+                "IBM could not legally sell both scientific and commercial machines to one buyer."
+              ],
+              "correct_index": 0,
+              "explanation": "Maintaining seven incompatible architectures multiplied IBM's engineering costs by requiring separate compilers, utilities, spare parts, and peripheral interfaces for every line."
+            },
+            {
+              "id": "q_058",
+              "prompt": "Why did the upgrade nightmare give IBM's competitors a dangerous commercial opening?",
+              "choices": [
+                "Rivals already sold single-chip microprocessors far smaller than IBM's room-sized mainframes.",
+                "Rivals offered free lifetime hardware replacements whenever magnetic core rings wore out.",
+                "Customers forced to rewrite software anyway might just as easily switch vendors.",
+                "Rivals had patented the 36-bit binary word length across North American markets."
+              ],
+              "correct_index": 2,
+              "explanation": "When upgrading within IBM already required scrapping and rewriting existing programs, customers lost their incentive to stay with IBM and became easy targets for rival vendors."
+            }
+          ]
+        },
+        {
+          "id": "ch_030",
+          "title": "Standing at the Crossroads of 1961",
+          "content_markdown": "Step back and survey the tangle created by a decade of one-off computer designs. The **IBM 7090** conquered binary aerospace math; the **IBM 1401** and **IBM 1620** carried **variable-length decimal architecture** into thousands of banks and engineering shops; and each machine excelled within its own narrow fence. Yet by 1961, software had quietly grown *more valuable* than the metal running it—turning every hardware transition into a painful **software incompatibility crisis**.\n\nIn December 1961, IBM's SPREAD committee returned with an astonishingly bold recommendation: retire the entire patchwork of incompatible families and invent *one single, unified computer architecture* able to serve both scientific floating-point math and commercial decimal records across every budget—from a modest branch office to a massive research center. That vision posed a daunting engineering riddle: how could an affordable entry-level computer and a towering top-end powerhouse run the *exact same* binary program without making the small machine unaffordable or the giant machine sluggish? Section 7 reveals IBM's five-billion-dollar gamble.",
+          "questions": [
+            {
+              "id": "q_059",
+              "prompt": "What fundamental economic shift made the early-1960s software incompatibility crisis intolerable?",
+              "choices": [
+                "Magnetic core memory had become vastly more expensive than vacuum-tube storage.",
+                "Customers' accumulated software investments had grown costlier than the physical machines themselves.",
+                "Punch-card paper shortages prevented companies from shipping programs between regional branches.",
+                "High-level languages like FORTRAN had failed to run faster than hand-coded assembly."
+              ],
+              "correct_index": 1,
+              "explanation": "As organizations built vast libraries of business and scientific code, the cost of rewriting software overtook hardware costs, making incompatible upgrades commercially unsustainable."
+            },
+            {
+              "id": "q_060",
+              "prompt": "What bold strategy did IBM's late-1961 SPREAD committee propose to resolve the incompatibility crisis?",
+              "choices": [
+                "Stop serving commercial banks entirely and build only 36-bit scientific supercomputers.",
+                "Require every customer to translate existing programs into Lisp before purchasing upgrades.",
+                "Split IBM into seven independent companies, one for each existing hardware family.",
+                "Replace the incompatible lines with one unified architecture spanning every price tier."
+              ],
+              "correct_index": 3,
+              "explanation": "The SPREAD report urged IBM to unify scientific and commercial computing under one single compatible architecture spanning small, medium, and large machines."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_07",
+      "title": "7. IBM System/360: Separating Architecture from Implementation (1964)",
+      "summary": "Unpacks IBM's five-billion-dollar 1964 System/360 gamble—guided by Gene Amdahl, Gerrit Blaauw, and Fred Brooks—which cleanly separated a stable software-visible Instruction Set Architecture (ISA) from diverse physical hardware implementations. Explains from first principles how the exact same compiled binary could run across an entire compatible family, from an inexpensive 8-bit-internal Model 30 to a powerhouse 64-bit-internal Model 75.",
+      "introduced_terms": [
+        "Instruction Set Architecture (ISA)",
+        "hardware implementation (microarchitecture)",
+        "binary-compatible computer family"
+      ],
+      "chunks": [
+        {
+          "id": "ch_031",
+          "title": "The Five-Billion-Dollar Gamble: April 7, 1964",
+          "content_markdown": "On April 7, 1964, IBM staged the grandest product unveiling in corporate history across 165 American cities at once. CEO Thomas Watson Jr. was wagering roughly five billion dollars—more than twice the cost of the wartime Manhattan Project, a risk *Fortune* magazine called 'IBM's five-billion-dollar gamble'—on one sweeping family called **IBM System/360**. The number '360' symbolized all 360 degrees of a compass: a single unified computer line engineered to handle scientific physics, commercial payrolls, and everything in between.\n\nThree remarkable engineers shaped the project's vision: chief architect **Gene Amdahl** (veteran of the IBM 704), co-architect **Gerrit Blaauw**, and overall System/360 manager **Fred Brooks** (who later captured its project lessons in *The Mythical Man-Month*). Their mandate sounded impossible: design a family of compatible computers spanning a fifty-to-one range in price and speed so a modest regional office and a giant aerospace lab could run the *exact same* compiled programs. How could a compact budget box and a towering flagship speak the exact same binary language?",
+          "questions": [
+            {
+              "id": "q_061",
+              "prompt": "What did the number '360' signify in the name of IBM's 1964 System/360 family?",
+              "choices": [
+                "Each processor operated at exactly 360 clock pulses per second worldwide.",
+                "One unified family covering all 360 degrees of scientific and commercial computing.",
+                "Every memory word held 360 bits to outpace the older 36-bit 7090.",
+                "The machine required 360 distinct plugboard cables to configure new office jobs."
+              ],
+              "correct_index": 1,
+              "explanation": "IBM chose '360' for the full 360 degrees of a compass to signal that one unified computer family would cover both scientific and business computing across every scale."
+            },
+            {
+              "id": "q_062",
+              "prompt": "Which trio of IBM leaders guided the architectural blueprint and management of System/360?",
+              "choices": [
+                "Gene Amdahl, Gerrit Blaauw, and Fred Brooks.",
+                "Maurice Wilkes, Frederic Williams, and Tom Kilburn.",
+                "John Backus, John McCarthy, and Steve Russell.",
+                "Howard Aiken, Presper Eckert, and John Mauchly."
+              ],
+              "correct_index": 0,
+              "explanation": "Gene Amdahl, Gerrit Blaauw, and Fred Brooks led System/360's architecture and development, co-authoring the famous 1964 paper that defined modern computer architecture."
+            }
+          ]
+        },
+        {
+          "id": "ch_032",
+          "title": "Architecture vs. Implementation: Coining the ISA",
+          "content_markdown": "Before 1964, engineers rarely drew a crisp wall between how a computer *appeared to software* and how its physical circuits were wired. In their landmark 1964 paper *Architecture of the IBM System/360*, Amdahl, Blaauw, and Brooks established the dividing line that still organizes all of computer engineering: separating **Instruction Set Architecture (ISA)** from **hardware implementation (microarchitecture)**.\n\nPicture the driver's cockpit of a car versus what sits under the hood. A thrifty compact hatchback and a thunderous sports coupe share the exact same driver interface—steering wheel, gas pedal, brake pedal, gearshift—so anyone who can drive one can step straight into the other. Under the hood, however, one packs a modest four-cylinder engine while the other hides a massive turbocharged V8. In computing, the **ISA** is that driver's contract: the exact instructions, registers, memory addressing rules, and binary formats visible to programmers. The **hardware implementation** is the hidden physical engine underneath—wire widths, circuit speeds, and internal organization—which engineers can redesign dramatically without breaking a single compiled program.",
+          "questions": [
+            {
+              "id": "q_063",
+              "prompt": "In Amdahl, Blaauw, and Brooks's landmark framework, what does an Instruction Set Architecture (ISA) define?",
+              "choices": [
+                "The physical size, cabinet paint color, and cooling fans of each model.",
+                "The exact internal copper wire width and transistor count inside every circuit.",
+                "The factory assembly schedule used to ship mainframes across international customer sites.",
+                "The software-visible contract of instructions, registers, memory rules, and binary formats."
+              ],
+              "correct_index": 3,
+              "explanation": "An ISA specifies everything a programmer or compiler must know—instructions, registers, data formats, and addressing—while hiding internal physical circuit choices."
+            },
+            {
+              "id": "q_064",
+              "prompt": "In the car analogy, how does a computer's hardware implementation (microarchitecture) relate to its ISA?",
+              "choices": [
+                "It sets the steering wheel layout while ignoring the hidden engine beneath.",
+                "It forces every car on the road to use identical four-cylinder engines.",
+                "It is the hidden physical engine, free to vary under one interface.",
+                "It requires drivers to relearn braking whenever a car gains more horsepower."
+              ],
+              "correct_index": 2,
+              "explanation": "Just as diverse engines can sit beneath identical car controls, diverse physical circuit designs can implement the exact same software-visible ISA at different prices and speeds."
+            }
+          ]
+        },
+        {
+          "id": "ch_033",
+          "title": "From an 8-Bit Model 30 to a 64-Bit Model 75",
+          "content_markdown": "Watch that separation come alive inside IBM's **binary-compatible computer family**. Suppose a small regional bank compiles an interest-rate program into System/360 binary code—packed with full 32-bit integer additions and floating-point math—and leases an affordable entry-level **Model 30**. Peek inside the Model 30's cabinet and you will find a jaw-dropping secret: its internal arithmetic unit and data paths are only *8 bits wide*! To add two 32-bit numbers, the frugal Model 30 patiently steps through them one 8-bit slice at a time across four internal cycles.\n\nFive years later, the bank expands nationwide and upgrades to a flagship **Model 75**. Open the Model 75's cabinet and its internal data pathways are a massive *64 bits wide*—eight times broader than the Model 30's—sweeping full pairs of 32-bit numbers through parallel logic at blistering speed. Yet when operators mount the *exact same binary tape* from the Model 30 onto the Model 75, it runs immediately with zero code changes—only roughly fifty times faster!",
+          "questions": [
+            {
+              "id": "q_065",
+              "prompt": "How could an entry-level System/360 Model 30 with an 8-bit internal data path run full 32-bit System/360 instructions?",
+              "choices": [
+                "It processed each 32-bit operation across multiple internal steps using narrow 8-bit circuits.",
+                "It quietly truncated every 32-bit program number down to just eight bits total.",
+                "It sent every 32-bit calculation over telephone wires to a larger remote model.",
+                "It refused to run 32-bit instructions unless programmers recompiled them for 8-bit hardware."
+              ],
+              "correct_index": 0,
+              "explanation": "Because the ISA hides internal wire widths from software, the budget Model 30 executed 32-bit instructions transparently by breaking each operation into multiple narrower 8-bit internal steps."
+            },
+            {
+              "id": "q_066",
+              "prompt": "What happened when a growing customer moved a compiled binary program from a System/360 Model 30 to a 64-bit-internal Model 75?",
+              "choices": [
+                "Programmers had to translate every opcode manually into wider 64-bit Model 75 instructions.",
+                "The program ran at identical speed because identical ISAs force identical hardware speeds.",
+                "The exact same binary ran unchanged—only dramatically faster on the wider hardware.",
+                "The Model 75 rejected the binary until all memory addresses were converted to decimal."
+              ],
+              "correct_index": 2,
+              "explanation": "Both models implemented the exact same System/360 ISA contract, so the identical compiled binary executed without modification while exploiting the Model 75's far wider, faster circuitry."
+            }
+          ]
+        },
+        {
+          "id": "ch_034",
+          "title": "Strict Compatibility and Standard Peripheral Channels",
+          "content_markdown": "A sneaky trap lurked inside System/360's family promise, and Fred Brooks fought fierce internal battles to keep IBM out of it. Several hardware managers pleaded to leave out 'costly' instructions—such as floating-point math or certain decimal operations—on the inexpensive Model 30 to trim manufacturing costs. Brooks and Amdahl held firm: partial compatibility is *no* compatibility. If a program compiled for a Model 75 crashed on a Model 30, the core promise of one unified family would collapse.\n\nJust as importantly, IBM extended that exact interface discipline beyond the CPU cabinet! Earlier computers wired printers, card readers, and tape drives directly into each model's quirky electronics. System/360 introduced standardized input/output (I/O) **channels**—dedicated helper interfaces using one uniform electrical plug—so any System/360 tape unit, disk pack, or line printer could plug cleanly into a Model 30 *or* a Model 75. For the first time, both a customer's software *and* its costly roomful of peripherals survived hardware upgrades intact.",
+          "questions": [
+            {
+              "id": "q_067",
+              "prompt": "Why did Brooks and Amdahl resist letting hardware teams strip 'expensive' ISA features out of smaller System/360 models?",
+              "choices": [
+                "Government regulators fined computer makers whose models had unequal transistor counts.",
+                "Dropping features on cheaper models would shatter binary compatibility across the family.",
+                "Removing floating-point instructions would make 8-bit internal circuits slower and costlier.",
+                "Customers refused to lease small mainframes unless every cabinet weighed the same."
+              ],
+              "correct_index": 1,
+              "explanation": "Omitting instructions on lower-end models would have created incompatible dialects, undermining System/360's central guarantee that identical binaries ran across the whole family."
+            },
+            {
+              "id": "q_068",
+              "prompt": "How did System/360 protect customers' peripheral investments alongside their software investments?",
+              "choices": [
+                "By soldering every printer and tape drive permanently inside the main processor cabinet.",
+                "By eliminating printers and disks in favor of pure punch-card input streams.",
+                "By giving customers free custom cable adapters every time they bought a model.",
+                "By standardizing I/O channels so the same peripherals worked across every System/360 model."
+              ],
+              "correct_index": 3,
+              "explanation": "System/360's standardized I/O channel interface let printers, tape drives, and disks connect uniformly across every model from the Model 30 up to the Model 75."
+            }
+          ]
+        },
+        {
+          "id": "ch_035",
+          "title": "The Idea That Built the Modern Computer Industry",
+          "content_markdown": "Separating **Instruction Set Architecture (ISA)** from **hardware implementation (microarchitecture)** became arguably the single most lucrative abstraction in technology history. Overnight, System/360 transformed IBM's compatibility nightmare into a dominant competitive moat: buyers could start modestly on a Model 30, scale smoothly up through Models 40, 50, and 65 to a flagship Model 75, and carry every working program and peripheral along for the ride. Nearly every enduring computer family since—from DEC's PDP-11 and VAX lines to modern x86 laptops and ARM smartphones (today's dominant PC and mobile processor families)—rests squarely on this 1964 blueprint of a **binary-compatible computer family**.\n\nNow that we know *why* IBM built a strict wall between software contract and physical circuitry, let's open that contract and inspect the details! What did System/360 actually look like to a programmer? How wide were its bytes, words, and registers, and how did it fit millions of memory addresses inside compact instructions? Section 8 takes us straight inside System/360's programmer-visible model.",
+          "questions": [
+            {
+              "id": "q_069",
+              "prompt": "What enduring design principle did IBM System/360 bequeath to later families like the PDP-11, x86, and ARM?",
+              "choices": [
+                "Decoupling a stable software-visible ISA from evolving physical hardware implementations beneath it.",
+                "Building completely distinct instruction sets for every single performance tier and market.",
+                "Keeping all internal data paths fixed at 8 bits regardless of price tier.",
+                "Requiring software programmers to rewrite binary code whenever transistor speeds double."
+              ],
+              "correct_index": 0,
+              "explanation": "System/360 proved that defining a stable ISA independent of internal hardware implementation lets generations of faster machines run existing software unchanged."
+            },
+            {
+              "id": "q_070",
+              "prompt": "How did System/360 finally resolve the early-1960s customer upgrade dilemma introduced in Section 6?",
+              "choices": [
+                "By requiring every customer to buy the largest Model 75 right from day one.",
+                "By translating every company's software automatically into Lisp before hardware installation began.",
+                "By letting customers upgrade to faster models while preserving identical binaries and peripherals.",
+                "By phasing out business data processing so all buyers ran scientific code exclusively."
+              ],
+              "correct_index": 2,
+              "explanation": "With one shared ISA and standardized peripheral channels across all performance tiers, customers could upgrade to faster System/360 models without rewriting software or replacing peripherals."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_08",
+      "title": "8. System/360's Registers, 8-Bit Bytes \u0026 Sliding Memory Windows",
+      "summary": "Walks cleanly through System/360's programmer-visible model: cementing the power-of-two 8-bit byte and 32-bit word, adopting big-endian byte ordering (briefly contrasted with the PDP-11's little-endian layout), and providing sixteen 32-bit general-purpose registers. Shows how base-plus-index-plus-12-bit-displacement addressing maps compact $$2^{12} = 4096$$ byte windows anywhere inside a $$2^{24}$$ byte (16 MB) address space.",
+      "introduced_terms": [
+        "8-bit byte standardization",
+        "big-endian byte ordering",
+        "base-index-displacement addressing"
+      ],
+      "chunks": [
+        {
+          "id": "ch_036",
+          "title": "The Battle for the 8-Bit Byte: Six Bits vs. Eight",
+          "content_markdown": "Today, everyone takes for granted that a byte holds 8 bits and computer words grow in clean powers of two—16, 32, or 64 bits. Before 1964, nothing was settled! Scientific mainframes like the IBM 704 and 7090 used 36-bit words holding six **6-bit** characters, and business machines like the IBM 1401 likewise used 6-bit characters. Six bits supplied $$2^6 = 64$$ symbols—just enough for uppercase A–Z, digits 0–9, and basic punctuation—while conserving pricey magnetic core rings.\n\nDuring System/360's design, a legendary showdown erupted inside IBM. Gene Amdahl initially favored 6-bit characters inside 24- or 48-bit words, whereas Fred Brooks fought fiercely for **8-bit byte standardization** inside 32-bit words. Brooks won—later calling it his single most important technical decision. Eight bits provided $$2^8 = 256$$ symbols—room for uppercase, *lowercase*, punctuation, and two 4-bit decimal digits packed neatly into every byte (since $$2^4 = 16$$ easily covers digits 0 through 9)! Better yet, making bytes and words exact powers of two turned bit shifting, byte addressing, and **hexadecimal** (base-16) shorthand into permanent worldwide standards.",
+          "questions": [
+            {
+              "id": "q_071",
+              "prompt": "Why did Fred Brooks champion an 8-bit byte over the older 6-bit character standard when designing System/360?",
+              "choices": [
+                "Eight bits matched the exact 8-column width of vintage 1950s paper punch cards.",
+                "Six-bit characters could not legally be stored inside ferrite magnetic core rings.",
+                "Eight bits supported upper/lowercase text, packed decimal digits, and clean power-of-two math.",
+                "Eight bits eliminated the need for binary floating-point instructions in scientific computing."
+              ],
+              "correct_index": 2,
+              "explanation": "An 8-bit byte gave 256 possible codes (enough for uppercase, lowercase, and punctuation), packed two 4-bit decimal digits cleanly, and aligned word widths to powers of two."
+            },
+            {
+              "id": "q_072",
+              "prompt": "How did System/360's choice of 8-bit bytes reshape computer word sizes after 1964?",
+              "choices": [
+                "It locked the entire industry permanently onto 36-bit words divided into six characters.",
+                "It forced later processors to abandon binary words in favor of decimal strings.",
+                "It shrank standard mainframe words down to single 8-bit registers with no math.",
+                "It cemented power-of-two 8-bit bytes and 32-bit words as the lasting industry norm."
+              ],
+              "correct_index": 3,
+              "explanation": "System/360's commercial dominance made the 8-bit byte and power-of-two word widths (16, 32, and later 64 bits) the universal foundation of modern computing."
+            }
+          ]
+        },
+        {
+          "id": "ch_037",
+          "title": "Sixteen 32-Bit Registers and Big-Endian Byte Ordering",
+          "content_markdown": "With the 8-bit byte anchored, System/360 organized memory into 32-bit (4-byte) words and handed programmers a roomy workspace right inside the processor: **sixteen 32-bit general-purpose registers** (numbered `R0` through `R15`). Unlike EDSAC's lone accumulator or the IBM 704's three separate index registers, almost any of these sixteen registers could hold an integer, run arithmetic, index an array, or point to memory—slashing slow trips across the Von Neumann bottleneck.\n\nBecause every individual byte had its own memory address, IBM also had to choose how to lay out a 4-byte number in memory. System/360 adopted **big-endian byte ordering**: the *most* significant byte (the 'big end' of the number) sits at the lowest memory address, followed by the remaining bytes in human left-to-right reading order. Contrast that briefly with the **PDP-11**: where the PDP-11 stored the least significant byte first (little-endian), System/360 wrote a hexadecimal 32-bit word like `12 34 56 78` (each base-16 pair holding one 8-bit byte) in that exact left-to-right order—making printed hexadecimal dumps readable at a glance.",
+          "questions": [
+            {
+              "id": "q_073",
+              "prompt": "How does System/360's big-endian byte ordering arrange the four bytes of the hexadecimal 32-bit value `12 34 56 78` starting at address 100?",
+              "choices": [
+                "`12` at 100, `34` at 101, `56` at 102, and `78` at 103.",
+                "`78` at 100, `56` at 101, `34` at 102, and `12` at 103.",
+                "`34` at 100, `12` at 101, `78` at 102, and `56` at 103.",
+                "`78` at 100, `12` at 101, `56` at 102, and `34` at 103."
+              ],
+              "correct_index": 0,
+              "explanation": "Big-endian ordering places the most significant byte (`12`) at the lowest address (100) and stores the remaining bytes (`34`, `56`, `78`) at consecutively higher addresses."
+            },
+            {
+              "id": "q_074",
+              "prompt": "How did System/360's sixteen 32-bit general-purpose registers improve upon earlier machines like EDSAC and the IBM 704?",
+              "choices": [
+                "They completely eliminated main memory so entire databases stayed inside CPU registers.",
+                "They unified arithmetic, indexing, and addressing inside one large, flexible register bank.",
+                "They dedicated all sixteen registers strictly to storing 6-bit uppercase text strings.",
+                "They automatically reversed big-endian bytes into little-endian words on every memory fetch."
+              ],
+              "correct_index": 1,
+              "explanation": "Instead of separating one accumulator from a few narrow index registers, System/360 gave software sixteen wide 32-bit registers usable for math, indexing, and memory addressing."
+            }
+          ]
+        },
+        {
+          "id": "ch_038",
+          "title": "Sliding Windows: Base + Index + 12-Bit Displacement",
+          "content_markdown": "Next came System/360's signature memory puzzle. IBM gave System/360 a vast **24-bit address space** spanning $$2^{24} = 16,777,216$$ bytes (16 megabytes)—enormous in 1964! Yet packing a full 24-bit (3-byte) address into every instruction would bloat code in expensive magnetic core memory. How could instructions remain trim *and* still reach any byte across 16 megabytes?\n\nIBM solved it with **base-index-displacement addressing**. Instead of embedding a full 24-bit address, an instruction packs three compact fields: a 4-bit **base register** number (`B`), an optional 4-bit **index register** number (`X`), and a 12-bit non-negative **displacement** (`D`) from `0` to `4095`. Hardware sums them on the fly: $$\\text{effective address} = (\\text{Base}) + (\\text{Index}) + \\text{Displacement}$$. Try a walkthrough! Suppose base register `R12` holds `100,000`, index register `R3` holds `40`, and the displacement is `12`. Hardware computes $$100,000 + 40 + 12 = 100,052$$. That 12-bit displacement carves out a sliding $$2^{12} = 4096$$ byte window anywhere inside the $$2^{24}$$ byte (16 MB) address space while keeping instructions compact!",
+          "questions": [
+            {
+              "id": "q_075",
+              "prompt": "Under System/360's base-index-displacement addressing, if base register `R12` holds `50,000`, index register `R4` holds `200`, and the 12-bit displacement is `16`, what effective address is accessed?",
+              "choices": [
+                "Address `49,784`, because System/360 subtracts both index and displacement from the base.",
+                "Address `50,016`, because hardware ignores index registers whenever a base register is set.",
+                "Address `216`, because the base register only selects which memory cabinet holds data.",
+                "Address `50,216`, computed by adding the base, index, and 12-bit displacement together."
+              ],
+              "correct_index": 3,
+              "explanation": "System/360 hardware computes the effective address by summing the base register (50,000), index register (200), and 12-bit displacement (16), yielding address 50,216."
+            },
+            {
+              "id": "q_076",
+              "prompt": "How wide a sliding memory window can a single 12-bit displacement reach from a given base register?",
+              "choices": [
+                "A $$2^{8} = 256$$ byte window inside the machine's 64 KB address space.",
+                "A $$2^{12} = 4096$$ byte window inside the machine's $$2^{24}$$ byte address space.",
+                "A $$2^{15} = 32,768$$ word window matching the older IBM 704 address layout.",
+                "A $$2^{24} = 16,777,216$$ byte window covering all of main memory directly."
+              ],
+              "correct_index": 1,
+              "explanation": "A 12-bit non-negative displacement spans offsets 0 through 4,095 ($$2^{12} = 4096$$ bytes), creating a movable 4 KB window anywhere inside System/360's $$2^{24}$$ byte (16 MB) memory."
+            }
+          ]
+        },
+        {
+          "id": "ch_039",
+          "title": "Relocatable Code, Register Zero, and the 24-Bit Habit",
+          "content_markdown": "Base-plus-displacement addressing delivered a handsome bonus beyond saving bytes: effortless **program relocation**! Because a program referred to its data using small offsets (`+12`, `+40`, `+100`) measured from a base register instead of fixed absolute addresses, an operating system could load that program *anywhere* in memory—at address `40,000` today and `200,000` tomorrow—just by dropping the new starting address into the base register, without rewriting a single instruction.\n\nTwo quirky design details, however, tripped up careless coders. First, what if an instruction wanted *no* base register or *no* index register? System/360 reserved register number `0` to mean 'add zero'—meaning `R0` worked fine for ordinary math, yet could *never* hold a base or index address! Second, look closely at the width mismatch: registers were 32 bits wide, yet memory addresses only used the lower 24 bits! Clever programmers started stashing personal status flags inside the ignored upper 8 bits of pointer registers—a tempting shortcut that caused enormous migration headaches decades later when IBM expanded mainframes beyond 16 megabytes!",
+          "questions": [
+            {
+              "id": "q_077",
+              "prompt": "Why did System/360's base-plus-displacement addressing make moving programs to different memory locations so clean?",
+              "choices": [
+                "Changing the base register shifted every relative offset without editing stored instructions.",
+                "Hardware automatically recompiled source code whenever an operating system moved a program.",
+                "All System/360 programs were restricted to fit permanently inside address zero only.",
+                "Base registers stored decimal line numbers rather than actual binary byte addresses."
+              ],
+              "correct_index": 0,
+              "explanation": "Because instructions encoded small displacements relative to a base register, updating that base register relocated an entire program cleanly anywhere in memory."
+            },
+            {
+              "id": "q_078",
+              "prompt": "What happened on System/360 if an instruction specified register number `0` in its base (`B`) or index (`X`) field?",
+              "choices": [
+                "The CPU immediately triggered an invalid-register fault and halted the running job.",
+                "The CPU read register `R0` and multiplied its value by four bytes.",
+                "The CPU treated that field as zero, omitting `R0` from address calculation.",
+                "The CPU redirected the memory read straight to the nearest tape drive."
+              ],
+              "correct_index": 2,
+              "explanation": "To let instructions omit a base or index register cleanly without adding extra format bits, System/360 interpreted a `0` in the `B` or `X` field as the value zero rather than reading `R0`."
+            }
+          ]
+        },
+        {
+          "id": "ch_040",
+          "title": "A Blueprint Too Rich for Cheap Wiring Alone",
+          "content_markdown": "Pause and admire the clean elegance of System/360's software-visible blueprint. By championing **8-bit byte standardization** inside 32-bit words, adopting human-readable **big-endian byte ordering**, offering sixteen 32-bit general-purpose registers, and pairing compact **base-index-displacement addressing** with a massive $$2^{24}$$ byte (16 MB) address space, Amdahl, Blaauw, and Brooks forged an ISA so durable that modern IBM mainframes still run direct descendants of it more than sixty years later.\n\nYet this rich ISA sharpened an intense hardware puzzle we first glimpsed in Section 7. System/360 packed well over a hundred sophisticated instructions—binary math, floating-point math, variable-length decimal arithmetic, string moves, and base-index-displacement calculations—into every model's contract! Designing custom, hand-wired logic gates to choreograph all of those complex multi-step instructions inside a modest, 8-bit-internal Model 30 would have produced an unaffordable, un-debuggable web of tangled wires. How did IBM actually build it? In Section 9, Maurice Wilkes returns—with a brilliant 1951 idea that rescued the entire System/360 gamble.",
+          "questions": [
+            {
+              "id": "q_079",
+              "prompt": "Which combination of features accurately describes System/360's programmer-visible register and memory architecture?",
+              "choices": [
+                "Eight 16-bit registers, little-endian bytes, and a 64 KB address space.",
+                "Sixteen 32-bit registers, big-endian 8-bit bytes, and a 16 MB address space.",
+                "Three 15-bit index registers, 36-bit words, and a 32,768-word address space.",
+                "One 17-bit accumulator, variable word marks, and acoustic mercury delay lines."
+              ],
+              "correct_index": 1,
+              "explanation": "System/360's ISA paired sixteen 32-bit general-purpose registers with big-endian 8-bit byte ordering and 24-bit addressing spanning 16 MB."
+            },
+            {
+              "id": "q_080",
+              "prompt": "What steep hardware-design challenge did System/360's rich, feature-packed 32-bit ISA create for low-cost models like the Model 30?",
+              "choices": [
+                "Fitting sixteen separate magnetic core memory cabinets inside a small office room.",
+                "Persuading programmers to abandon 8-bit bytes in favor of older 6-bit characters.",
+                "Converting big-endian numbers back into little-endian bytes before printing bank statements.",
+                "Orchestrating over a hundred complex instructions affordably on narrow 8-bit internal circuits."
+              ],
+              "correct_index": 3,
+              "explanation": "Building custom hardwired control logic to step a narrow 8-bit datapath through more than a hundred complex 32-bit instructions would have been prohibitively expensive and error-prone."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_09",
+      "title": "9. Microprogramming at Industrial Scale: Control Stores \u0026 Emulation",
+      "summary": "Traces how Maurice Wilkes's 1951 microprogramming concept—replacing complex hardwired control circuits with tiny internal microprograms stored in fast read-only control stores—solved IBM's System/360 scaling problem. Explains how microcode let affordable narrow hardware like the 8-bit Model 30 execute a full 32-bit ISA step by step, and even emulate older IBM 1401 and 7094 machines to rescue customers' existing software.",
+      "introduced_terms": [
+        "microprogramming (Wilkes, 1951)",
+        "read-only control store (ROS)",
+        "microcoded hardware emulation"
+      ],
+      "chunks": [
+        {
+          "id": "ch_041",
+          "title": "Spaghetti Wiring and Maurice Wilkes's 1951 Insight",
+          "content_markdown": "Inside every processor sits an orchestra conductor called the **control unit**. Whenever the CPU fetches an instruction such as 'multiply two floating-point numbers,' the control unit must flip dozens of internal electronic switches in exact clock-by-clock order—opening register pathways, steering values through adders, shifting bits, and storing results. In the 1950s, engineers built control units by hand-wiring bespoke webs of individual **logic gates** (tiny on/off electronic decision circuits), a tangled, bug-prone craft nicknamed 'random logic.'\n\nBack in 1951, Cambridge's **Maurice Wilkes**—the very pioneer behind EDSAC—had stared at EDSAC's messy control wiring and spotted a clean structural leap. Why build the control unit as a unique sculpture of soldered gates when its work was really just following tiny, step-by-step recipes? In a landmark 1951 paper, Wilkes proposed **microprogramming**: replace chaotic hardwired control circuits with a neat internal table of tiny primitive control steps ('microinstructions') kept inside a fast built-in memory. For a decade, Wilkes's idea stayed mostly a quiet academic gem—until IBM System/360 scaled it across an entire industry in 1964.",
+          "questions": [
+            {
+              "id": "q_081",
+              "prompt": "What messy hardware problem inspired Maurice Wilkes to propose microprogramming back in 1951?",
+              "choices": [
+                "Building complex control units out of hand-wired logic gates became tangled and error-prone.",
+                "Programmers kept accidentally overwriting punch-card reader instructions during scientific loops.",
+                "Liquid mercury inside delay lines constantly leaked across neighboring arithmetic circuits.",
+                "Ferrite magnetic core rings could not switch quickly enough to hold 32-bit registers."
+              ],
+              "correct_index": 0,
+              "explanation": "Wilkes saw that hand-wired 'random logic' control units grew overwhelmingly messy and hard to debug as instruction sets became richer, motivating a systematic table-driven alternative."
+            },
+            {
+              "id": "q_082",
+              "prompt": "What core idea did Maurice Wilkes introduce with microprogramming?",
+              "choices": [
+                "Replacing electronic processors entirely with mechanical player-piano rolls of punched paper tape.",
+                "Shrinking regular user programs down to fit inside a single 8-bit register.",
+                "Driving the CPU's internal circuits using tiny step-by-step programs kept in built-in memory.",
+                "Letting application programmers physically solder new logic gates between every loop iteration."
+              ],
+              "correct_index": 2,
+              "explanation": "Microprogramming replaces irregular hardwired control webs with small internal microprograms stored inside a dedicated fast memory that controls internal gates tick by tick."
+            }
+          ]
+        },
+        {
+          "id": "ch_042",
+          "title": "The Player Piano Inside the CPU: Read-Only Control Stores",
+          "content_markdown": "Picture a classic player piano. The hammers and strings are simple physical hardware, while a perforated paper roll tells *which* hammers strike on *which* beat to perform anything from ragtime to Chopin. Inside microprogrammed System/360 models (Models 30, 40, 50, and 65), the simple internal **datapath** (the hardware channels moving and adding bits—such as a narrow adder, temporary holding circuits, and a memory interface) acted as the piano's hammers. What served as the paper roll? A blazingly fast **read-only control store (ROS)**!\n\nInside that **read-only control store**, IBM permanently encoded thousands of tiny low-level **microinstructions** (collectively known as *microcode*). A microinstruction did not look like a programmer's `ADD` or `LOAD`; instead, its bits directly toggled internal hardware gates on a single clock tick—'send byte 1 of `R4` to the 8-bit adder, save the carry bit, advance to the next micro-step.' Because ROS was vastly cheaper and tidier than massive custom gate webs, IBM could deliver System/360's entire rich 32-bit ISA on modest hardware simply by *writing* microcode!",
+          "questions": [
+            {
+              "id": "q_083",
+              "prompt": "In a microprogrammed System/360 processor, what role did the read-only control store (ROS) play?",
+              "choices": [
+                "It held customers' daily payroll databases permanently so power outages never erased them.",
+                "It translated FORTRAN source text directly into big-endian 8-bit character strings.",
+                "It replaced magnetic core memory as the computer's main 16 MB workspace.",
+                "It stored fast internal microinstructions that switched hardware gates step by step."
+              ],
+              "correct_index": 3,
+              "explanation": "The read-only control store held permanent internal microinstructions (microcode) that orchestrated internal register transfers and arithmetic switches cycle by cycle."
+            },
+            {
+              "id": "q_084",
+              "prompt": "Why did microprogramming in a read-only control store make building low-end System/360 models financially viable?",
+              "choices": [
+                "It eliminated the need for an arithmetic unit inside the Model 30 completely.",
+                "It replaced costly tangled control wiring with systematic microcode driving narrow circuits.",
+                "It boosted narrow 8-bit circuits to run faster than wide 64-bit hardware.",
+                "It allowed IBM to reuse leftover vacuum tubes from older IBM 704 cabinets."
+              ],
+              "correct_index": 1,
+              "explanation": "Encoding complex 32-bit instruction sequences in a tidy read-only control store cost far less than designing custom hardwired logic around narrow 8-bit datapaths."
+            }
+          ]
+        },
+        {
+          "id": "ch_043",
+          "title": "Stepping an 8-Bit Model 30 Through One 32-Bit Instruction",
+          "content_markdown": "Watch one ordinary System/360 instruction—adding two 32-bit numbers in registers `R2` and `R5`—unfold inside an affordable **Model 30**, whose internal arithmetic unit is just 8 bits wide! Remember, to the programmer's compiled binary, this appears as *one single* 32-bit `ADD` instruction.\n\nBeneath the hood, the Model 30 reads the instruction's opcode and jumps straight to the matching micro-routine stored in its **read-only control store**—which on the Model 30 literally consisted of decks of punched Mylar plastic cards dotted with tiny copper foil pads acting as electrical capacitors (charge-storing plates)! Tick one: microinstruction 1 steers the rightmost 8 bits (byte 3) of `R2` and `R5` through the 8-bit adder and saves the carry bit. Tick two: microinstruction 2 adds byte 2 plus that carry. Tick three adds byte 1; tick four adds byte 0 and updates the condition flags. Four brisk micro-steps, one modest 8-bit adder, zero broken compatibility—the 32-bit ISA contract holds cleanly down to the last bit!",
+          "questions": [
+            {
+              "id": "q_085",
+              "prompt": "How did the 8-bit-internal System/360 Model 30 execute a single 32-bit binary addition instruction?",
+              "choices": [
+                "Its microcode stepped through all four 8-bit bytes sequentially, carrying between ticks.",
+                "Its hardware split the addition across four separate Model 30 cabinets in parallel.",
+                "Its compiler automatically broke every 32-bit addition into four separate user instructions.",
+                "Its control store converted both 32-bit integers into decimal lookup tables first."
+              ],
+              "correct_index": 0,
+              "explanation": "Model 30 microcode walked its narrow 8-bit adder across all four bytes of a 32-bit integer over four internal ticks, carrying between bytes transparently."
+            },
+            {
+              "id": "q_086",
+              "prompt": "How did IBM physically manufacture the read-only control store (ROS) inside the System/360 Model 30?",
+              "choices": [
+                "As circulating acoustic sound pulses bouncing through five-foot steel mercury tubes.",
+                "As glowing electrostatic charge spots painted continuously onto cathode-ray screens.",
+                "As decks of punched plastic cards coated with tiny copper capacitor pads.",
+                "As removable copper telephone plugboards rewired by operators before each job."
+              ],
+              "correct_index": 2,
+              "explanation": "The System/360 Model 30 used Card Capacitor Read-Only Storage (CCROS), encoding microcode patterns physically as punched Mylar cards lined with tiny copper capacitor pads."
+            }
+          ]
+        },
+        {
+          "id": "ch_044",
+          "title": "The Business Superpower: Microcoded Emulation of Older Machines",
+          "content_markdown": "Once System/360's control unit behaved like a player piano, IBM's engineers uncovered a commercial superpower nobody had originally planned: **microcoded hardware emulation**! Remember the 10,000 worried IBM 1401 banks and aerospace 7094 labs from Section 6 who dreaded rewriting mountains of battle-tested legacy programs before upgrading to System/360?\n\nIBM realized that by sliding an *extra* deck of microcode cards into a System/360's read-only control store (assisted by modest helper circuits), the exact same physical cabinet could switch personalities! Flip into compatibility mode, and a System/360 Model 30 stopped interpreting System/360 opcodes and began interpreting **IBM 1401** variable-length decimal instructions directly in microcode—often executing 1401 programs *faster* than a genuine 1401! Similarly, a larger Model 65 could load compatibility microcode to emulate an older **IBM 7094** (the upgraded sibling of the 7090). Customers could order System/360 right away, run cherished legacy binaries on day one, and rewrite into native System/360 code gradually at their own pace.",
+          "questions": [
+            {
+              "id": "q_087",
+              "prompt": "How did IBM use System/360's read-only control stores to ease customers' painful migration away from older IBM 1401 and 7094 machines?",
+              "choices": [
+                "By wiring entire separate 1401 and 7094 cabinets hidden behind every System/360 console.",
+                "By forcing customers to translate all legacy programs into FORTRAN before delivery day.",
+                "By rewriting System/360's ISA so it dropped 8-bit bytes and copied the 1401.",
+                "By adding extra compatibility microcode so System/360 hardware could emulate legacy instructions natively."
+              ],
+              "correct_index": 3,
+              "explanation": "Adding compatibility microcode decks to the read-only control store let System/360 models interpret IBM 1401 or 7094 machine instructions directly in hardware."
+            },
+            {
+              "id": "q_088",
+              "prompt": "Why was microcoded hardware emulation such an effective business weapon for IBM in the mid-1960s?",
+              "choices": [
+                "It let customers avoid paying for magnetic core memory on newly leased mainframes.",
+                "It let customers adopt System/360 immediately while migrating legacy software gradually over time.",
+                "It eliminated the need for operating systems by running single programs permanently.",
+                "It allowed IBM 1401 machines to execute brand-new 64-bit Model 75 binaries directly."
+              ],
+              "correct_index": 1,
+              "explanation": "Running existing 1401 and 7094 binaries on day one removed the frightening all-or-nothing software rewrite barrier, keeping legacy customers loyal to IBM's new family."
+            }
+          ]
+        },
+        {
+          "id": "ch_045",
+          "title": "Microcode's Trade-Offs—and One Final Architectural Pillar",
+          "content_markdown": "Industrial-scale **microprogramming** turned Maurice Wilkes's 1951 proposal into the hidden glue that made System/360 practical. Encoding control steps inside a **read-only control store (ROS)** let inexpensive narrow models execute a rich 32-bit ISA reliably, unlocked **microcoded hardware emulation** of older 1401 and 7094 machines, and even let IBM fix subtle processor bugs simply by mailing technicians replacement ROS cards instead of rewiring whole cabinets!\n\nYet microcode carried a real speed trade-off: fetching and stepping through microinstructions consumed extra clock cycles. That is why IBM's roaring flagship **Model 75** skipped microprogramming altogether, relying on a direct hardwired control unit for pure peak throughput—illustrating once again how contrasting hardware implementations could still uphold one identical ISA. One vital architectural pillar of System/360 still remains: when a million-dollar mainframe juggles *multiple* users' jobs at once under a shared operating system, how does hardware stop one buggy program from crashing its neighbors or taking over the machine? Section 10 unpacks System/360's protection engine and synthesizes our pre-microchip legacy.",
+          "questions": [
+            {
+              "id": "q_089",
+              "prompt": "Why did IBM keep a traditional hardwired control unit inside the flagship System/360 Model 75 instead of using microprogramming?",
+              "choices": [
+                "Read-only control stores could not physically encode 32-bit binary instructions on large machines.",
+                "The Model 75 lacked an ISA and had to be rewired manually by operators.",
+                "Direct hardwired control avoided multi-cycle microcode overhead to deliver maximum peak execution speed.",
+                "Maurice Wilkes's patents restricted IBM from placing microcode inside machines wider than 32 bits."
+              ],
+              "correct_index": 2,
+              "explanation": "While microcode cut costs on smaller and mid-range models, the top-end Model 75 used direct hardwired control logic to avoid microinstruction overhead and maximize raw speed."
+            },
+            {
+              "id": "q_090",
+              "prompt": "Besides enabling narrow hardware and legacy emulation, what unexpected engineering benefit did read-only control stores give IBM?",
+              "choices": [
+                "Fixing subtle processor control bugs meant swapping ROS cards instead of rewiring cabinets.",
+                "Control stores automatically expanded a machine's main core memory past 16 megabytes.",
+                "Microcode removed all need for compilers by running typed English directly in hardware.",
+                "Every ROS card doubled as a removable magnetic disk pack for customer payrolls."
+              ],
+              "correct_index": 0,
+              "explanation": "Because control logic lived in structured microcode cards rather than tangled wiring, IBM could ship hardware bug fixes simply by replacing ROS decks in the field."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_10",
+      "title": "10. Privilege, Protection, Precise Interrupts \u0026 Pre-IC Architectural DNA",
+      "summary": "Unpacks System/360's operating-system safeguards from first principles—its 64-bit Program Status Word (PSW), Supervisor vs. Problem execution modes, 4-bit memory protection keys guarding 2 KB storage blocks, and precise interrupts that halt programs cleanly on exact instruction boundaries. Concludes by synthesizing the complete pre-integrated-circuit architectural DNA that future silicon microprocessor designers would inherit.",
+      "introduced_terms": [
+        "Supervisor vs. Problem state",
+        "memory protection keys",
+        "precise interrupts"
+      ],
+      "chunks": [
+        {
+          "id": "ch_046",
+          "title": "The Shared Mainframe Problem: Keeping Bad Code in Its Lane",
+          "content_markdown": "Back on a 1949 EDSAC or a 1955 IBM 704, one program owned the whole computer from start to finish. If a student's routine jumped to a wild address or scribbled across memory, the worst penalty was losing ten minutes until an operator pressed reset and fed in the next deck of cards.\n\nOn a multimillion-dollar 1964 IBM System/360, letting one job idle the entire processor while waiting for a slow printer or disk drive was unaffordable waste. IBM engineered System/360 for **multiprogramming**—holding *several* independent jobs inside magnetic core memory simultaneously under a resident operating system, immediately switching the CPU to Job B whenever Job A paused for I/O. Suddenly, ordinary software bugs turned genuinely dangerous! What prevented a stray loop in Payroll Job A from overwriting Engineering Job B's arrays, peeking at confidential records, or wrecking the operating system itself? Software politeness was never enough—the *hardware itself* had to enforce hard walls.",
+          "questions": [
+            {
+              "id": "q_091",
+              "prompt": "Why did running multiple jobs concurrently in memory on System/360 create an urgent need for hardware-enforced boundaries?",
+              "choices": [
+                "Magnetic core rings physically melted whenever two programs ran within the same hour.",
+                "Sharing one mainframe forced every user job to run inside read-only control stores.",
+                "System/360 lacked a compiler capable of checking whether programmers used valid 8-bit bytes.",
+                "A single buggy program could otherwise corrupt neighboring jobs or erase the operating system."
+              ],
+              "correct_index": 3,
+              "explanation": "Once multiple jobs and the operating system coexisted in the same main memory, hardware isolation became essential so a bug in one job could not corrupt others."
+            },
+            {
+              "id": "q_092",
+              "prompt": "What core efficiency goal motivated System/360's support for multiprogramming?",
+              "choices": [
+                "Letting each user program directly control printers and tape drives without an operating system.",
+                "Keeping the costly processor busy on another job whenever one paused for slow I/O.",
+                "Compressing every 32-bit job down into 8-bit registers so core memory stayed empty.",
+                "Running the exact same binary instruction twice on every cycle to check for typos."
+              ],
+              "correct_index": 1,
+              "explanation": "Multiprogramming kept expensive mainframe CPUs productive by switching to another ready job in memory whenever the active job waited on slow peripherals."
+            }
+          ]
+        },
+        {
+          "id": "ch_047",
+          "title": "The 64-Bit Program Status Word and Supervisor vs. Problem State",
+          "content_markdown": "At the command center of System/360 sat a 64-bit control bundle called the **Program Status Word (PSW)**—a wider, 64-bit forerunner of the 16-bit PSW you met on the PDP-11. Inside one compact snapshot, System/360's PSW packed everything defining the CPU's live state: the 24-bit address of the next instruction, the 2-bit condition code (recording comparison outcomes), interrupt masks (switches choosing which urgent alerts can pause the CPU), a 4-bit memory protection key, and one decisive privilege bit switching between **Supervisor vs. Problem state**.\n\nPicture an airliner with a locked cockpit door. Everyday user jobs run in **Problem state** (named because they solve customer 'problems,' like banking or physics). In Problem state, code can freely compute, loop, and branch—yet the instant it attempts a sensitive *privileged instruction* (like starting an I/O channel, changing protection settings, or halting the CPU), hardware blocks it cold! Only the trusted operating system executes in **Supervisor state**, holding the cockpit keys to govern shared disks, memory, and scheduling safely.",
+          "questions": [
+            {
+              "id": "q_093",
+              "prompt": "What happened on System/360 if a user program running in Problem state attempted to execute a privileged I/O or system-control instruction?",
+              "choices": [
+                "Hardware blocked the instruction immediately and alerted the operating system to intervene.",
+                "The CPU silently promoted the user program into Supervisor state until completion.",
+                "The instruction executed normally as long as its address used base register `R12`.",
+                "Hardware converted the privileged instruction into an ordinary 32-bit integer addition instead."
+              ],
+              "correct_index": 0,
+              "explanation": "Privileged instructions are restricted to Supervisor state; attempting them in Problem state causes hardware to block execution and hand control to the operating system."
+            },
+            {
+              "id": "q_094",
+              "prompt": "Which collection of live processor state did System/360 bundle together inside its 64-bit Program Status Word (PSW)?",
+              "choices": [
+                "All sixteen 32-bit general-purpose registers plus every active user array in core memory.",
+                "The complete microcode routine for the currently executing instruction and its lookup tables.",
+                "Next instruction address, condition code, interrupt masks, protection key, and privilege state bit.",
+                "Only the 8-bit character encoding table used by attached line printers and card readers."
+              ],
+              "correct_index": 2,
+              "explanation": "System/360's 64-bit PSW packed the instruction address, condition code, interrupt masks, 4-bit protection key, and Supervisor/Problem privilege bit into one atomic state word."
+            }
+          ]
+        },
+        {
+          "id": "ch_048",
+          "title": "Memory Protection Keys: Hardware Locks on 2 KB Blocks",
+          "content_markdown": "Locking privileged instructions out of Problem state solves only half the safety puzzle: an ordinary `STORE` instruction is *not* privileged, yet a buggy array index could still scribble straight across a neighbor's memory! To build solid walls between jobs, System/360 introduced **memory protection keys**.\n\nImagine a hotel hallway where every 2,048-byte (2 KB) block of main memory is a guest room guarded by a 4-bit electronic lock called a **storage key** (numbered `0` through `15`). Meanwhile, the actively running program carries its own 4-bit **protection key** inside its PSW! Trace what happens when Job A (carrying PSW key `3`) tries to execute a `STORE` to an address inside a 2 KB block owned by Job B (stamped with storage key `7`). Before a single bit alters in magnetic core, hardware checks the two 4-bit values: $$3 \\neq 7$$! Access snaps shut immediately, and hardware triggers a **trap** (an automatic handoff into the operating system). Only when the keys match—or when the operating system runs with master key `0`—does the memory write proceed.",
+          "questions": [
+            {
+              "id": "q_095",
+              "prompt": "Under System/360's memory protection keys, what happens when a program carrying PSW key `5` tries to write into a 2 KB memory block stamped with storage key `9`?",
+              "choices": [
+                "The write succeeds automatically because key `5` is smaller than storage key `9`.",
+                "Hardware changes the block's storage key to `5` before completing the store cleanly.",
+                "The write proceeds silently, then logs a warning message onto the operator's printer.",
+                "Hardware blocks the write immediately and traps into the operating system to handle it."
+              ],
+              "correct_index": 3,
+              "explanation": "Because PSW key 5 does not match storage key 9 (and is not master key 0), System/360 hardware refuses the write and triggers a protection exception into the OS."
+            },
+            {
+              "id": "q_096",
+              "prompt": "Why did System/360 give the operating system special access when its PSW held protection key `0`?",
+              "choices": [
+                "Key `0` disabled memory altogether so the operating system ran strictly inside registers.",
+                "Key `0` served as a master key matching every 2 KB storage block.",
+                "Key `0` prevented the operating system from reading or modifying user jobs' memory.",
+                "Key `0` unlocked read-only control stores so user jobs could rewrite CPU microcode."
+              ],
+              "correct_index": 1,
+              "explanation": "PSW protection key 0 acted as a hardware master key so the trusted operating system in Supervisor state could load, inspect, and manage memory across all user jobs."
+            }
+          ]
+        },
+        {
+          "id": "ch_049",
+          "title": "Precise Interrupts—and the Elegant PSW Swap",
+          "content_markdown": "Whenever an urgent event strikes—a protection-key mismatch, a divide-by-zero fault, a user request for OS service, or a completed disk transfer—System/360 hands control to the operating system via one remarkably sleek hardware move: it saves the active 64-bit PSW into a fixed 'Old PSW' slot in low memory and loads a prepared 'New PSW' (already in Supervisor state) pointing straight to the handler!\n\nBehind that clean swap stood a crucial guarantee called **precise interrupts**. Picture freezing a fast-moving film *cleanly between two frames* instead of halfway through a smear. A precise interrupt guarantees that every instruction *before* the faulting one has finished completely, while the faulting instruction and everything after it leave zero half-finished debris—and the saved Old PSW identifies the exact culprit! Here is the twist: on sequential System/360 models, precise interrupts came cleanly; yet on IBM's ultra-fast pipelined Model 91 (which overlapped many instructions simultaneously), interrupts sometimes arrived *imprecisely* several instructions late—proving just how tough, and how indispensable, precise interrupts are for reliable debugging and operating systems.",
+          "questions": [
+            {
+              "id": "q_097",
+              "prompt": "What guarantee defines a 'precise interrupt' on IBM System/360?",
+              "choices": [
+                "Prior instructions finish cleanly, later ones stay untouched, and the faulting address is exact.",
+                "Interrupts arrive only between full batch jobs so running programs never pause mid-flight.",
+                "Hardware silently skips past every failing instruction without alerting the resident operating system.",
+                "All sixteen general-purpose registers are cleared to zero before any interrupt handler starts."
+              ],
+              "correct_index": 0,
+              "explanation": "Precise interrupts halt execution cleanly on an exact instruction boundary so prior work is complete, later work has not begun, and the saved PSW pinpoints the exact event."
+            },
+            {
+              "id": "q_098",
+              "prompt": "How did System/360 hardware transition cleanly from a running user job into the operating system when an interrupt fired?",
+              "choices": [
+                "It paused the clock until a human operator typed the handler's starting address.",
+                "It copied all 16 megabytes of core memory onto magnetic tape before branching.",
+                "It automatically saved the current 'Old PSW' and loaded a supervisor 'New PSW.'",
+                "It switched the read-only control store into IBM 1401 compatibility mode automatically."
+              ],
+              "correct_index": 2,
+              "explanation": "On an interrupt, System/360 hardware stored the active PSW to a fixed Old PSW location and loaded a supervisor-mode New PSW pointing to the OS handler in one indivisible step."
+            }
+          ]
+        },
+        {
+          "id": "ch_050",
+          "title": "The Pre-IC Architectural DNA Ready for Silicon",
+          "content_markdown": "Stand back at the close of 1964 and marvel at the architectural journey you just traced—every piece forged *before* a single commercial microprocessor chip existed! Within two astonishing decades, pioneers assembled almost the complete conceptual DNA of modern computers: EDVAC's **stored-program concept** (and its Harvard split-path trade-off), EDSAC's practical execution, Manchester's **B-line index registers** and clean read-only loops, the IBM 704's **hardware floating-point** and language-shaping word fields, and System/360's crowning synthesis—separating **ISA from hardware implementation**, cementing **8-bit bytes** and **32-bit registers**, industrializing Wilkes's **microprogramming**, and hardening shared operating systems with **Supervisor vs. Problem state**, **memory protection keys**, and **precise interrupts**.\n\nEvery one of these architectural triumphs, however, still lived inside air-conditioned rooms packed with cabinets of individual wired circuits and magnetic core memory costing millions of dollars. Soon, a semiconductor revolution—packing dozens, then thousands, of transistors onto tiny slivers of silicon—would pose an electrifying new challenge: how do you shrink decades of hard-won mainframe architecture onto a single chip? That leap awaits in Part II!",
+          "questions": [
+            {
+              "id": "q_099",
+              "prompt": "Which architectural milestone completed the journey from fragile self-modifying loops in 1949 to protected multi-job families in 1964?",
+              "choices": [
+                "Replacing electronic memory entirely with mechanical counter wheels and copper plugboards.",
+                "Uniting index registers, stable ISAs, microcode, privilege modes, and precise interrupts.",
+                "Shrinking every mainframe immediately onto single-chip microprocessors inside personal desk calculators.",
+                "Standardizing all software worldwide on 6-bit characters and variable-length decimal words."
+              ],
+              "correct_index": 1,
+              "explanation": "Between 1949 and 1964, computer architects progressively assembled index registers, floating-point, clean ISA/implementation separation, microcode, privilege modes, protection keys, and precise interrupts."
+            },
+            {
+              "id": "q_100",
+              "prompt": "Standing at the end of 1964, what fundamental physical limitation still constrained all the architectural breakthroughs covered in this module?",
+              "choices": [
+                "Programmers still lacked index registers, floating-point hardware, and high-level optimizing compilers.",
+                "Operating systems still had no hardware way to isolate independent user jobs.",
+                "Computer makers had not yet discovered how to separate ISA from implementation.",
+                "These architectures still required room-sized, multimillion-dollar cabinets rather than single silicon chips."
+              ],
+              "correct_index": 3,
+              "explanation": "By 1964 the conceptual architecture of modern computing was largely mature, yet physical implementations still required enormous, costly room-sized cabinets prior to integrated-circuit microprocessors."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

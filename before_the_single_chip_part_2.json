@@ -1,0 +1,1690 @@
+{
+  "id": "before_the_single_chip_part_2",
+  "title": "Before the Single Chip II: Minicomputers, Programmable Calculators \u0026 Custom Silicon (1965–1969)",
+  "summary": "Part 2 of the 'Before the Single Chip' Quest Arc traces how 1960s minicomputer architects and desktop calculator pioneers squeezed real computing into tiny hardware budgets—building directly on Part 1's ISA foundations and your PDP-11 background without rehashing PDP-11 basics. At a relaxed, one-idea-per-chunk pace with concrete register-level and bit-encoding depth, learners unpack DEC's 12-bit PDP-8, Data General's 16-bit Nova, a three-way silicon-budget comparison with the PDP-11, Olivetti's Programma 101, HP's 9100A and CORDIC math, and Busicom's 1969 Intel contract that set up the pivot to a ROM-driven microprocessor.",
+  "topic_prompt": "Teach Part 2 of the 'Before the Single Chip' Quest Arc at a relaxed, generalist-friendly, one-idea-per-chunk conversational pace (~14 concepts across 10 sections / 50 chunks) with concrete register-level, bit-encoding, and software-effect depth. Build on Module 1's ISA concepts and the learner's existing knowledge of pdp_11_part_1 and pdp_11_part_2 WITHOUT rehashing PDP-11 basics (do not re-explain UNIBUS, R0–R7 intro, core memory basics, or Unix/C history). Cover: (1) why shrinking mainframes into affordable minicomputers forced aggressive architectural trade-offs around word width, opcode count, and register budgets; (2) DEC's 12-bit PDP-8 (1965) in real architectural depth—a single 12-bit Accumulator plus 1-bit Link flag, only 8 major 3-bit opcodes (lacking a native subtract instruction), and microcoded Operate (OPR) bit-mask instructions packing multiple clears, complements, rotates, and skips into one word; (3) PDP-8 addressing tricks and software consequences—128-word Current Page vs. Page Zero addressing, the indirect bit, Page Zero auto-index locations (octal 0010–0017), why JMS storing return addresses in subroutine headers broke recursion, and how Page Zero foreshadowed later microprocessor tricks like the 6502 Zero Page; (4) Data General's 16-bit Nova (1969) by Edson de Castro—four 16-bit accumulators (AC0–AC3, with AC2/AC3 doubling as index/base registers and AC3 holding JSR returns) and its compact multifunction ALU instruction encoding packing source, destination, ALU op, carry, shift/byte-swap, no-load, and skip into a single 16-bit word; (5) an analytical three-way comparison of PDP-8 minimalism, Nova register compactness, and the PDP-11's rich orthogonal model—explaining why early silicon budgets could not fit a full PDP-11 on one die, yet the PDP-11 remained the aspirational North Star for later microprocessors; (6) why minicomputers still lacked mass-market volume while desktop programmable calculators created the economic pull for custom silicon; (7) Olivetti's Programma 101 (1965)—Pier Giorgio Perotto's magnetostrictive delay-line memory, magnetic program cards, and Apollo 11 calculations—and HP's 9100A (1968)—discrete-transistor scientific computing, Reverse Polish Notation (RPN) stack efficiency, printed-circuit ROM, and an intuitive first-principles walkthrough of the CORDIC shift-and-add algorithm replacing bulky hardware multipliers; and (8) the fierce late-1960s Japanese calculator price war and Busicom's 1969 contract with startup memory maker Intel for 12 custom MOS LSI chips, setting up how Ted Hoff and Stanley Mazor pivoted toward a general-purpose ROM-driven processor.",
+  "tag_path": [
+    "History",
+    "History of Technology",
+    "Microprocessor History"
+  ],
+  "prerequisite_ids": [
+    "before_the_single_chip_part_1",
+    "pdp_11_part_1",
+    "pdp_11_part_2"
+  ],
+  "vetting_summary": "Audited all 10 sections (50 chunks and 100 multiple-choice questions) sequentially from a college-freshman generalist perspective, checking jargon definitions, forward references, pacing, choice balance, and LaTeX/JSON escaping. Refined 18 chunks and 16 questions across all 10 sections to gloss technical terms inline, eliminate two forward references, strengthen RPN transfer testing, and tighten choice lengths and answer-index distribution (23 A, 27 B, 23 C, 27 D).",
+  "created_at": "2026-11-19T23:17:52Z",
+  "sections": [
+    {
+      "id": "sec_01",
+      "title": "1. Shrinking the Mainframe: Cost, Gates \u0026 Minicomputer Trade-Offs",
+      "summary": "Explore why shrinking room-sized, million-dollar mainframes into affordable mid-1960s laboratory minicomputers forced aggressive engineering compromises across three coupled levers: word width, opcode count, and register budgets. Building on Part 1's ISA fundamentals, learners see in concrete hardware terms why every extra bit of word width widens adders, buses, and memory planes, and why every added register or opcode demands costly physical flip-flops and decode logic.",
+      "introduced_terms": [
+        "minicomputer",
+        "gate count",
+        "register budget"
+      ],
+      "chunks": [
+        {
+          "id": "ch_001",
+          "title": "Why Could a Lab Suddenly Afford a Computer?",
+          "content_markdown": "In 1964, an IBM System/360 mainframe cost hundreds of thousands to millions of dollars, lived behind air-conditioned glass walls, and required white-coated operators to feed decks of punch cards. Yet just one year later, a university chemist or factory engineer could wheel a **minicomputer**—a compact, interactive, refrigerator-sized or tabletop computer priced near 18,000 dollars—straight into an ordinary laboratory. How did designers slash the price of a general-purpose computer by more than a factor of ten without waiting for miracle silicon chips? They certainly did not get transistors for free. Every discrete (individually packaged) transistor, diode, and resistor soldered onto a 1965 circuit board still cost real money, board area, power, and assembly labor. Instead, minicomputer pioneers made ruthless Instruction Set Architecture (ISA) trade-offs, stripping away every comfort a mainframe took for granted so that every bit of width, every extra opcode, and every spare register had to earn its place on the bill of materials.",
+          "questions": [
+            {
+              "id": "q_001",
+              "prompt": "What primarily allowed mid-1960s engineers to cut minicomputer prices to a small fraction of contemporary mainframe prices?",
+              "choices": [
+                "Replacing room-sized discrete transistor logic with mass-produced single-chip microprocessors",
+                "Making aggressive ISA trade-offs to shrink word width, opcode count, and register hardware",
+                "Eliminating stored-program memory so machines ran exclusively from hardwired plugboards",
+                "Subsidizing laboratory hardware sales through long-term federal mainframe leasing programs"
+              ],
+              "correct_index": 1,
+              "explanation": "Minicomputer pioneers could not rely on cheap single-chip CPUs in 1965; they cut costs by aggressively trimming architectural features like word width, opcodes, and registers to minimize physical circuitry."
+            },
+            {
+              "id": "q_002",
+              "prompt": "How did a mid-1960s minicomputer most sharply differ from a contemporary glass-house mainframe in daily use?",
+              "choices": [
+                "It sat directly inside a laboratory for interactive hands-on work at a small fraction of mainframe cost",
+                "It executed programs strictly in overnight batch queues overseen by dedicated machine-room operators",
+                "It offered far wider data words and larger register banks than commercial corporate mainframes",
+                "It relied exclusively on vacuum tubes rather than discrete transistors to survive rough lab floors"
+              ],
+              "correct_index": 0,
+              "explanation": "A minicomputer brought compact, affordable, interactive computing directly into labs and factories, contrasting sharply with centralized, operator-run batch mainframes."
+            }
+          ]
+        },
+        {
+          "id": "ch_002",
+          "title": "The Tyranny of Gate Count",
+          "content_markdown": "To understand why mainframe luxuries vanished in small computers, imagine building a house where every single brick costs a month's rent. Inside a mid-1960s processor built from discrete transistors or tiny early logic modules, computation rests on two basic building blocks: logic gates—electronic switches that combine binary signals using rules like AND, OR, and NOT—and flip-flops, tiny two-state latches that remember a single bit. The total number of these basic switching circuits inside a processor is its **gate count**. In 1965, gate count dictated almost everything on a company's balance sheet: component cost, circuit-board count, cabinet size, power supply weight, cooling fans, and how often a solder joint might fail. A million-dollar mainframe could spend tens of thousands of gates decoding elaborate instructions and moving wide chunks of data at once. An affordable minicomputer had to survive on only a few hundred to a couple thousand gates.",
+          "questions": [
+            {
+              "id": "q_003",
+              "prompt": "Why did reducing a processor's gate count matter so heavily to mid-1960s minicomputer designers?",
+              "choices": [
+                "Lower gate counts automatically doubled the clock speed of magnetic core memory arrays",
+                "Fewer logic switches directly reduced circuit boards, cabinet size, power draw, and sticker price",
+                "Lower gate counts eliminated the need for flip-flops to store binary states inside the CPU",
+                "Fewer logic switches allowed software programmers to ignore binary arithmetic and addressing rules"
+              ],
+              "correct_index": 1,
+              "explanation": "In discrete-component machines, every logic gate and flip-flop consumed physical board space, parts cost, power, and assembly labor, so minimizing gate count directly cut machine cost and size."
+            },
+            {
+              "id": "q_004",
+              "prompt": "Which pair of fundamental digital building blocks makes up the bulk of a 1960s processor's gate count?",
+              "choices": [
+                "Magnetic disk platters that store files and mechanical relays that scan keyboard switches",
+                "Analog vacuum amplifiers that boost audio tones and capacitors that tune radio signals",
+                "Logic gates that combine binary signals and flip-flops that hold individual bits of state",
+                "Optical glass lenses that project punch holes and paper-tape rollers that feed instructions"
+              ],
+              "correct_index": 2,
+              "explanation": "Digital CPUs combine logic gates (which implement rules like AND, OR, and NOT) with flip-flops (two-state latches holding single bits) to build arithmetic units, decoders, and registers."
+            }
+          ]
+        },
+        {
+          "id": "ch_003",
+          "title": "How Word Width Multiplies Hardware Everywhere",
+          "content_markdown": "Consider the first great cost-cutting lever: word width, the number of bits a processor carries and adds in a single stride. Suppose an architect trims a machine from a classic 36-bit mainframe word down to a 12-bit minicomputer word—just one-third as wide. That single decision shrinks hardware across the entire cabinet simultaneously. The arithmetic adder drops from 36 bit-slices to 12, cutting the carry circuits that pass overflow bits across columns by two-thirds. Every internal data path shrinks from 36 parallel wires to 12, and every CPU register drops from 36 flip-flops to 12. Even magnetic core memory becomes far cheaper: storing 4,096 words requires only 12 ferrite-ring planes instead of 36, slashing hand-strung wire grids and costly sense amplifiers (the delicate circuits that detect tiny core-read pulses). Naturally, there is a steep catch. With only 12 bits per instruction word, the designer has very little room left to divide between specifying an operation and specifying a memory address.",
+          "questions": [
+            {
+              "id": "q_005",
+              "prompt": "Why does narrowing a computer's word width from 36 bits to 12 bits cut costs far beyond the arithmetic unit alone?",
+              "choices": [
+                "It lets the CPU run without any instruction decoder or internal timing clock circuits",
+                "It removes the need for binary representation by encoding numbers directly as decimal digits",
+                "It eliminates address bits from instructions so programs can reference unlimited memory directly",
+                "It shrinks every data path, every register's flip-flop count, and the number of core-memory planes"
+              ],
+              "correct_index": 3,
+              "explanation": "Word width scales hardware system-wide: narrower words cut the width of adders, internal buses, every register, and the number of parallel ferrite-core planes and sense amplifiers."
+            },
+            {
+              "id": "q_006",
+              "prompt": "What immediate architectural headache does a narrow 12-bit instruction word create for the ISA designer?",
+              "choices": [
+                "The processor can no longer distinguish a binary zero from a binary one on internal wires",
+                "Magnetic core rings physically refuse to flip their magnetization in multiples of twelve",
+                "Very few bits remain in one word to divide between the opcode field and the memory address",
+                "Programs written for a 12-bit computer cannot be stored sequentially inside main memory"
+              ],
+              "correct_index": 2,
+              "explanation": "Every bit in a 12-bit instruction word is precious; spending bits on an opcode immediately leaves very few bits to directly address locations in memory."
+            }
+          ]
+        },
+        {
+          "id": "ch_004",
+          "title": "Opcode Budgets vs. Register Budgets",
+          "content_markdown": "Once word width is locked in, two more levers compete fiercely for both instruction bits and physical gate count: opcode count and the **register budget**, the strict cap on how many fast, on-CPU storage slots a design can afford. Adding extra registers—say, eight instead of one—costs far more than a handful of extra flip-flops. You must also wire selector circuits (multiplexers) so the arithmetic logic unit (ALU) can grab values from any chosen register, and you must spend precious bits inside every instruction word just to name which register to use. Likewise, doubling the count of major opcodes steals another bit from the instruction's address field and balloons the decoder gates that turn binary patterns into hardware control signals. Here is the surprising twist: starving a processor of registers and opcodes never makes complexity disappear. It pushes that complexity onto programmers, who must write longer, cleverer instruction sequences to accomplish what a mainframe did in one step.",
+          "questions": [
+            {
+              "id": "q_007",
+              "prompt": "Beyond the flip-flops themselves, what hidden hardware and ISA costs arise when an architect expands a CPU's register budget?",
+              "choices": [
+                "Extra selector wiring to route registers into the ALU and extra instruction bits to name them",
+                "Slower core-memory cycle times caused by magnetic interference from nearby register latches",
+                "Higher power-grid voltage requirements because each added register needs its own wall transformer",
+                "Complete loss of compatibility with standard octal front-panel switches and indicator lamps"
+              ],
+              "correct_index": 0,
+              "explanation": "Expanding the register budget requires multiplexer wiring to steer values between registers and the ALU, plus instruction bits in every command to identify the chosen register."
+            },
+            {
+              "id": "q_008",
+              "prompt": "When a minicomputer architect cuts opcode count and shrinks the register budget to save gates, where does the eliminated complexity actually go?",
+              "choices": [
+                "It disappears permanently because smaller word widths require fewer mathematical steps overall",
+                "It shifts into the power supply, which must regulate tighter voltages for simpler circuits",
+                "It shifts into external disk controllers, which automatically translate short instructions",
+                "It shifts onto software programmers, who must combine simpler instructions to do complex tasks"
+              ],
+              "correct_index": 3,
+              "explanation": "Hardware austerity transfers complexity from silicon/gates to software: programmers must write multi-instruction workarounds for missing opcodes and scarce registers."
+            }
+          ]
+        },
+        {
+          "id": "ch_005",
+          "title": "Austerity as an Architectural Art Form",
+          "content_markdown": "Put those three coupled levers together—word width, opcode count, and **register budget**—and a clear engineering trade-off triangle emerges. Widening words, multiplying opcodes, and stocking the CPU with registers make programs shorter and cleaner to write, yet every comfort drives up **gate count** and sticker price. Trimming all three brings a real stored-program **minicomputer** within reach of modest university labs and factory floors, provided the architect compensates with smart encoding tricks. Notice that this exact tension did not fade away when processors moved onto silicon a few years later; the very first single-chip processors faced an even harsher transistor ceiling. In 1965, no machine pushed minicomputer austerity further—or turned stark simplicity into greater commercial triumph—than Digital Equipment Corporation's 12-bit PDP-8. Let's open its hood next and see how a real computer ran laboratories around the world with just one accumulator and eight opcodes.",
+          "questions": [
+            {
+              "id": "q_009",
+              "prompt": "Why do the trade-offs of mid-1960s minicomputers remain directly relevant to understanding early microprocessors?",
+              "choices": [
+                "Early microprocessors reused the exact same refrigerator-sized discrete-transistor cabinets",
+                "Early single-chip CPUs faced similarly tight hardware ceilings on width, registers, and opcodes",
+                "Early microprocessors abandoned stored programs in favor of the mechanical dials used in labs",
+                "Early single-chip CPUs were legally required to duplicate the 36-bit IBM mainframe word width"
+              ],
+              "correct_index": 1,
+              "explanation": "Just as mid-1960s minicomputers were constrained by discrete-component gate budgets, early microprocessors faced strict on-chip transistor ceilings that forced the same minimalist trade-offs."
+            },
+            {
+              "id": "q_010",
+              "prompt": "Which summary best captures the core engineering triangle facing a 1965 minicomputer architect?",
+              "choices": [
+                "Wider words, richer opcodes, and more registers ease software writing while raising gate count and cost",
+                "Narrower words, fewer opcodes, and fewer registers always make assembly programs shorter and faster",
+                "Increasing gate count automatically reduces cabinet power draw as long as word width stays small",
+                "Choosing an interactive minicomputer design eliminates every trade-off between hardware and software"
+              ],
+              "correct_index": 0,
+              "explanation": "Architectural richness improves software convenience at the expense of higher gate count and price; minicomputer architects balanced those three levers to hit an affordable price point."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_02",
+      "title": "2. DEC's 12-Bit PDP-8: One Accumulator, One Link \u0026 Eight Opcodes",
+      "summary": "Step inside DEC's landmark 1965 12-bit PDP-8 to see minimalist architecture in register-level detail: a single 12-bit Accumulator paired with a 1-bit Link flag for carry and multi-word arithmetic, and just $$2^3 = 8$$ major 3-bit opcodes (AND, TAD, ISZ, DCA, JMS, JMP, IOT, and OPR). Learners discover why omitting a native subtract instruction saved real logic gates and walk step by step through performing subtraction using two's-complement negation and TAD, alongside why DCA clears the Accumulator as it stores.",
+      "introduced_terms": [
+        "accumulator-only architecture",
+        "Link bit",
+        "two's-complement subtraction"
+      ],
+      "chunks": [
+        {
+          "id": "ch_006",
+          "title": "The 18,500-Dollar Machine That Broke the Mold",
+          "content_markdown": "When Digital Equipment Corporation (DEC) unveiled the 12-bit PDP-8 in March 1965—later nicknamed the 'Straight-8'—it stood roughly the size of a compact refrigerator and sold for 18,500 dollars, less than one-tenth the price of a typical mainframe. Engineered by a tiny team led by Edson de Castro, the Straight-8 packed its entire central processor into roughly 1,400 discrete transistors mounted on plug-in circuit boards, launching the first truly mass-produced minicomputer family (eventually topping 50,000 units sold). Mainframe veterans flipping open its programmer's handbook could hardly believe what was missing. There were no general-purpose register banks, no hardware multiply or divide instructions, and—most startling of all—no subtract instruction! How could a computer control particle accelerators, run chemical analyzers, and typeset newspapers when its entire computational workbench boiled down to a single 12-bit register and a handful of tiny instructions?",
+          "questions": [
+            {
+              "id": "q_011",
+              "prompt": "Roughly how many discrete transistors made up the original 1965 Straight-8 processor?",
+              "choices": [
+                "About 140 transistors housed inside a single desk calculator case",
+                "About 1,400 transistors mounted across plug-in discrete circuit boards",
+                "About 14,000 transistors cooled by chilled-water mainframe pipes",
+                "About 140,000 transistors wired into an eight-register crossbar switch"
+              ],
+              "correct_index": 1,
+              "explanation": "The original 1965 PDP-8 ('Straight-8') achieved its landmark 18,500-dollar price by keeping its discrete-transistor CPU to roughly 1,400 transistors."
+            },
+            {
+              "id": "q_012",
+              "prompt": "Which striking omission from the PDP-8's core instruction set immediately surprised mainframe programmers?",
+              "choices": [
+                "It lacked any way to jump to a different instruction address in memory",
+                "It lacked any mechanism to communicate with external input or output devices",
+                "It lacked a dedicated native subtract instruction alongside general register banks",
+                "It lacked magnetic core memory and stored every instruction on paper cards"
+              ],
+              "correct_index": 2,
+              "explanation": "To preserve its extreme minimalism, the PDP-8 omitted general-purpose register banks, hardware multiply/divide, and even a native subtract instruction."
+            }
+          ]
+        },
+        {
+          "id": "ch_007",
+          "title": "One Accumulator and a Single Link Bit",
+          "content_markdown": "The PDP-8 is the textbook example of an **accumulator-only architecture**: a processor design in which nearly every arithmetic and logical step passes through one central 12-bit working register, the Accumulator (`AC`), which acts as both an input and the result destination. Picture the `AC` as a single pocket-calculator display on a crowded workbench; to add two variables from memory, you pull the first into `AC`, add the second onto it, and park the sum back in memory before touching anything else. Bolted onto the left edge of the 12-bit `AC` sits one extra 1-bit flip-flop called the **Link bit** (`L`). Whenever an addition carries past the 12th bit, that carry-out flips `L` instead of disappearing. Together, `L` and `AC` form a 13-bit strip that lets software detect arithmetic overflow, rotate bits cleanly through a carry slot, and stitch 12-bit additions into 24-bit or 36-bit numbers.",
+          "questions": [
+            {
+              "id": "q_013",
+              "prompt": "In the PDP-8's accumulator-only architecture, what role does the 12-bit Accumulator (AC) play during arithmetic?",
+              "choices": [
+                "It holds only the memory address of the next instruction waiting to be fetched",
+                "It stores eight separate user variables simultaneously without touching main memory",
+                "It acts exclusively as an external buffer connecting paper-tape readers to the cabinet",
+                "It serves as both the sole central arithmetic input register and the destination for results"
+              ],
+              "correct_index": 3,
+              "explanation": "In an accumulator-only architecture, nearly every arithmetic or logic operation combines an incoming operand with the single Accumulator and writes the result right back into it."
+            },
+            {
+              "id": "q_014",
+              "prompt": "Why does the PDP-8 pair its 12-bit Accumulator with the 1-bit Link flag (L)?",
+              "choices": [
+                "To capture 12-bit carry-outs for overflow checks, bit rotations, and multi-word arithmetic",
+                "To double the computer's addressable memory from 4,096 words to 8,192 words automatically",
+                "To select which of eight general-purpose CPU registers receives the next memory read",
+                "To indicate whether an incoming instruction should be interpreted as decimal or octal"
+              ],
+              "correct_index": 0,
+              "explanation": "The 1-bit Link flag extends AC into a 13-bit path so carries out of bit 0 are preserved for overflow detection, rotations, and chaining multi-word arithmetic."
+            }
+          ]
+        },
+        {
+          "id": "ch_008",
+          "title": "Just Eight Opcodes for an Entire Computer",
+          "content_markdown": "With only 12 bits per instruction word, the PDP-8 reserves its top 3 bits (bits 0–2 in DEC's left-to-right numbering) for the opcode, leaving room for exactly $$2^3 = 8$$ major instructions, numbered `0` through `7` in octal. Six instructions reference memory: `0` (`AND`) matches each bit pair of `AC` and a memory word, keeping a `1` only where both are `1`; `1` (`TAD`, Two's-Complement Add) adds a memory word into `AC`; `2` (`ISZ`, Increment and Skip if Zero) adds 1 to a memory cell and skips the next instruction if it reaches zero, powering loops; `3` (`DCA`, Deposit and Clear AC) stores `AC` into memory and immediately zeroes `AC`; `4` (`JMS`) calls a subroutine (a reusable mini-program); and `5` (`JMP`) jumps unconditionally. Opcode `6` (`IOT`) talks to input/output devices, while `7` (`OPR`) handles register tweaks. Notice there is no `LOAD` opcode! Because `DCA` conveniently leaves `AC` at zero, loading a variable simply runs `TAD` onto an empty Accumulator.",
+          "questions": [
+            {
+              "id": "q_015",
+              "prompt": "Because the PDP-8 has no dedicated LOAD instruction, how does a program normally load a value from memory into an empty Accumulator?",
+              "choices": [
+                "By executing AND against memory, which copies every bit directly into a zeroed AC",
+                "By executing TAD onto a zeroed AC, since adding a value to zero loads that value",
+                "By executing ISZ on the variable, which moves its unmodified bits straight into AC",
+                "By executing JMP to the variable's address so the CPU fetches the data into AC"
+              ],
+              "correct_index": 1,
+              "explanation": "Because DCA leaves AC cleared to zero after storing, a subsequent TAD adds the memory word to zero—acting as a clean load without spending one of the eight opcodes on LOAD."
+            },
+            {
+              "id": "q_016",
+              "prompt": "What does the PDP-8's DCA (Deposit and Clear AC) instruction do, and why is its clearing step so useful?",
+              "choices": [
+                "It clears memory before copying AC so old loop counters never trigger accidental skips",
+                "It deposits AC into the Link bit and clears memory to prepare for multi-word addition",
+                "It stores AC into memory and zeroes AC, leaving AC ready to load the next value via TAD",
+                "It deletes the current instruction from memory and zeroes the Program Counter after a jump"
+              ],
+              "correct_index": 2,
+              "explanation": "DCA writes AC into a memory location and immediately clears AC to zero, which saves a separate clear instruction before the next TAD-based load."
+            }
+          ]
+        },
+        {
+          "id": "ch_009",
+          "title": "Subtracting Without a Subtract Instruction",
+          "content_markdown": "Look back at those eight opcodes and notice the boldest omission of all: there is no `SUB` instruction anywhere on the PDP-8. Dropping a dedicated subtractor circuit and opcode saved hardware gates and protected one of the eight scarce 3-bit slots. Instead, programmers relied on **two's-complement subtraction**—subtracting a number by inverting every bit (its one's complement), adding 1 to form its arithmetic negative, and adding that negated value with ordinary `TAD`. Suppose `AC` starts at zero and you want $$A - B$$. You execute `TAD B` to bring $$B$$ into `AC`, issue a single register command that flips all 12 bits of `AC` and increments it by 1 (producing $$-B$$), and finally run `TAD A` to yield $$A + (-B) = A - B$$! There is a subtle twist with the Link bit: `TAD` *toggles* (flips) `L` whenever a carry exits the top bit rather than merely setting `L` to 1, so programmers carefully clear `L` before chaining multi-word arithmetic.",
+          "questions": [
+            {
+              "id": "q_017",
+              "prompt": "Starting with AC cleared to zero, which three-step sequence computes $$A - B$$ on a PDP-8 without a native subtract opcode?",
+              "choices": [
+                "TAD A, flip all bits of AC and add 1, then TAD B",
+                "AND B, clear the Link bit to zero, then DCA A",
+                "ISZ B, deposit AC into memory A, then TAD B",
+                "TAD B, flip all bits of AC and add 1, then TAD A"
+              ],
+              "correct_index": 3,
+              "explanation": "Loading B with TAD B, negating it via two's complement (flip all bits and add 1 to get -B), and executing TAD A yields (-B) + A = A - B."
+            },
+            {
+              "id": "q_018",
+              "prompt": "What quirky hardware behavior of the PDP-8's Link bit (L) must programmers watch for during TAD additions?",
+              "choices": [
+                "A carry-out from the 12th bit toggles L between 0 and 1 rather than always forcing L to 1",
+                "Every TAD instruction automatically resets L to zero regardless of whether an overflow occurred",
+                "A carry-out from TAD copies the top bit into memory address zero instead of updating L",
+                "The Link bit updates only during bitwise AND operations and ignores arithmetic carries from TAD"
+              ],
+              "correct_index": 0,
+              "explanation": "On the PDP-8, carry-out from TAD complements (toggles) the Link bit rather than unconditionally setting it to 1, so programmers explicitly clear L before multi-word carry tests."
+            }
+          ]
+        },
+        {
+          "id": "ch_010",
+          "title": "Every Bit Pulling Double Duty",
+          "content_markdown": "Pause and appreciate the austere craft inside the PDP-8's core architecture. By committing to an **accumulator-only architecture** augmented by a single **Link bit**, folding memory loads into `TAD` right after a clearing `DCA`, and replacing dedicated subtraction hardware with **two's-complement subtraction**, DEC squeezed a dependable, mass-market computer into roughly 1,400 transistors. Yet our subtraction walkthrough just exposed a fascinating mystery! We casually relied on a register command that flips every bit of `AC` and adds 1—and we also mentioned clearing `AC`, clearing `L`, rotating bits, and testing whether a result is zero or negative. None of opcodes `0` through `6` can perform any of those chores. Every single one of them had to fit inside the lone remaining 3-bit slot: opcode `7`, `OPR` (Operate). How can one single opcode trigger dozens of distinct register operations—and even chain several together inside a single 12-bit word? Let's crack open `OPR` next.",
+          "questions": [
+            {
+              "id": "q_019",
+              "prompt": "Which pair of design tricks let the PDP-8 operate comfortably with only six memory-reference opcodes?",
+              "choices": [
+                "Using JMP to load data words into AC and using IOT to perform hardware floating-point division",
+                "Using eight parallel accumulators to eliminate memory stores and using octal digits to double opcode bits",
+                "Using DCA plus TAD to cover loads and using two's-complement negation plus TAD to cover subtraction",
+                "Using an external mainframe over phone lines whenever a program needed to subtract or load variables"
+              ],
+              "correct_index": 2,
+              "explanation": "Clearing AC during DCA allowed TAD to serve as LOAD, while two's-complement negation followed by TAD replaced a dedicated SUB opcode—keeping memory-reference opcodes down to six."
+            },
+            {
+              "id": "q_020",
+              "prompt": "Why did the PDP-8's eight-opcode budget force all register clears, complements, rotates, and tests into opcode 7 (OPR)?",
+              "choices": [
+                "Because DEC's front-panel switches could physically enter octal digit 7 faster than digits 0 through 6",
+                "Because magnetic core memory could not store instructions whose top three bits were all zeroes",
+                "Because the Link bit could only be wired to the instruction decoder when all three opcode bits were 1",
+                "Because opcodes 0 through 6 were already claimed by memory-reference and I/O instructions"
+              ],
+              "correct_index": 3,
+              "explanation": "With only $$2^3 = 8$$ major opcodes, six went to memory-reference operations (AND, TAD, ISZ, DCA, JMS, JMP) and one to I/O (IOT), leaving opcode 7 (OPR) to carry every register-only operation."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_03",
+      "title": "3. Microcoded Magic: Packing Multiple Operations into PDP-8's OPR Word",
+      "summary": "Uncover how the PDP-8 squeezed dozens of register manipulations out of a single leftover opcode—Operate (OPR, octal 7)—by repurposing its nine remaining bits as independent hardware control switches instead of a memory address. Learners unpack Group 1 and Group 2 bit-mask encodings to see how clears, complements, increments, rotates, and conditional skips combine inside one 12-bit instruction word and fire in strict hardware sub-step order.",
+      "introduced_terms": [
+        "microcoded instruction",
+        "bit-mask encoding",
+        "conditional skip"
+      ],
+      "chunks": [
+        {
+          "id": "ch_011",
+          "title": "Nine Idle Bits Waiting to Work",
+          "content_markdown": "Look closely at a PDP-8 instruction whose top three bits are `111` (octal `7`), the `OPR` (Operate) opcode. Unlike `TAD` or `DCA`, a register tweak never needs to fetch a variable from magnetic core memory—it acts exclusively on the 12-bit Accumulator (`AC`) and 1-bit Link (`L`) already sitting inside the CPU. That leaves **nine whole bits** (bits 3 through 11) completely free of address duties! A conventional mainframe designer might have treated those nine bits as a numbered lookup table of 512 separate opcodes, demanding a sprawling binary decoder stuffed with extra gates. Edson de Castro's engineers spotted a far thriftier strategy: what if each individual bit inside the `OPR` word acted as its own miniature on/off toggle switch wired almost straight to a piece of CPU circuitry? Flip one bit and `AC` clears; flip two or three bits together and multiple register actions fire inside a single 12-bit instruction!",
+          "questions": [
+            {
+              "id": "q_021",
+              "prompt": "Why does the PDP-8's OPR (opcode 7) instruction have nine extra bits available for specifying register actions?",
+              "choices": [
+                "Because OPR automatically loads a second 12-bit extension word from memory",
+                "Because the PDP-8 temporarily disables the Link bit whenever opcode 7 executes",
+                "Because register-only operations need no memory address, leaving bits 3 through 11 free",
+                "Because DEC reserved bits 0 through 2 for data whenever an instruction modified AC"
+              ],
+              "correct_index": 2,
+              "explanation": "Since OPR manipulates only the on-CPU Accumulator and Link bit without touching memory, bits 3 through 11 are freed from holding an address and can control register operations directly."
+            },
+            {
+              "id": "q_022",
+              "prompt": "What hardware advantage did treating OPR's leftover bits as individual control switches offer over decoding 512 separate numbered opcodes?",
+              "choices": [
+                "It required very few decoder gates while letting one word trigger multiple actions at once",
+                "It eliminated the need for a Program Counter whenever consecutive OPR words executed",
+                "It doubled the physical width of the Accumulator from 12 bits to 24 bits during rotates",
+                "It allowed OPR words to fetch two operands from core memory in a single clock cycle"
+              ],
+              "correct_index": 0,
+              "explanation": "Wiring individual bits directly to control lines minimized gate count compared to a giant 9-bit opcode decoder, and simultaneously allowed combining several operations in one word."
+            }
+          ]
+        },
+        {
+          "id": "ch_012",
+          "title": "Bit-Mask Encoding and Microcoded Instructions",
+          "content_markdown": "DEC's `OPR` design is a classic **microcoded instruction**: a single machine-code word whose internal bit fields directly command one or more elementary hardware steps (micro-operations) instead of choosing one monolithic action from a rigid menu. To select which micro-operations fire, `OPR` relies on **bit-mask encoding**, where each bit position functions as an independent flag (`1` means activate this circuit, `0` means leave it idle). Picture a short-order diner slip where a single ticket lets you check off 'toast bread', 'add butter', and 'cut diagonally' all at once rather than handing the cook three separate slips. Inside `OPR`, bit 3 first divides the instruction into two distinct families: setting bit 3 to `0` selects **Group 1** (data transformations such as clears, complements, increments, and rotates), whereas setting bit 3 to `1` (with bit 11 at `0`) selects **Group 2** (status tests and skips). Because each flag maps cleanly to a control wire, the CPU stays tiny while acting surprisingly expressive.",
+          "questions": [
+            {
+              "id": "q_023",
+              "prompt": "How does bit-mask encoding inside a microcoded instruction differ from a standard numbered opcode table?",
+              "choices": [
+                "Every binary number in the field names exactly one fixed, indivisible mainframe routine",
+                "The processor ignores individual bits and reads only the total count of 1s in the word",
+                "The bit pattern stores a compressed memory pointer rather than hardware control signals",
+                "Each bit position acts as an independent switch that can be combined with sibling switches"
+              ],
+              "correct_index": 3,
+              "explanation": "In bit-mask encoding, each bit independently turns a specific micro-operation on or off, allowing programmers to combine multiple flags into one instruction word."
+            },
+            {
+              "id": "q_024",
+              "prompt": "What structural role does bit 3 play inside a PDP-8 OPR instruction word?",
+              "choices": [
+                "It decides whether the result of the register operation is saved into core memory or AC",
+                "It selects between Group 1 data-manipulation switches and Group 2 test-and-skip switches",
+                "It specifies whether the Accumulator should rotate left by one position or right by two",
+                "It toggles the Link bit automatically before any remaining bits in the word are read"
+              ],
+              "correct_index": 1,
+              "explanation": "Bit 3 partitions OPR into Group 1 (bit 3 = 0, for clears, complements, increments, and rotates) and Group 2 (bit 3 = 1 with bit 11 = 0, for conditional tests and skips)."
+            }
+          ]
+        },
+        {
+          "id": "ch_013",
+          "title": "Inside Group 1: Clears, Complements, Increments, and Rotates",
+          "content_markdown": "Let's unpack a real Group 1 `OPR` word (`bits 0–2 = 111`, `bit 3 = 0`) bit by bit! Bit 4 is `CLA` (Clear `AC`), bit 5 is `CLL` (Clear `L`), bit 6 is `CMA` (Complement `AC`, inverting all 12 bits), bit 7 is `CML` (Complement `L`), bit 11 is `IAC` (Increment `AC` by 1), and bits 8–10 rotate the 13-bit `L + AC` strip—shifting every bit sideways and wrapping the end bit around—by one or two steps right or left (`RAR`, `RAL`, `RTR`, `RTL`). Wait: if a single word sets both `CMA` and `IAC`, which happens first? Hardware enforces a fixed sub-step order (Event Times 1, 2, and 3): clears always fire first, complements fire second, and increments or rotates fire third! Because complement precedes increment, setting `CMA IAC` together (octal `7041`) flips every bit and *then* adds 1—performing our two's-complement negation from Section 2 in a single word! Better yet, setting `CLA CMA` (octal `7240`) zeroes `AC` and flips every bit to `1`, loading $$-1$$ (octal `7777`) in one instruction!",
+          "questions": [
+            {
+              "id": "q_025",
+              "prompt": "Because Group 1 clears fire before complements, what value lands in AC after executing the single combined instruction CLA CMA?",
+              "choices": [
+                "Octal 7777 (all twelve bits set to 1, representing -1 in two's complement)",
+                "Octal 0000 (all twelve bits cleared to 0 after the complement is wiped out)",
+                "Octal 0001 (a single 1 in the rightmost bit produced by an automatic increment)",
+                "The prior AC value (unchanged because clear and complement cancel each other out)"
+              ],
+              "correct_index": 0,
+              "explanation": "Hardware executes clears in Event Time 1 (setting AC to 0000) and complements in Event Time 2 (flipping every 0 to 1), leaving AC with octal 7777 (-1)."
+            },
+            {
+              "id": "q_026",
+              "prompt": "Why does combining CMA and IAC into one PDP-8 Group 1 word produce an exact two's-complement negation of AC?",
+              "choices": [
+                "Because hardware rotates the Link bit into AC before applying the increment circuit",
+                "Because the PDP-8 pauses between bits so the programmer can manually toggle front switches",
+                "Because IAC executes before CMA, subtracting one before inverting the remaining bits",
+                "Because hardware runs complements before increments, flipping all bits and then adding 1"
+              ],
+              "correct_index": 3,
+              "explanation": "Two's-complement negation requires inverting all bits first and adding 1 afterward; Group 1's timed event sequence runs CMA (Event Time 2) before IAC (Event Time 3)."
+            }
+          ]
+        },
+        {
+          "id": "ch_014",
+          "title": "Group 2: Conditional Skips Instead of Conditional Jumps",
+          "content_markdown": "Flip bit 3 to `1` (with bit 11 at `0`) and `OPR` becomes Group 2, where the PDP-8 handles program decisions without spending scarce opcodes on conditional jump instructions. Instead, it relies on a **conditional skip**: an instruction that inspects `AC` or `L` and, if the tested condition is true, adds 1 to the Program Counter so the CPU hops right over the next word in memory (typically an unconditional `JMP`). Bits 5, 6, and 7 test three basic flags: `SMA` (Skip on Minus `AC`, meaning its sign bit is `1`), `SZA` (Skip on Zero `AC`), and `SNL` (Skip on Non-zero Link). Here is the clever bit-8 twist: when bit 8 is `0`, checking multiple flags skips if *any* tested condition holds (an OR test, such as 'negative or zero'); flipping bit 8 to `1` reverses the tests into `SPA` (Plus `AC`), `SNA` (Non-zero `AC`), and `SZL` (Zero Link) and skips only if *all* tested conditions hold (an AND test)! Even `CLA` (bit 4) remains active in Group 2, letting you test `AC` and wipe it clean in one step.",
+          "questions": [
+            {
+              "id": "q_027",
+              "prompt": "How does a PDP-8 program typically branch to another block of code when a Group 2 conditional skip succeeds?",
+              "choices": [
+                "The Group 2 instruction embeds a full 12-bit destination address inside bits 5 through 11",
+                "The Group 2 instruction overwrites the Link bit with the target address of the new block",
+                "The Group 2 instruction skips over an immediately following JMP when the test holds",
+                "The Group 2 instruction halts the clock until an I/O device supplies the next PC value"
+              ],
+              "correct_index": 2,
+              "explanation": "Because Group 2 has no address field, it performs a conditional skip—advancing the PC by an extra 1 to bypass a following JMP instruction when the condition succeeds."
+            },
+            {
+              "id": "q_028",
+              "prompt": "What happens in a Group 2 OPR instruction when the programmer flips bit 8 from 0 to 1?",
+              "choices": [
+                "The instruction switches back into Group 1 to perform shifts and increments instead",
+                "The sense of the test bits reverses and multiple flags combine with AND rather than OR",
+                "The CPU forces CLA off so the Accumulator can never be cleared after a conditional test",
+                "The instruction skips two words forward instead of one whenever AC contains zero"
+              ],
+              "correct_index": 1,
+              "explanation": "With bit 8 = 0, SMA/SZA/SNL skip if any selected condition is true (OR); setting bit 8 = 1 reverses them to SPA/SNA/SZL and requires all selected conditions to hold (AND)."
+            }
+          ]
+        },
+        {
+          "id": "ch_015",
+          "title": "Why Bit-Packing Was Both Genius and Tricky",
+          "content_markdown": "Step back and marvel at what **bit-mask encoding** inside a **microcoded instruction** bought DEC. From just one 3-bit opcode (`7`), the PDP-8 unlocked dozens of expressive combinations: `CLA IAC` clears `AC` and increments it to load `1`; `CLA CMA` loads $$-1$$; `CMA IAC` negates `AC`; `CLL RAL` multiplies an unsigned number by 2; and Group 2 **conditional skips** let software test `AC` and `L` while optionally clearing `AC` right afterward. Programmers loved inventing compact one-word idioms that squeezed maximum work into precious 12-bit words, though forgetting the Event Time sequence could produce mystifying bugs! Yet notice why `OPR` enjoyed such generous elbow room: it never needed to touch main memory. What happened in opcodes `0` through `5`, which *did* have to address 4,096 words of core memory using only the 9 bits left behind a 3-bit opcode? That addressing crunch produced some of computing's cleverest—and most infamous—tricks.",
+          "questions": [
+            {
+              "id": "q_029",
+              "prompt": "Which single combined Group 1 OPR instruction cleanly loads the positive integer 1 into AC regardless of AC's previous contents?",
+              "choices": [
+                "CMA IAC (complement AC, then increment AC by 1)",
+                "CLA CMA (clear AC to 0, then flip all 12 bits)",
+                "CLL RAL (clear Link, then rotate AC left by 1)",
+                "CLA IAC (clear AC to 0, then increment AC by 1)"
+              ],
+              "correct_index": 3,
+              "explanation": "Because clears execute before increments, CLA zeros AC in Event Time 1 and IAC adds 1 in Event Time 3, guaranteeing AC ends up holding 1."
+            },
+            {
+              "id": "q_030",
+              "prompt": "Why could memory-reference instructions like TAD and DCA NOT use the same nine-bit microcoded bit-mask trick as OPR?",
+              "choices": [
+                "Because memory-reference instructions needed those remaining nine bits to specify memory locations",
+                "Because core memory could not deliver instructions whose top three bits were anything below octal 7",
+                "Because the Accumulator was physically disconnected from the adder during TAD and DCA cycles",
+                "Because Group 1 and Group 2 skips already consumed every available flip-flop inside the CPU"
+              ],
+              "correct_index": 0,
+              "explanation": "OPR had nine spare bits only because it performed no memory access; memory-reference opcodes had to spend all nine remaining bits solving how to reach 4,096 words of memory."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_04",
+      "title": "4. Pages, Pointers \u0026 Broken Recursion: PDP-8 Addressing \u0026 Software Effects",
+      "summary": "Trace how the PDP-8's 12-bit word split memory-reference instructions into a 3-bit opcode, an indirect bit, a page-select bit, and a 7-bit offset covering $$2^7 = 128$$ words—forcing programs to juggle Current Page vs. shared Page Zero addressing and indirect pointer chains. Learners inspect Page Zero's eight hardware auto-index locations (octal 0010–0017), see concretely why JMS storing return addresses inside subroutine headers broke recursion and reentrancy, and connect Page Zero directly to later microprocessor workarounds like the MOS 6502 Zero Page.",
+      "introduced_terms": [
+        "Page Zero",
+        "auto-index location",
+        "reentrancy"
+      ],
+      "chunks": [
+        {
+          "id": "ch_016",
+          "title": "How Do You Address 4,096 Words with Only 9 Bits?",
+          "content_markdown": "A standard 1965 PDP-8 shipped with 4,096 words of magnetic core memory (octal `0000` through `7777`). Naming any arbitrary word in that memory takes a full 12-bit address, because $$2^{12} = 4096$$. Now stare at the impossible math problem inside a memory-reference instruction like `TAD` or `DCA`: the instruction word itself is only 12 bits wide, and the 3-bit opcode already claimed bits 0 through 2! Only 9 bits remain—enough to address at most $$2^9 = 512$$ words directly, barely one-eighth of standard memory. DEC refused to make memory-reference instructions two words long, because fetching a second word for every load or add would halve memory speed and chew through costly core storage. How could a 12-bit instruction stay strictly one word wide yet somehow reach *any* address across the entire 4,096-word machine?",
+          "questions": [
+            {
+              "id": "q_031",
+              "prompt": "Why could a single 12-bit PDP-8 memory-reference instruction not hold a direct address for every word of standard 4,096-word memory?",
+              "choices": [
+                "Because magnetic core rings required three parity bits inside every stored memory address",
+                "Because 4,096 words require 12 address bits, yet only 9 bits remain after the 3-bit opcode",
+                "Because the Link bit permanently occupied bit 11 inside every memory-reference instruction",
+                "Because octal notation can only represent memory addresses smaller than 512 words"
+              ],
+              "correct_index": 1,
+              "explanation": "Addressing $$2^{12} = 4096$$ words takes 12 bits, but spending 3 bits on the opcode inside a 12-bit word leaves just 9 bits (at most $$2^9 = 512$$ direct targets)."
+            },
+            {
+              "id": "q_032",
+              "prompt": "Why did DEC avoid fixing the PDP-8's address squeeze by simply making memory-reference instructions two 12-bit words long?",
+              "choices": [
+                "Because the PDP-8 Program Counter could only increment by even numbers during execution",
+                "Because two-word instructions would make octal front-panel entry mathematically impossible",
+                "Because discrete transistors were physically unable to latch more than one word per program",
+                "Because fetching two words per instruction would cut execution speed and waste scarce core memory"
+              ],
+              "correct_index": 3,
+              "explanation": "Doubling instruction size would require extra core-memory fetch cycles and consume far more of the expensive 4,096-word memory—undermining the PDP-8's low-cost design."
+            }
+          ]
+        },
+        {
+          "id": "ch_017",
+          "title": "128-Word Pages, Current Page, and Page Zero",
+          "content_markdown": "DEC solved the squeeze by dividing all 4,096 words like a 32-page notebook, with exactly $$2^7 = 128$$ words on every page. Inside a memory-reference instruction, bits 5 through 11 supply a 7-bit offset (0 to 127 within a page), while bit 4—the page-select bit—chooses which page that offset targets. When bit 4 is `1`, the CPU addresses the **Current Page**: the same 128-word page containing the instruction itself, formed by gluing the top 5 bits of the Program Counter onto the 7-bit offset. When bit 4 is `0`, the CPU addresses **Page Zero**—the very first 128 words of memory (octal `0000`–`0177`), which serve as a shared global scratchpad reachable directly from any page in memory! Need a variable living on a *different* page? Set bit 3, the **indirect bit** (`I`), to `1`. The CPU reads a full 12-bit pointer parked on Page Zero or the Current Page and jumps to that 12-bit target anywhere in memory, paying one extra memory cycle for global reach.",
+          "questions": [
+            {
+              "id": "q_033",
+              "prompt": "On the PDP-8, what two 128-word regions of memory can a direct (non-indirect) memory-reference instruction reach?",
+              "choices": [
+                "Either Page Zero (octal 0000–0177) or the instruction's own Current Page, chosen by bit 4",
+                "Either the top 128 words of memory or the immediately following page, chosen by the Link bit",
+                "Any two adjacent 128-word pages selected dynamically by the value stored in the Accumulator",
+                "Only Page Zero, unless the programmer flips a physical page switch on the front console"
+              ],
+              "correct_index": 0,
+              "explanation": "Bit 4 selects between Page Zero (0) and the Current Page (1), combining that 5-bit page number with the 7-bit offset to directly reach 128 words in either region."
+            },
+            {
+              "id": "q_034",
+              "prompt": "How does a PDP-8 instruction access a variable stored on Page 14 when the instruction itself sits on Page 3?",
+              "choices": [
+                "By borrowing three bits from the opcode field to hold a 10-bit cross-page offset",
+                "By executing an OPR rotate that shifts the Program Counter into Page 14 automatically",
+                "By setting the indirect bit (I = 1) to follow a 12-bit pointer stored on Page Zero or Page 3",
+                "By copying all 128 words of Page 14 onto Page Zero before running a TAD instruction"
+              ],
+              "correct_index": 2,
+              "explanation": "Setting the indirect bit (bit 3 = 1) tells the CPU to read a full 12-bit address word from Page Zero or the Current Page and use that word as the final effective address."
+            }
+          ]
+        },
+        {
+          "id": "ch_018",
+          "title": "Octal 0010–0017: Magic Auto-Index Locations on Page Zero",
+          "content_markdown": "Imagine walking through an array—a contiguous list of fifty sensor readings in memory—on an accumulator-only machine with no index registers (dedicated counters that track your position in a list): for every item, you would load the pointer, add 1, store it back, and then read the item! DEC slipped an unforgettable hardware trick onto Page Zero: eight special addresses—octal `0010` through `0017`—act as **auto-index locations**. Whenever *any* instruction accesses one of those eight cells **indirectly** (with bit 3 `I = 1`), the hardware fetches the 12-bit pointer stored there, automatically increments it by 1, writes the new pointer back into that Page Zero cell, and *then* uses the incremented address to read or write data! Because direct access (`I = 0`) does *not* increment the cell, a programmer initializes octal `0010` to `array_start - 1` using `DCA 0010`, and a tight loop running `TAD I 0010` walks smoothly through every list entry without adding a single extra CPU flip-flop!",
+          "questions": [
+            {
+              "id": "q_035",
+              "prompt": "Why did a PDP-8 programmer initialize auto-index location 0010 to `array_start - 1` before reading an array with `TAD I 0010`?",
+              "choices": [
+                "Because PDP-8 arrays were stored backward from high addresses toward address zero",
+                "Because the Link bit automatically subtracted 1 from every indirect Page Zero reference",
+                "Because DCA always added 1 to any value deposited into Page Zero locations 0010–0017",
+                "Because indirect access pre-increments location 0010 by 1 before following it to fetch data"
+              ],
+              "correct_index": 3,
+              "explanation": "Auto-index locations 0010–0017 increment their stored pointer *before* using it as the effective address, so priming the cell with `array_start - 1` makes the first indirect access land on `array_start`."
+            },
+            {
+              "id": "q_036",
+              "prompt": "What prevents storing an initial pointer into octal 0010 with `DCA 0010` from triggering the auto-increment hardware?",
+              "choices": [
+                "Auto-increment triggers only on TAD instructions and ignores all DCA store commands",
+                "Auto-increment triggers only when the indirect bit (I = 1) is set, not on direct accesses",
+                "Auto-increment triggers only when the Accumulator holds a non-zero positive integer",
+                "Auto-increment stays disabled until the programmer executes a Group 2 skip instruction"
+              ],
+              "correct_index": 1,
+              "explanation": "Direct memory references (I = 0) read or write octal 0010–0017 like ordinary memory cells; the pre-increment side effect fires exclusively on indirect references (I = 1)."
+            }
+          ]
+        },
+        {
+          "id": "ch_019",
+          "title": "Why JMS Broke Recursion and Reentrancy",
+          "content_markdown": "Now consider the sharpest software consequence of omitting a hardware stack pointer like the PDP-11's `R6`. How did the PDP-8 call a subroutine (`JMS target`) and remember where to return? Rather than pushing the return address onto a growing stack in memory, `JMS target` writes the updated Program Counter directly into memory location `target`—the very first word (header) of the subroutine itself—and begins executing at `target + 1`. To return, the subroutine ends with `JMP I target`, jumping indirectly through its own header word! That frugal trick saved stack hardware, yet it completely broke **reentrancy**—the ability for a subroutine to be safely entered again before an earlier call finishes, as in recursion (a routine calling itself) or an urgent hardware alert (an interrupt) that pauses and re-invokes the routine. If a subroutine calls itself, the second `JMS` overwrites the first call's return address sitting in that single header slot! When the inner call returns, the outer call jumps straight back into itself in an endless loop.",
+          "questions": [
+            {
+              "id": "q_037",
+              "prompt": "Where does the PDP-8's JMS instruction store a subroutine's return address when a call occurs?",
+              "choices": [
+                "Inside the 12-bit Accumulator, shifting the previous data word into the Link bit",
+                "On a descending hardware call stack managed automatically by a dedicated stack register",
+                "Directly inside the first word (header) of the subroutine itself, then jumping to target + 1",
+                "Inside auto-index location octal 0017 so nested calls stack up automatically on Page Zero"
+              ],
+              "correct_index": 2,
+              "explanation": "JMS stores the return address in memory at `target` (the subroutine's header word) and starts executing instructions at `target + 1`; the subroutine returns via `JMP I target`."
+            },
+            {
+              "id": "q_038",
+              "prompt": "Why does storing return addresses in a subroutine's own header word break recursion and reentrancy?",
+              "choices": [
+                "A second call overwrites the single header slot, erasing the first caller's return address",
+                "Indirect jumps through JMP I can only return to instructions located on Page Zero",
+                "Core memory locks a subroutine's first word as read-only after its initial execution",
+                "Each JMS call increments the header address by 1, pushing the return past the subroutine"
+              ],
+              "correct_index": 0,
+              "explanation": "Because every call to a subroutine shares the exact same single header word for its return address, any recursive or interrupted re-entry clobbers the prior return address."
+            }
+          ]
+        },
+        {
+          "id": "ch_020",
+          "title": "How PDP-8's Page Zero Echoed into the Microprocessor Era",
+          "content_markdown": "Look at how tightly a 12-bit instruction layout sculpted everyday programming. Slicing memory into 128-word pages meant PDP-8 programmers organized routines to fit cleanly inside page boundaries while hoarding hot variables and cross-page pointers on **Page Zero**. Eight **auto-index locations** (`0010`–`0017`) rescued array loops without expanding CPU gate count, while header-stored `JMS` returns traded away **reentrancy** and native recursion to stay lean. Crucially, that Page Zero pattern did not vanish when 12-bit minicomputers faded! A decade later, when engineers squeezed early 8-bit microprocessors like the MOS 6502 onto tight silicon budgets with very few on-chip registers, they revived the very same concept as the **Zero Page**—turning the first 256 bytes of RAM (random-access memory) into fast, short-addressable pseudo-registers and indirect pointer slots. Even before microprocessors arrived, however, the PDP-8's own lead designer saw that 12 bits and one accumulator were getting tight. Next, Edson de Castro leaves DEC to build a compact 16-bit rival: Data General's Nova.",
+          "questions": [
+            {
+              "id": "q_039",
+              "prompt": "How did the PDP-8's Page Zero directly foreshadow a famous architectural trick in the later MOS 6502 microprocessor?",
+              "choices": [
+                "Both designs banned subroutines from using indirect pointers anywhere in low memory",
+                "Both designs turned the lowest slice of RAM into fast, short-addressable scratchpad and pointer space",
+                "Both designs forced every program to fit strictly inside a single 128-word fixed page",
+                "Both designs eliminated accumulators altogether in favor of 32 on-chip general-purpose registers"
+              ],
+              "correct_index": 1,
+              "explanation": "Facing similarly tight register budgets, the MOS 6502 echoed the PDP-8's Page Zero by giving the first 256 bytes of RAM (the Zero Page) shorter, faster addressing and indirect pointer roles."
+            },
+            {
+              "id": "q_040",
+              "prompt": "Which trade-off best summarizes the software impact of the PDP-8's memory-addressing and subroutine design?",
+              "choices": [
+                "Hardware gained full recursion and flat addressing while forcing instructions to grow to 24 bits",
+                "Software gained effortless multi-megabyte reach without ever needing indirect pointers or pages",
+                "Hardware eliminated core memory altogether by keeping every array inside CPU registers",
+                "Hardware stayed tiny and cheap, while software managed page limits, indirect pointers, and non-reentrant calls"
+              ],
+              "correct_index": 3,
+              "explanation": "The PDP-8's addressing and JMS tricks preserved its minimalist gate count and single-word instructions, shifting the burden of page boundaries, pointer indirection, and non-reentrancy onto software."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_05",
+      "title": "5. Data General's 16-Bit Nova: Four Accumulators \u0026 Multifunction ALU Words",
+      "summary": "Follow PDP-8 lead designer Edson de Castro to Data General's 1969 16-bit Nova, which escaped the single-accumulator bottleneck with four 16-bit accumulators (AC0–AC3)—using AC2 and AC3 as base-index registers and AC3 as a link register for JSR return addresses to eliminate self-modifying subroutine headers. Learners dissect Nova's celebrated multifunction ALU word, where a single 16-bit instruction packs source, destination, ALU operation, carry preset, shift or byte-swap, a no-load test bit, and conditional skip into one dense hardware cycle.",
+      "introduced_terms": [
+        "link register",
+        "multifunction ALU instruction",
+        "no-load bit"
+      ],
+      "chunks": [
+        {
+          "id": "ch_021",
+          "title": "Edson de Castro's 16-Bit Rebellion (1969)",
+          "content_markdown": "By 1968, PDP-8 lead designer Edson de Castro saw clearly that 12-bit words and a single accumulator were starting to feel cramped, yet DEC's leadership declined to pursue his streamlined 16-bit successor. De Castro and three colleagues resigned to found Data General, unveiling the 16-bit **Nova** in 1969 at just 7,995 dollars with 4,096 words of core memory—less than half the original PDP-8's launch price! Nova capitalized on newly available Medium-Scale Integration (MSI) chips—tiny plastic packages holding dozens of logic gates, such as a complete 4-bit adder—shrinking the entire processor onto just two circuit boards. Inside, de Castro pulled off a clever hardware sleight of hand: the original Nova processed 16-bit math as four sequential 4-bit chunks through one compact 4-bit adder, slashing chip count while presenting a clean 16-bit ISA to programmers. Even more ingenious was how Nova expanded its register and instruction design without exploding gate count.",
+          "questions": [
+            {
+              "id": "q_041",
+              "prompt": "How did the original 1969 Data General Nova keep its physical chip count low while still offering programmers a full 16-bit ISA?",
+              "choices": [
+                "It processed 16-bit operations as four sequential 4-bit chunks through a compact MSI adder",
+                "It discarded core memory entirely and stored all 16-bit values inside mechanical shift dials",
+                "It limited instructions to 8-bit opcodes that could only manipulate the lower half of a word",
+                "It outsourced every arithmetic operation to a neighboring mainframe over a serial phone line"
+              ],
+              "correct_index": 0,
+              "explanation": "Using newly available MSI chips, the original Nova computed 16-bit math in four 4-bit nibbles through a narrow adder, cutting hardware cost while keeping a 16-bit ISA visible to software."
+            },
+            {
+              "id": "q_042",
+              "prompt": "What historical link connects DEC's 1965 PDP-8 directly to Data General's 1969 Nova?",
+              "choices": [
+                "DEC licensed the Nova blueprint from Data General to build the original Straight-8",
+                "Both machines ran identical 12-bit binary programs without needing any reassembly",
+                "Edson de Castro led the PDP-8 design at DEC before co-founding Data General to build Nova",
+                "Data General bought DEC's closed Maynard woolen mill to manufacture Nova cabinets"
+              ],
+              "correct_index": 2,
+              "explanation": "Edson de Castro, the chief engineer behind DEC's PDP-8, left DEC in 1968 with three colleagues to start Data General and create the 16-bit Nova."
+            }
+          ]
+        },
+        {
+          "id": "ch_022",
+          "title": "Four Accumulators, Base-Indexing, and a Link Register",
+          "content_markdown": "Nova escaped the PDP-8's single-register bottleneck with four 16-bit accumulators—`AC0`, `AC1`, `AC2`, and `AC3`—plus a 1-bit Carry flag (`C`). Any of the four could serve as an arithmetic input or result, cutting constant trips back to memory. To keep the register budget lean while enriching addressing, de Castro gave the upper two accumulators smart double duties. In memory-reference instructions, `AC2` and `AC3` doubled as base or index registers—holding a starting address to which an instruction adds a signed 8-bit offset (from $$-128$$ to $$+127$$) to walk through tables and data records, alongside Page Zero and PC-relative addressing. Meanwhile, `AC3` also acted as a **link register**: a CPU register that catches the return address whenever a subroutine call (`JSR`) executes. Because `JSR` places the return address into `AC3` rather than overwriting a subroutine's first memory word, Nova code stayed read-only and reentrant—nested routines simply saved `AC3` before calling deeper.",
+          "questions": [
+            {
+              "id": "q_043",
+              "prompt": "Which two Nova accumulators doubled as base or index registers for offset memory addressing?",
+              "choices": [
+                "AC0 and AC1, while AC2 and AC3 were restricted to bitwise AND operations",
+                "AC0 and AC3, while AC1 and AC2 stored floating-point exponents only",
+                "AC1 and AC2, while AC0 and AC3 were reserved exclusively for I/O devices",
+                "AC2 and AC3, allowing signed 8-bit displacements to reach tables and structures"
+              ],
+              "correct_index": 3,
+              "explanation": "While all four Nova accumulators handled general arithmetic, AC2 and AC3 doubled as base/index registers in memory-reference instructions alongside Page Zero and PC-relative modes."
+            },
+            {
+              "id": "q_044",
+              "prompt": "How did Nova's use of AC3 as a link register solve the PDP-8's broken-recursion problem?",
+              "choices": [
+                "AC3 automatically stored up to 256 nested return addresses inside one 16-bit register",
+                "JSR placed the return address in AC3 instead of overwriting the subroutine's header in memory",
+                "AC3 forced every subroutine to execute on Page Zero where memory writes were blocked",
+                "JSR banned subroutines from calling any other routine while AC3 held a non-zero number"
+              ],
+              "correct_index": 1,
+              "explanation": "Saving the JSR return address in the AC3 link register avoided self-modifying subroutine headers; nested or recursive routines could preserve AC3 before making another call."
+            }
+          ]
+        },
+        {
+          "id": "ch_023",
+          "title": "Unpacking Nova's 16-Bit Multifunction ALU Word",
+          "content_markdown": "Remember how PDP-8's `OPR` packed multiple micro-operations into one word? Nova elevated that idea into a **multifunction ALU instruction**: a single 16-bit word (flagged by bit 0 = `1`) that chains seven independent hardware fields into one sleek operation! Read its 16 bits from left to right: bit 0 is `1`; bits 1–2 pick the source accumulator (`ACS`); bits 3–4 pick the destination accumulator (`ACD`); and bits 5–7 pick one of eight full ALU operations (complement, negate, move, increment, add-complement, subtract, add, or bitwise AND—giving programmers native subtraction!). Next, bits 8–9 control post-ALU shifting: leave untouched, rotate left through Carry, rotate right through Carry, or perform a **byte swap** exchanging the upper and lower 8-bit halves of the 16-bit result—vital for handling 8-bit text characters on a word-addressed computer. Bits 10–11 preset Carry (keep, zero, set to `1`, or complement), bit 12 controls register writeback, and bits 13–15 choose one of eight conditional skips. Count the fields: $$1 + 2 + 2 + 3 + 2 + 2 + 1 + 3 = 16$$ bits!",
+          "questions": [
+            {
+              "id": "q_045",
+              "prompt": "Why was the byte-swap option inside Nova's 2-bit shift field so practical for 1969 software?",
+              "choices": [
+                "It converted 16-bit Nova words into 12-bit PDP-8 instructions on the fly",
+                "It automatically doubled clock speed whenever two accumulators held equal values",
+                "It swapped 8-bit halves, making text handling easy on a word-addressed 16-bit machine",
+                "It erased the upper eight bits of memory whenever an arithmetic carry overflowed bit 0"
+              ],
+              "correct_index": 2,
+              "explanation": "Because the Nova addressed 16-bit words rather than individual bytes, packing a byte-swap option directly into the ALU shift field let programs unpack and manipulate 8-bit ASCII characters swiftly."
+            },
+            {
+              "id": "q_046",
+              "prompt": "Which complete set of independent controls fits simultaneously inside a single 16-bit Nova multifunction ALU word?",
+              "choices": [
+                "Source and destination accumulators, ALU op, shift/byte-swap, carry preset, writeback control, and skip test",
+                "A full 16-bit memory address, an indirect page pointer, an I/O device number, and a subroutine header",
+                "Four separate 4-bit opcode tables executed one after another across four core-memory read cycles",
+                "Eight general-purpose register selectors, two byte-offset displacements, and a hardware stack push flag"
+              ],
+              "correct_index": 0,
+              "explanation": "When bit 0 = 1, Nova packs ACS (2), ACD (2), ALU op (3), shift/byte-swap (2), carry control (2), no-load (1), and skip condition (3) into a single 16-bit instruction."
+            }
+          ]
+        },
+        {
+          "id": "ch_024",
+          "title": "The No-Load Bit: Testing Without Overwriting",
+          "content_markdown": "Bit 12 of Nova's multifunction ALU word looks tiny at first glance, yet it delivers one of the neatest software boosts in minicomputer history: the **no-load bit** (written `#` in Nova assembly). Ordinarily, an ALU instruction writes its final shifted result into destination accumulator `ACD` and updates the Carry flag. Setting the no-load bit to `1` instructs the CPU to execute the entire carry preset, ALU calculation, shift, and skip evaluation—and then *suppress* writing the answer back into `ACD` or Carry! Why compute a number only to throw it away? Because it converts every single ALU operation into a non-destructive test or comparison! Suppose you want to check whether `AC0` equals `AC1` without destroying either value. One single instruction—`SUB# 0,1,SNR`—subtracts `AC0` from `AC1`, leaves both `AC1` and Carry completely untouched thanks to `#`, and skips the next instruction if the difference is non-zero! You just compared two 16-bit registers and made a branch decision in one 16-bit word.",
+          "questions": [
+            {
+              "id": "q_047",
+              "prompt": "What does setting Nova's no-load bit (#) to 1 accomplish during a multifunction ALU instruction?",
+              "choices": [
+                "It prevents the CPU from fetching the next instruction from core memory until Carry clears",
+                "It computes the ALU operation and skip test while blocking writes back to ACD and Carry",
+                "It clears the source accumulator to zero immediately after copying its value to memory",
+                "It forces the ALU to ignore the shift field so only raw unshifted additions can execute"
+              ],
+              "correct_index": 1,
+              "explanation": "The no-load bit lets the full ALU, carry, shift, and skip pipeline run for testing purposes without overwriting the destination accumulator or the Carry flag."
+            },
+            {
+              "id": "q_048",
+              "prompt": "What happens when a Nova program executes `SUB# 0,1,SNR` (subtract AC0 from AC1, no-load, skip if result non-zero)?",
+              "choices": [
+                "AC1 is overwritten with AC1 minus AC0, and the next instruction is skipped if they match",
+                "AC0 is cleared to zero, and the program jumps unconditionally to the address stored in AC3",
+                "AC1 is swapped with AC0's upper byte, and Carry is forced to 1 regardless of the difference",
+                "Neither AC0 nor AC1 changes, and the CPU skips the next instruction if AC0 and AC1 differ"
+              ],
+              "correct_index": 3,
+              "explanation": "With `#` set, `SUB# 0,1,SNR` leaves both registers intact, checks whether `AC1 - AC0` is non-zero (meaning AC0 and AC1 differ), and skips the following instruction if so."
+            }
+          ]
+        },
+        {
+          "id": "ch_025",
+          "title": "Compact Power Before the RISC Era",
+          "content_markdown": "Pause and appreciate how much architectural punch Edson de Castro fit onto two MSI circuit boards. Stepping up from one 12-bit accumulator to four 16-bit accumulators—with `AC2`/`AC3` indexing and an `AC3` **link register**—resolved the PDP-8's steepest software frustrations: no more self-modifying subroutine headers and far less Page Zero choreography. At the same time, Nova's **multifunction ALU instruction** and **no-load bit** fused arithmetic, shifting or byte-swapping, carry control, non-destructive testing, and conditional skipping into one uniform 16-bit word. Computer historians still admire Nova as an early ancestor of sleek Reduced Instruction Set Computer (RISC) designs—such as the ARM chips powering modern smartphones—which decades later also paired a link register with single-word shift-and-ALU commands! Yet just one year after Nova's debut, in 1970, de Castro's former employer DEC launched the 16-bit PDP-11 you already know well. Let's line up PDP-8, Nova, and PDP-11 side by side next and test all three against the unforgiving reality of early silicon.",
+          "questions": [
+            {
+              "id": "q_049",
+              "prompt": "Which pair of Nova features most strongly anticipated later RISC-style architectures like ARM?",
+              "choices": [
+                "Self-modifying subroutine headers in core memory and 12-bit octal-paged addressing",
+                "Variable-length three-word memory-to-memory instructions and dedicated decimal multipliers",
+                "A link register for subroutine returns and uniform single-word combined ALU-and-shift instructions",
+                "A single 12-bit Accumulator lacking subtraction and nine-bit microcoded operate masks"
+              ],
+              "correct_index": 2,
+              "explanation": "Nova's link register (AC3 for JSR) and dense single-word load/store-style ALU instructions combining shifts and tests closely prefigured later RISC designs such as ARM."
+            },
+            {
+              "id": "q_050",
+              "prompt": "Compared directly to DEC's 1965 PDP-8, which software burden did Data General's 1969 Nova most decisively relieve?",
+              "choices": [
+                "It removed the need for binary instructions by running high-level English sentences directly in hardware",
+                "It relieved single-accumulator juggling, missing subtraction, and non-reentrant subroutine headers",
+                "It replaced magnetic core memory with single-chip microprocessors mounted inside the front panel",
+                "It eliminated every conditional skip instruction by embedding 16-bit branch targets in ALU words"
+              ],
+              "correct_index": 1,
+              "explanation": "Nova provided four 16-bit accumulators, native SUB/NEG ALU ops, base-index registers AC2/AC3, and the AC3 link register—directly curing the PDP-8's sharpest software constraints."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_06",
+      "title": "6. Three Philosophies Compared: PDP-8, Nova \u0026 the PDP-11 North Star",
+      "summary": "Synthesize three landmark minicomputer philosophies side by side—PDP-8 minimalism, Nova's compact multi-accumulator ALU words, and the PDP-11's orthogonal general-register and stack model already familiar from the PDP-11 modules (without rehashing PDP-11 basics). Comparing real transistor budgets and early-1970s silicon die limits explains why the first single-chip processors could not fit a full PDP-11 onto one die and had to make austere compromises, yet the PDP-11 endured as the aspirational North Star for later microprocessors.",
+      "introduced_terms": [
+        "transistor budget",
+        "die area",
+        "code density"
+      ],
+      "chunks": [
+        {
+          "id": "ch_026",
+          "title": "Three Minicomputers, Three Worldviews (1965–1970)",
+          "content_markdown": "In just five short years, minicomputer architects crafted three strikingly different philosophies of what belongs inside hardware versus software. At the spartan extreme stood DEC's 1965 PDP-8: one 12-bit accumulator, eight opcodes, 128-word pages, and header-stored `JMS` calls. In the streamlined middle sat Data General's 1969 Nova: a nimble 16-bit machine with four accumulators, `AC2`/`AC3` base-indexing, an `AC3` link register, and single-word multifunction ALU instructions. At the luxurious end arrived DEC's 1970 PDP-11—whose orthogonal two-operand instructions, byte-addressable memory, uniform general-purpose registers, and hardware stack you already know from earlier modules. Watching programmers fall in love with the PDP-11's clean regularity in 1970, you might assume the debate was over forever. Yet when the very first single-chip microprocessors appeared in the early 1970s, they looked far closer to the austere PDP-8 and Nova than to the beloved PDP-11! Why did the industry seem to step backward?",
+          "questions": [
+            {
+              "id": "q_051",
+              "prompt": "How do the PDP-8, Data General Nova, and PDP-11 line up along the 1965–1970 spectrum of hardware complexity?",
+              "choices": [
+                "PDP-11 was the most minimalist, Nova sat in the middle, and PDP-8 offered the richest orthogonal model",
+                "Nova had the fewest registers, PDP-8 had the widest data path, and PDP-11 dropped hardware stacks",
+                "All three shared identical 12-bit register budgets and differed only in cabinet paint and price",
+                "PDP-8 prized strict minimalism, Nova packed compact multi-accumulator ALU words, and PDP-11 delivered rich orthogonality"
+              ],
+              "correct_index": 3,
+              "explanation": "The three machines trace a clear progression from PDP-8's single-accumulator minimalism through Nova's compact four-accumulator ALU design to the PDP-11's orthogonal general-register and stack model."
+            },
+            {
+              "id": "q_052",
+              "prompt": "What historical paradox emerges when comparing the 1970 PDP-11 with the earliest microprocessors built right afterward?",
+              "choices": [
+                "Early microprocessors rejected binary logic completely in favor of mechanical delay gears",
+                "Despite programmers loving the PDP-11, the first single-chip CPUs resembled the more austere PDP-8 and Nova",
+                "Early microprocessors immediately surpassed the PDP-11's register count and orthogonal addressing in 1971",
+                "Minicomputer buyers abandoned the PDP-11 in 1970 because they preferred non-reentrant JMS headers"
+              ],
+              "correct_index": 1,
+              "explanation": "Even though the PDP-11 set a beloved standard for programmer ergonomics, tight early-1970s chip limits forced the first microprocessors back toward PDP-8-like and Nova-like simplicity."
+            }
+          ]
+        },
+        {
+          "id": "ch_027",
+          "title": "Transistor Budgets, Die Area, and Code Density",
+          "content_markdown": "Resolving that paradox takes three sharp engineering lenses. First is **transistor budget**: the firm upper ceiling on how many transistors a factory can reliably pack onto one chip (or a manufacturer can afford on circuit boards) at a given point in time. Second is **die area**: the tiny rectangular footprint of silicon wafer (measured in square millimeters) occupied by one integrated circuit. Stretching **die area** to cram in extra features is treacherous, because microscopic crystal defects scatter randomly across every wafer—a slightly bigger die is far more likely to catch a fatal flaw, causing manufacturing yield (the share of working chips per wafer) to crash and prices to skyrocket! Third is **code density**: how much useful computational work fits inside a given number of memory words or bytes. Think of **transistor budget** and programmer convenience as balanced against hardware reality: richer decoders and register files improve ergonomics and flexibility, yet every extra transistor consumes precious die area.",
+          "questions": [
+            {
+              "id": "q_053",
+              "prompt": "Why can chipmakers not simply double a silicon chip's die area whenever they want to add more architectural features?",
+              "choices": [
+                "Larger dies are far more likely to catch microscopic wafer defects, slashing yields and driving up cost",
+                "Larger dies cannot conduct electricity across more than 12 parallel wires at room temperature",
+                "Larger dies legally lose patent protection unless they emulate a 12-bit minicomputer instruction set",
+                "Larger dies erase their own instruction decoders whenever exposed to standard laboratory lighting"
+              ],
+              "correct_index": 0,
+              "explanation": "Random microscopic defects across a silicon wafer mean larger die area sharply increases the probability that any given die is defective, crashing manufacturing yield and raising unit cost."
+            },
+            {
+              "id": "q_054",
+              "prompt": "What does the metric 'code density' measure when comparing computer architectures?",
+              "choices": [
+                "The physical weight of copper wiring per cubic inch inside a minicomputer cabinet",
+                "The number of discrete transistors soldered onto each square inch of a fiberglass board",
+                "How much useful computational work a program expresses per unit of instruction memory",
+                "How fast a magnetic core plane reverses polarity when reading an indirect address"
+              ],
+              "correct_index": 2,
+              "explanation": "Code density measures how compactly an instruction set encodes real software tasks—an urgent priority when memory itself was scarce and expensive."
+            }
+          ]
+        },
+        {
+          "id": "ch_028",
+          "title": "Side-by-Side: Comparing PDP-8, Nova, and PDP-11",
+          "content_markdown": "Place all three minicomputers under those lenses side by side! On **registers and subroutines**, the PDP-8's single Accumulator and header-stored `JMS` minimized flip-flops yet broke recursion; Nova's four accumulators and `AC3` link register restored clean reentrancy at moderate hardware cost; the PDP-11's eight uniform registers and native hardware stack made nested calls and high-level compilers effortless. On **instruction encoding and code density**, PDP-8 packed impressive register tricks into `OPR`, yet burned extra words on indirect page pointers and multi-step subtractions; Nova achieved standout **code density** in tight compare-shift-skip loops using single 16-bit multifunction words, though text manipulation still needed byte-swap shifts on its word-addressed memory; the PDP-11 sacrificed fixed single-word decoding for variable-length 1-to-3-word orthogonal instructions that handled bytes and words uniformly. Each step up that ladder delighted software engineers—yet each step demanded wider datapaths, register banks wired to read and write multiple values at once, and heavier control logic.",
+          "questions": [
+            {
+              "id": "q_055",
+              "prompt": "Which comparison accurately contrasts subroutine handling across the PDP-8, Nova, and PDP-11?",
+              "choices": [
+                "PDP-8 used a hardware stack, Nova used subroutine headers, and PDP-11 used a single link register",
+                "PDP-8 overwrote subroutine headers, Nova used AC3 as a link register, and PDP-11 used a hardware stack",
+                "All three machines stored return addresses exclusively on Page Zero locations 0010 through 0017",
+                "PDP-8 and Nova both banned subroutines altogether, leaving modular calls unique to the PDP-11"
+              ],
+              "correct_index": 1,
+              "explanation": "Subroutine mechanics progressed cleanly across the three designs: non-reentrant memory headers on PDP-8, a dedicated link register (AC3) on Nova, and a native hardware stack on PDP-11."
+            },
+            {
+              "id": "q_056",
+              "prompt": "How did Nova's approach to instruction encoding trade off against the PDP-11's orthogonal model?",
+              "choices": [
+                "Nova used 36-bit variable-length instructions that traded code density for native decimal arithmetic",
+                "Nova eliminated ALU instructions entirely in favor of memory-to-memory byte copies like a mainframe",
+                "Nova copied the PDP-11's eight addressing modes while shrinking word width back down to 12 bits",
+                "Nova packed fixed 16-bit words with byte-swaps, while PDP-11 used variable-length orthogonal byte-addressable instructions"
+              ],
+              "correct_index": 3,
+              "explanation": "Nova achieved high code density in fixed 16-bit words (using byte-swap shifts for text), while the PDP-11 gained native byte addressing and rich orthogonality at the cost of variable 1-to-3-word encoding and heavier decode logic."
+            }
+          ]
+        },
+        {
+          "id": "ch_029",
+          "title": "Why Early Silicon Could Not Fit a PDP-11 on One Die",
+          "content_markdown": "Now apply early-1970s semiconductor physics to that comparison! Around 1970 and 1971, cutting-edge chip factories could reliably fit only about 2,000 to 2,500 transistors onto a single affordable piece of silicon before **die area** defects ruined yields. Look back at our numbers: that entire **transistor budget** barely exceeded the ~1,400 discrete transistors of the 1965 PDP-8! A full 16-bit PDP-11 CPU—with its complex orthogonal instruction decoder, eight 16-bit general-purpose registers, byte-alignment circuits, and eight addressing modes—required many times that transistor budget. Remember from the PDP-11 modules that even in 1975, years later, DEC's own LSI-11 still had to split the PDP-11 processor across multiple microchips! In 1971, fitting a full PDP-11 onto one chip was simply impossible. Early single-chip architects had no choice but to borrow the survival playbook of the PDP-8 and Nova: narrow data paths, tiny register sets, and memory-paging shortcuts.",
+          "questions": [
+            {
+              "id": "q_057",
+              "prompt": "Why could semiconductor engineers around 1970–1971 NOT fit a full PDP-11 processor onto a single silicon chip?",
+              "choices": [
+                "DEC refused to publish any manuals describing how binary instructions worked on 16-bit machines",
+                "Silicon transistors could only switch at octal frequencies incompatible with 16-bit byte addressing",
+                "Early single-die transistor ceilings fell far short of the PDP-11's complex decode and register logic",
+                "Early silicon wafers could hold registers easily but physically could not implement an arithmetic adder"
+              ],
+              "correct_index": 2,
+              "explanation": "Early-1970s single-die transistor budgets (~2,000–2,500 transistors) could accommodate PDP-8-scale minimalism, but a full orthogonal 16-bit PDP-11 demanded far more transistors (even the 1975 LSI-11 took multiple chips)."
+            },
+            {
+              "id": "q_058",
+              "prompt": "What architectural consequence did the ~2,000-transistor ceiling of early 1970s chips impose on the first microprocessors?",
+              "choices": [
+                "They adopted austere shortcuts—narrow widths, few registers, and paging tricks—reminiscent of PDP-8 and Nova",
+                "They shipped with 64 general-purpose registers and triple-precision floating-point units by default",
+                "They completely bypassed binary instruction sets in favor of analog voltage-divider computers",
+                "They required customers to plug sixteen separate PDP-11 cabinets into every desktop keyboard"
+              ],
+              "correct_index": 0,
+              "explanation": "With only ~2,000–2,500 transistors available on one die, early microprocessor architects had to embrace minimalist compromises pioneered by machines like the PDP-8 and Nova."
+            }
+          ]
+        },
+        {
+          "id": "ch_030",
+          "title": "Austerity Today, the PDP-11 as Tomorrow's North Star",
+          "content_markdown": "Here is the overarching story of 1970s processor evolution in one crisp arc: tight **transistor budgets** and **die area** limits forced Round One of microprocessors to embrace the austere compromises of the PDP-8 and Nova, yet the PDP-11 endured as the industry's **aspirational North Star**! Every time chipmakers shrank transistors and doubled what fit on one die, microprocessor architects climbed back toward the PDP-11's programmer-friendly ideals—restoring true hardware stacks, byte-addressable 16-bit datapaths, uniform register banks, and orthogonal addressing (epitomized by chips like the Motorola 68000 you met earlier). Yet an intriguing historical mystery remains! If minicomputer makers like DEC and Data General understood lean CPU design so thoroughly, why didn't a minicomputer company create the first single-chip microprocessor? Surprisingly, minicomputers lacked the economic muscle to fund custom processor silicon. To find the real financial catalyst behind the microprocessor, we leave laboratory minicomputers behind and turn to humble desktop calculators.",
+          "questions": [
+            {
+              "id": "q_059",
+              "prompt": "Why do historians describe the PDP-11 as the 'aspirational North Star' for later microprocessor designers?",
+              "choices": [
+                "Because early microprocessors copied the PDP-11's refrigerator-sized sheet-metal cabinets",
+                "Because federal law required every 1970s chipmaker to license DEC's octal front-panel layout",
+                "Because the PDP-11 used fewer total transistors than either the PDP-8 or the Data General Nova",
+                "Because expanding transistor budgets let later chip designers steadily reclaim its orthogonal, stack-friendly, general-register ideal"
+              ],
+              "correct_index": 3,
+              "explanation": "While early chips lacked the transistor budget for a PDP-11, expanding silicon budgets allowed later microprocessors (such as the 68000) to reclaim the PDP-11's clean, orthogonal, compiler-friendly architecture."
+            },
+            {
+              "id": "q_060",
+              "prompt": "Even though minicomputer engineers mastered lean CPU design in the late 1960s, what missing factor kept minicomputers from sparking the first single-chip microprocessor?",
+              "choices": [
+                "Minicomputer companies did not believe silicon transistors worked as reliably as vacuum tubes",
+                "Minicomputers lacked the mass-market economic pull needed to fund custom processor silicon",
+                "Minicomputer customers refused to buy any machine that cost less than 100,000 dollars",
+                "Minicomputer software could run only on mechanical gear trains rather than solid-state switches"
+              ],
+              "correct_index": 1,
+              "explanation": "Minicomputers provided crucial architectural blueprints for lean CPUs, but as Section 7 explains next, desktop calculators—not low-volume minicomputers—supplied the mass-market economics for custom silicon."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_07",
+      "title": "7. The Volume Engine: Why Calculators Paid for Custom MOS Silicon",
+      "summary": "Pivot from minicomputer engineering to semiconductor economics to see why lab minicomputers—selling only in the thousands—could not amortize the steep upfront design and photomask costs of custom integrated circuits. Learners explore how MOS LSI traded raw bipolar speed for dense, low-power chip integration and why millions of offices trading noisy mechanical calculators and slide rules for quiet electronic desktops supplied the true mass-market economic pull for custom silicon.",
+      "introduced_terms": [
+        "MOS LSI",
+        "non-recurring engineering (NRE)",
+        "photomask"
+      ],
+      "chunks": [
+        {
+          "id": "ch_031",
+          "title": "Why Didn't Minicomputers Buy Custom Silicon?",
+          "content_markdown": "By 1969, minicomputers like the PDP-8 and Data General Nova looked like runaway engineering triumphs, spreading rapidly into university labs, hospitals, and automated factories. Yet peek at the actual sales volume behind that fame! Even the bestselling PDP-8 family sold only in the thousands of units per year—taking a full decade to top 50,000 machines—and an 8,000-to-18,000-dollar box was still far too expensive for an ordinary office desk. To semiconductor companies staring at gleaming new chip factories (wafer fabs), minicomputer demand was surprisingly tiny. Meanwhile, sitting on millions of accounting, banking, and engineering desks worldwide were heavy, clattering electro-mechanical rotary calculators (packed with spinning gears and noisy motors) alongside handheld wooden slide rules. Replacing those millions of mechanical workhorses with compact, silent electronic desktop calculators promised sales not in the thousands, but in the *hundreds of thousands*—and soon millions—of units every single year!",
+          "questions": [
+            {
+              "id": "q_061",
+              "prompt": "Why did late-1960s semiconductor makers view desktop calculators as a far bigger economic prize than minicomputers?",
+              "choices": [
+                "Minicomputer engineers refused to buy solid-state transistors for laboratory hardware",
+                "Desktop calculators sold for over 100,000 dollars apiece to national weather agencies",
+                "Desktop calculators targeted millions of office and engineering desks rather than thousands of labs",
+                "Minicomputers required zero memory or arithmetic circuits once MSI packages appeared"
+              ],
+              "correct_index": 2,
+              "explanation": "Even wildly popular minicomputers sold only in the thousands per year, whereas replacing mechanical adding machines and slide rules on office desks promised mass-market volumes in the hundreds of thousands to millions."
+            },
+            {
+              "id": "q_062",
+              "prompt": "Which everyday office and engineering tools were late-1960s electronic desktop calculators aiming to replace?",
+              "choices": [
+                "Heavy, noisy electro-mechanical rotary calculators and manual wooden slide rules",
+                "Room-sized IBM System/360 mainframes running corporate overnight payroll batches",
+                "Interactive DEC PDP-11 minicomputers driving university time-sharing terminals",
+                "High-speed telephone acoustic couplers linking remote punch-card keypunch pools"
+              ],
+              "correct_index": 0,
+              "explanation": "Millions of desks still relied on clattering mechanical gear calculators and manual slide rules, creating enormous pent-up demand for quiet, compact electronic replacements."
+            }
+          ]
+        },
+        {
+          "id": "ch_032",
+          "title": "Photomasks and Non-Recurring Engineering (NRE)",
+          "content_markdown": "Why did sheer unit volume matter so intensely to custom chip economics? Think about printing a hardcover novel: typesetting the layout and engraving the printing plates cost a small fortune, yet once the press starts rolling, each extra copy costs only pennies of paper and ink. Semiconductor manufacturing obeys the exact same rule! Before fabricating a custom chip, engineers spend months drawing intricate microscopic circuits and etching them onto high-precision glass stencils called **photomasks**—photographic plates that project circuit patterns onto silicon wafers layer by layer. That entire upfront tab for circuit design, verification, and photomask tooling is known as **non-recurring engineering (NRE)**: a large one-time fixed cost paid before the first finished chip sells. Spread a 200,000-dollar NRE bill across 2,000 minicomputers, and every chip carries a crushing 100-dollar overhead before fabrication even begins; spread it across 200,000 calculators, and that upfront burden shrinks to just one dollar per chip!",
+          "questions": [
+            {
+              "id": "q_063",
+              "prompt": "What role does a photomask play during custom integrated-circuit manufacturing?",
+              "choices": [
+                "It cools hot discrete transistors inside a minicomputer cabinet during heavy math loops",
+                "It acts as a high-precision glass stencil that projects circuit patterns onto silicon wafers",
+                "It stores temporary decimal digits inside a calculator's keyboard scanning unit",
+                "It translates assembly mnemonics into binary octal words before loading core memory"
+              ],
+              "correct_index": 1,
+              "explanation": "Photomasks are precision photographic plates etched with microscopic circuit patterns, used optically to pattern each physical layer on a silicon wafer."
+            },
+            {
+              "id": "q_064",
+              "prompt": "How does massive unit volume solve the problem of steep non-recurring engineering (NRE) costs in custom silicon?",
+              "choices": [
+                "High sales volumes legally exempt semiconductor factories from building glass photomasks",
+                "High sales volumes reduce the physical number of transistors required inside a calculator",
+                "High sales volumes automatically double the speed of bipolar logic gates on every wafer",
+                "High sales volumes spread one-time design and mask costs across hundreds of thousands of chips"
+              ],
+              "correct_index": 3,
+              "explanation": "NRE is a fixed upfront cost paid once regardless of production quantity; amortizing that fixed cost across hundreds of thousands of calculator chips shrinks the NRE burden per chip to pennies or dollars."
+            }
+          ]
+        },
+        {
+          "id": "ch_033",
+          "title": "Why MOS LSI Fit Calculators Better Than Minicomputers",
+          "content_markdown": "Alongside raw economics, a vivid speed-versus-density divide separated minicomputers from desktop calculators in the late 1960s. Minicomputers relied on fast, current-driven **bipolar** transistors—including MSI TTL (Transistor-Transistor Logic) chips—to keep up with laboratory sensors and microsecond core-memory cycles; unfortunately, bipolar transistors were physically bulky and ran hot, limiting how many fit on one die. Now think about a human typing on a calculator keypad! No person notices whether a division finishes in two microseconds or five milliseconds—both feel instantaneous! That relaxed speed requirement opened the door wide for **MOS LSI** (Metal-Oxide-Semiconductor Large-Scale Integration): chips using tiny, slower, low-power MOS transistors that packed hundreds—and soon thousands—of logic gates onto one sliver of silicon. To a 1969 minicomputer designer, MOS LSI felt sluggish; to a calculator maker, MOS LSI was pure magic, collapsing bulky circuit boards into a handful of cool, quiet chips.",
+          "questions": [
+            {
+              "id": "q_065",
+              "prompt": "Why were late-1960s desktop calculators far better suited to early MOS LSI chips than high-speed minicomputers were?",
+              "choices": [
+                "MOS LSI chips ran ten times faster than bipolar TTL logic while costing twice as much",
+                "Minicomputers could not perform binary addition unless wired with mechanical gear relays",
+                "Human keypad speeds let calculators prize MOS LSI's compact density and low power over speed",
+                "MOS LSI chips worked exclusively with 12-bit octal addresses incompatible with 16-bit calculators"
+              ],
+              "correct_index": 2,
+              "explanation": "Early MOS LSI transistors were slower than bipolar logic but far smaller and cooler, allowing hundreds to thousands of gates per chip—ideal for human-speed calculators, though too slow for fast minicomputers."
+            },
+            {
+              "id": "q_066",
+              "prompt": "What physical advantage did MOS LSI transistors offer over contemporary bipolar transistors for shrinking desktop electronics?",
+              "choices": [
+                "They eliminated the need for photomasks by etching circuits directly with hand tools",
+                "They were smaller and drew less power, letting far more gates fit onto a single silicon chip",
+                "They stored programs permanently in copper traces without needing any power supply",
+                "They automatically corrected manufacturing defects anywhere across a silicon wafer"
+              ],
+              "correct_index": 1,
+              "explanation": "Because MOS transistors were physically compact and dissipated much less heat than bipolar transistors, MOS LSI enabled far higher gate density per chip."
+            }
+          ]
+        },
+        {
+          "id": "ch_034",
+          "title": "The Chicken-and-Egg Trap of Early Electronic Calculators",
+          "content_markdown": "Here is an ironic twist of mid-1960s computing history: before affordable **MOS LSI** chips hit full stride around 1968–1970, the very first electronic desktop calculators still had to be assembled from hundreds of discrete transistors and diodes! As a result, they carried steep price tags of 2,000 to 5,000 dollars—a substantial chunk of a minicomputer's cost. Why did engineering firms, labs, and financial offices eagerly pay thousands of dollars for a desk-sized calculating box? Because waiting twenty-four hours in a batch-processing mainframe queue just to test a dozen equations was maddening! Having a quiet, instant electronic calculator right beside your notepad changed how people actually thought and solved problems. Better still, a handful of bold engineers spotted an even bigger opportunity: if an expensive desktop calculator already housed electronic arithmetic circuits and a little internal memory, why not make it *programmable*—putting personal computing directly on a desk years before the microprocessor?",
+          "questions": [
+            {
+              "id": "q_067",
+              "prompt": "Why were technical professionals willing to pay 2,000 to 5,000 dollars for early discrete-transistor desktop calculators when mainframes already existed?",
+              "choices": [
+                "Desktop boxes offered immediate, hands-on interactive calculation without waiting in mainframe batch queues",
+                "Mainframes of the mid-1960s were physically unable to execute multiplication or square-root routines",
+                "Early discrete-transistor calculators always ran faster and held more memory than IBM System/360 mainframes",
+                "Federal accounting rules forbade companies from using centralized mainframes for engineering math"
+              ],
+              "correct_index": 0,
+              "explanation": "Immediate desk-side interactivity let engineers and analysts test formulas iteratively on the spot instead of waiting hours or days for punch-card mainframe batch runs."
+            },
+            {
+              "id": "q_068",
+              "prompt": "Why did mid-1960s electronic calculators cost thousands of dollars prior to the rise of MOS LSI?",
+              "choices": [
+                "Every calculator shipped with a dedicated 4,096-word PDP-8 minicomputer tucked inside its base",
+                "Calculator makers were required to pay licensing fees to glass-house mainframe operators",
+                "Early keyboards had to be sculpted from solid silver to prevent static discharge in offices",
+                "They still had to be hand-built from hundreds of discrete transistors and diodes on bulky boards"
+              ],
+              "correct_index": 3,
+              "explanation": "Before MOS LSI packed hundreds or thousands of gates onto a few chips, electronic calculators relied on large discrete-transistor assemblies that kept manufacturing costs high."
+            }
+          ]
+        },
+        {
+          "id": "ch_035",
+          "title": "Mass-Market Pull Meets Desktop Programmability",
+          "content_markdown": "Connect these economic and technological threads, and the true launchpad of the microprocessor comes into view. High **non-recurring engineering (NRE)** and **photomask** investments meant low-volume minicomputers could not justify custom processor silicon, whereas the vast global office appetite for quiet electronic calculators gave **MOS LSI** factories the mass-market engine needed to slash prices and push integration forward. Yet before the late-1960s MOS LSI calculator war erupted, two unforgettable discrete-transistor programmable calculators—Italy's Olivetti Programma 101 (1965) and Hewlett-Packard's HP 9100A (1968)—proved how much real computing power could fit onto an ordinary desk. Along the way, their designers pioneered radical memory, removable storage, stack-entry, permanent read-only storage, and shift-and-add algorithmic tricks that directly shaped how engineers later squeezed intelligence into tiny silicon chips. Our first stop is Ivrea, Italy in 1965, where a secret desktop project stunned the New York World's Fair crowd.",
+          "questions": [
+            {
+              "id": "q_069",
+              "prompt": "Which combination of forces best explains why desktop calculators—not minicomputers—pulled custom MOS LSI silicon into existence?",
+              "choices": [
+                "Minicomputer buyers demanded slower clock speeds, while calculators required massive bipolar cabinets",
+                "Calculators combined mass-market office volume to amortize NRE with human speeds suited to dense MOS LSI",
+                "Minicomputers lacked binary logic gates, whereas calculators invented two's-complement addition in 1969",
+                "Photomasks could physically imprint decimal digits only and refused to pattern binary CPU instructions"
+              ],
+              "correct_index": 1,
+              "explanation": "Calculators offered both the huge sales volume required to pay off custom NRE/photomask costs and the modest speed needs that made dense, low-power MOS LSI ideal."
+            },
+            {
+              "id": "q_070",
+              "prompt": "Before MOS LSI dominated calculators, what landmark contribution did programmable desktop machines like Olivetti's Programma 101 and HP's 9100A make?",
+              "choices": [
+                "They replaced all university mainframes with networked single-chip 16-bit microprocessors in 1965",
+                "They forced DEC and Data General to abandon 12-bit and 16-bit minicomputers for mechanical gears",
+                "They proved desk-side programmability worked and pioneered compact memory, permanent storage, and math shortcuts",
+                "They eliminated NRE costs completely by replacing silicon wafers with hand-wound copper core planes"
+              ],
+              "correct_index": 2,
+              "explanation": "Discrete-transistor programmable calculators demonstrated real desk-side demand and introduced frugal storage, permanent read-only routines, and algorithmic techniques that informed later chip designs."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_08",
+      "title": "8. Olivetti's Programma 101: Delay-Line Memory, Magnetic Cards \u0026 Apollo 11",
+      "summary": "Meet Pier Giorgio Perotto's sleek 1965 Olivetti Programma 101, which brought stored-program computing off the mainframe floor and onto everyday desks before integrated-circuit CPUs existed. Learners explore the intuitive acoustic physics of its magnetostrictive delay-line memory—circulating bits as mechanical twist waves along a coiled wire—alongside its swappable magnetic program cards and how NASA engineers used Programma 101 units on their desks during Apollo 11 calculations.",
+      "introduced_terms": [
+        "magnetostrictive delay line",
+        "serial-access memory",
+        "magnetic program card"
+      ],
+      "chunks": [
+        {
+          "id": "ch_036",
+          "title": "The Italian Showstopper of 1965",
+          "content_markdown": "In October 1965, visitors strolling past towering room-sized mainframes at New York's Business Equipment Exhibition stopped in amazement around a sleek, typewriter-sized wedge sitting casually on an ordinary wooden table. Priced at roughly 3,200 dollars, Olivetti's **Programma 101**—created in Ivrea, Italy by engineer **Pier Giorgio Perotto** and a small, fiercely independent team—was a genuine stored-program desktop machine assembled entirely from discrete transistors. With its numeric keypad, built-in paper-tape printer, and clean sculpted shell by designer Mario Bellini, it plugged straight into a wall outlet and executed loops, branches, and arithmetic without a single air-conditioned computer room or punch-card operator in sight! Yet Perotto's engineers had faced a daunting budget wall: magnetic core memory and its heavy drive electronics were far too expensive and bulky for a 3,200-dollar desktop shell. How did they store numbers and multi-step programs inside such an affordable box?",
+          "questions": [
+            {
+              "id": "q_071",
+              "prompt": "What hardware constraint forced Pier Giorgio Perotto's team to look beyond magnetic core memory for the 1965 Olivetti Programma 101?",
+              "choices": [
+                "Magnetic core memory had not yet been invented anywhere in Europe or North America",
+                "Magnetic core planes and their heavy drive electronics were too costly and bulky for a 3,200-dollar desktop",
+                "Discrete transistors were electrically unable to read or write ferrite memory rings",
+                "Italian telecommunications laws prohibited ferrite cores inside non-military office equipment"
+              ],
+              "correct_index": 1,
+              "explanation": "To keep the Programma 101 compact and affordable at around 3,200 dollars, Perotto's team needed a far cheaper, smaller storage technology than full core-memory planes and drivers."
+            },
+            {
+              "id": "q_072",
+              "prompt": "Why did the Olivetti Programma 101 steal crowds away from mainframe exhibits when unveiled in New York in 1965?",
+              "choices": [
+                "It outperformed IBM System/360 mainframes on multi-user payroll processing by a factor of ten",
+                "It was the first machine built around a mass-produced single-chip silicon microprocessor",
+                "It displayed full-color interactive 3D graphics across a wide CRT monitor on every desk",
+                "It packed genuine stored-program computing—loops and branches—into a sleek, plug-in desktop wedge"
+              ],
+              "correct_index": 3,
+              "explanation": "Audiences were stunned to see a self-contained, typewriter-sized, 3,200-dollar desktop box executing real stored programs without a mainframe room or operator."
+            }
+          ]
+        },
+        {
+          "id": "ch_037",
+          "title": "Storing Bits as Sound Waves in a Wire",
+          "content_markdown": "Perotto's team solved the memory puzzle with a marvel of electromechanical physics: a **magnetostrictive delay line**, a memory device that stores binary bits as tiny mechanical twist waves continuously circulating along a coiled metal wire! The trick relies on magnetostriction—the physical property of certain nickel alloys to twist slightly whenever nudged by a magnetic pulse. At one end of a coiled wire, a transmitter coil gives the metal a sharp twist for each `1` bit, launching an acoustic wave racing along the wire at the speed of sound in metal. Roughly two milliseconds later, the twist reaches a pickup coil at the far end, converts back into an electrical pulse, passes through an amplifier that sharpens its edges, and gets launched right back into the wire! That single vibrating loop continuously held 240 bytes (ten registers of 22 decimal digits plus sign and decimal point)—delivering compact desktop memory at a tiny fraction of core memory's cost.",
+          "questions": [
+            {
+              "id": "q_073",
+              "prompt": "How does a magnetostrictive delay line physically represent and preserve binary data inside the Programma 101?",
+              "choices": [
+                "As circulating acoustic twist waves launched along a coiled wire and continually amplified",
+                "As permanent microscopic holes punched magnetically into a spinning glass photomask disc",
+                "As static magnetic polarities frozen inside thousands of hand-threaded ferrite rings",
+                "As standing radio waves bounced continuously between two aluminum antennas on the desk"
+              ],
+              "correct_index": 0,
+              "explanation": "A transmitter coil twists a magnetostrictive nickel-alloy wire to encode bits as traveling mechanical waves; a pickup coil reads them ~2 ms later, amplifies them, and feeds them back around the loop."
+            },
+            {
+              "id": "q_074",
+              "prompt": "Why does a magnetostrictive delay line require an amplifier loop connecting its pickup coil back to its transmitter coil?",
+              "choices": [
+                "To convert decimal digits into 12-bit PDP-8 octal instructions before storing them",
+                "To cool the coiled nickel wire so acoustic pulses travel faster than the speed of light",
+                "To reshape fading pulses and re-inject them continuously so stored bits do not vanish",
+                "To erase all ten registers automatically every two milliseconds to prevent overflow"
+              ],
+              "correct_index": 2,
+              "explanation": "Because mechanical waves weaken as they travel along the wire and would disappear once they hit the end, an amplifier continuously restores and recirculates every bit."
+            }
+          ]
+        },
+        {
+          "id": "ch_038",
+          "title": "Serial-Access Memory and the Airport-Carousel Trade-Off",
+          "content_markdown": "Storing bits as waves chasing one another around a coiled wire creates an important architectural constraint: a delay line is **serial-access memory**, meaning data items must pass a single reading point sequentially rather than being fetched directly from any chosen address at any instant. Picture standing beside an airport baggage carousel. Random-access magnetic core memory works like a wall of numbered lockers where you walk straight to locker 47 in one fixed stride; **serial-access memory** means that if the register you want just glided past the pickup coil, the processor must patiently wait roughly two milliseconds for the whole pulse train to circle back around! For a high-speed minicomputer running real-time lab sensors, waiting two milliseconds per variable would feel painfully sluggish. For a desktop programmer punching keys—or watching answers print onto a paper tape—two milliseconds is fifty times faster than an eyeblink! Perotto brilliantly traded mainframe speed for desktop affordability.",
+          "questions": [
+            {
+              "id": "q_075",
+              "prompt": "How does serial-access memory (like a delay line) fundamentally differ from random-access memory (like magnetic core)?",
+              "choices": [
+                "Serial-access memory holds only alphabetical text while random-access memory holds numbers",
+                "Serial-access memory preserves its contents forever with power off, unlike magnetic core rings",
+                "Serial-access memory lets ten processors read ten different locations simultaneously in one cycle",
+                "Serial-access memory forces the CPU to wait for desired data to circulate past a single read point"
+              ],
+              "correct_index": 3,
+              "explanation": "Like suitcases on a carousel, bits in serial-access delay-line memory arrive in fixed sequence, so access latency depends on waiting for the desired register to reach the pickup coil."
+            },
+            {
+              "id": "q_076",
+              "prompt": "Why was the ~2-millisecond circulation delay of the Programma 101's memory perfectly acceptable for its target users?",
+              "choices": [
+                "Because magnetic cards automatically eliminated every delay-line read during program runs",
+                "Because interactive desk-side typing and paper printing operate far slower than two milliseconds",
+                "Because Perotto's discrete transistors ran slower than mechanical relays and could not go faster",
+                "Because 2 milliseconds was actually ten times faster than contemporary 1965 magnetic core memory"
+              ],
+              "correct_index": 1,
+              "explanation": "While 2 ms would bottleneck a fast minicomputer, it is imperceptibly fast compared to human typing and mechanical paper printing—making the huge cost savings an easy win."
+            }
+          ]
+        },
+        {
+          "id": "ch_039",
+          "title": "The Magnetic Program Card: Swappable Software Before Floppies",
+          "content_markdown": "Clever internal memory still left one huge everyday snag: flip the power switch off at 5 p.m., and the acoustic waves die out inside the wire, erasing everything! Nobody wanted to re-key an eighty-step financial or engineering program every single morning. Perotto's team answered with one of personal computing's landmark inventions: the **magnetic program card** (*Cartolina Magnetica*), a durable postcard-sized plastic strip coated on one side with brown magnetic recording oxide. Feeding a card through a front slot on the Programma 101 either saved up to 120 program instructions out of the delay line or loaded a stored program back into memory in just a couple of seconds! Years before floppy disks or cassette drives reached ordinary desks, surveyors, accountants, and engineers could store a neat deck of labeled magnetic cards in a drawer—reconfiguring one desktop box from mortgage amortization to structural-beam analysis simply by sliding in a fresh card.",
+          "questions": [
+            {
+              "id": "q_077",
+              "prompt": "What critical everyday weakness of magnetostrictive delay-line memory did Olivetti's magnetic program card solve?",
+              "choices": [
+                "Delay-line memory could store data numbers but was physically unable to store program instructions",
+                "Delay-line memory grew too hot to hold data for longer than thirty seconds at a time",
+                "Delay lines lost their waves at power-off, so cards saved and reloaded programs in seconds",
+                "Delay-line memory could only be programmed in 12-bit octal by a trained DEC mainframe technician"
+              ],
+              "correct_index": 2,
+              "explanation": "Because delay-line memory is volatile (waves stop when power is cut), swappable magnetic program cards gave users non-volatile, reusable program storage years before floppy disks."
+            },
+            {
+              "id": "q_078",
+              "prompt": "How did an everyday engineer load a different saved program into an Olivetti Programma 101?",
+              "choices": [
+                "By sliding a postcard-sized magnetic-oxide program card through a slot on the front of the machine",
+                "By toggling 12 binary front-panel switches repeatedly to key in an octal bootstrap loader",
+                "By unplugging the coiled nickel wire and bolting in a pre-twisted replacement wire drum",
+                "By dialing a centralized corporate mainframe over a 300-baud telephone modem line"
+              ],
+              "correct_index": 0,
+              "explanation": "The Programma 101's front slot read magnetic strips on the *Cartolina Magnetica* directly into memory in seconds, making software swapping effortless for non-specialists."
+            }
+          ]
+        },
+        {
+          "id": "ch_040",
+          "title": "Desk-Side Calculations for Apollo 11",
+          "content_markdown": "Nothing validated Olivetti's desktop breakthrough more vividly than NASA's space race! Preparing for the 1969 **Apollo 11** Moon landing, NASA purchased at least ten Programma 101 machines so engineers could calculate radar antenna angles, double-check trajectory figures, and verify lunar-landing data right on their own desks—escaping long turnaround queues at centralized IBM mainframes. By pairing a thrifty **magnetostrictive delay line** (willingly trading away random access for **serial-access memory** savings) with swappable **magnetic program cards**, Perotto's team proved beyond doubt that professionals hungered for personal, programmable computing and would buy machines that solved mission-critical problems at arm's reach. Yet the Programma 101 focused mainly on four-function math and square roots; scientists also dreamed of single-key trigonometry, logarithms, and exponentials right on their desks. Three years later, in 1968, Hewlett-Packard delivered exactly that—using three breathtaking hardware and mathematical tricks inside the HP 9100A.",
+          "questions": [
+            {
+              "id": "q_079",
+              "prompt": "Why did NASA engineers keep Olivetti Programma 101 units right on their desks during Apollo 11 preparations despite having giant IBM mainframes?",
+              "choices": [
+                "NASA's IBM mainframes lacked enough accuracy to compute orbital equations beyond four digits",
+                "Desk-side Programma 101s let engineers verify antenna angles and landing math immediately without batch delays",
+                "Olivetti built radiation-hardened Programma 101 units directly inside the Apollo Lunar Module cabin",
+                "Magnetic program cards were the only storage medium capable of surviving rocket-launch vibrations"
+              ],
+              "correct_index": 1,
+              "explanation": "Having programmable Programma 101 units on engineers' desks enabled rapid, iterative verification of trajectory, antenna-pointing, and lunar-landing calculations without waiting in mainframe batch queues."
+            },
+            {
+              "id": "q_080",
+              "prompt": "Which capability gap left open by the 1965 Olivetti Programma 101 set the stage for Hewlett-Packard's 1968 HP 9100A?",
+              "choices": [
+                "The Programma 101 had no power plug and ran strictly off hand-cranked springs",
+                "The Programma 101 lacked any way to save programs between morning and evening sessions",
+                "The Programma 101 could only add two integers and lacked division or square-root keys",
+                "Scientists also wanted single-key trigonometry, logarithms, and exponentials on a desktop machine"
+              ],
+              "correct_index": 3,
+              "explanation": "While the Programma 101 nailed four-function math, square roots, and magnetic-card programmability, engineers still craved built-in scientific functions (trig, logs, exponentials)—which HP's 9100A delivered in 1968."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_09",
+      "title": "9. HP's 9100A: RPN Stacks, Printed-Circuit ROM \u0026 the CORDIC Algorithm",
+      "summary": "Examine Hewlett-Packard's 1968 HP 9100A, a discrete-transistor scientific desktop powerhouse built with zero CPU integrated circuits that packed trigonometry and logarithms onto an engineer's desk. Learners see how Reverse Polish Notation (RPN) and a visible hardware stack eliminated parenthesis-parsing circuitry, how a 16-layer printed-circuit ROM stored permanent microprograms in copper traces, and—through an intuitive first-principles walkthrough—how the CORDIC algorithm replaced bulky hardware multipliers with iterative $$2^{-i}$$ (or decimal $$10^{-i}$$) shifts, adds, and a tiny angle table.",
+      "introduced_terms": [
+        "Reverse Polish Notation (RPN)",
+        "printed-circuit ROM",
+        "CORDIC algorithm"
+      ],
+      "chunks": [
+        {
+          "id": "ch_041",
+          "title": "Scientific Computing on a Desk—Without a Single Integrated Circuit",
+          "content_markdown": "When Hewlett-Packard unveiled the **HP 9100A** in 1968 at 4,900 dollars, engineers stared in disbelief. Sitting comfortably on a desk like a sleek laboratory instrument, it featured a crisp glowing green cathode-ray-tube (CRT) screen showing three lines of numbers, a magnetic program-card slot, and single-key buttons for sine, cosine, tangent, logarithms, and exponentials—all the mathematical weaponry scientists normally begged a mainframe to compute! Even more astonishing was what lived inside its 40-pound chassis: **zero integrated circuits in the CPU**! Designers Tom Osborne and Dave Cochran built the entire processor out of carefully matched discrete transistors and diodes, deliberately avoiding early ICs that were still pricey and inconsistent. How did HP squeeze full scientific computing into a discrete-transistor box without drowning in bulky hardware multipliers and complex formula parsers? Through three brilliant architectural shortcuts working together: Reverse Polish Notation, a printed-circuit ROM, and the CORDIC algorithm.",
+          "questions": [
+            {
+              "id": "q_081",
+              "prompt": "What remarkable hardware choice stood out inside the central processor of Hewlett-Packard's 1968 HP 9100A scientific calculator?",
+              "choices": [
+                "Its CPU used carefully matched discrete transistors and diodes with zero integrated circuits",
+                "Its CPU ran on a single 16-bit MOS LSI microprocessor purchased from Data General",
+                "Its CPU used a coiled magnetostrictive nickel wire instead of any electronic switches",
+                "Its CPU relied on twelve miniature vacuum tubes cooled by a liquid-nitrogen reservoir"
+              ],
+              "correct_index": 0,
+              "explanation": "Despite delivering full scientific functions on a desktop, the 1968 HP 9100A CPU was engineered completely from discrete transistors and diodes, using no integrated circuits."
+            },
+            {
+              "id": "q_082",
+              "prompt": "Which capability set the 1968 HP 9100A most dramatically apart from basic desktop four-function machines?",
+              "choices": [
+                "It could connect twenty remote teletype terminals over telephone modems simultaneously",
+                "It compiled high-level FORTRAN punch-card decks directly into 12-bit PDP-8 binary code",
+                "It offered single-key scientific functions like trig, logarithms, and exponentials on an engineer's desk",
+                "It sold for under 100 dollars to compete directly with wooden slide rules in elementary schools"
+              ],
+              "correct_index": 2,
+              "explanation": "At 4,900 dollars, the HP 9100A brought true scientific computing—single-key trig, inverse trig, logs, exponentials, and a 3-line CRT—straight onto an engineer's desk."
+            }
+          ]
+        },
+        {
+          "id": "ch_042",
+          "title": "Reverse Polish Notation (RPN) and Stack Efficiency",
+          "content_markdown": "Think about entering `(3 + 4) × 5 =` on an ordinary algebraic calculator: the machine must remember open parentheses, hold pending operators, and apply order-of-operations rules—demanding extra parser circuitry and memory registers. To keep the 9100A hardware lean, HP adopted **Reverse Polish Notation (RPN)**: a postfix entry method where you type the numbers first and press the operator afterward (for example, `3`, `ENTER`, `4`, `+`, `5`, `×`). Supporting RPN was a visible three-level hardware stack—registers `X`, `Y`, and `Z` displayed live on the 3-line CRT! Typing a number pushed existing values upward; pressing `+` combined `X` and `Y`, displayed `7` in `X`, and dropped the stack cleanly. Dropping parentheses and precedence-parsing logic slashed hardware gates and saved precious stored program steps, while showing every intermediate result live on screen—an efficiency edge so beloved that HP kept RPN on scientific calculators for decades.",
+          "questions": [
+            {
+              "id": "q_083",
+              "prompt": "In Reverse Polish Notation (RPN), which keystroke sequence computes $$(6 + 2) \\times 4$$ without needing parentheses keys?",
+              "choices": [
+                "`6`, `+`, `2`, `ENTER`, `×`, `4`",
+                "`6`, `ENTER`, `2`, `+`, `4`, `×`",
+                "`×`, `4`, `+`, `6`, `ENTER`, `2`",
+                "`ENTER`, `6`, `2`, `4`, `+`, `×`"
+              ],
+              "correct_index": 1,
+              "explanation": "In postfix RPN, operands enter the stack before each operator acts on them: `6 ENTER 2 +` produces `8` on the stack, and `4 ×` multiplies that result by `4`."
+            },
+            {
+              "id": "q_084",
+              "prompt": "Why did adopting RPN with a visible three-level hardware stack help HP keep the 9100A's circuitry compact?",
+              "choices": [
+                "RPN converted all floating-point decimals into 8-bit ASCII strings to shrink the CRT",
+                "RPN replaced addition and subtraction with pure octal bitwise AND operations",
+                "RPN prevented users from typing numbers larger than three decimal digits at a time",
+                "RPN eliminated parenthesis keys and complex algebraic precedence-parsing hardware"
+              ],
+              "correct_index": 3,
+              "explanation": "Because every operator acts immediately on the top stack values, RPN required no parentheses and no algebraic precedence parser—saving hardware gates and program memory while showing intermediate results."
+            }
+          ]
+        },
+        {
+          "id": "ch_043",
+          "title": "Printed-Circuit ROM: Storing Microcode in Copper Traces",
+          "content_markdown": "Computing sines, logarithms, and polar conversions required thousands of fixed internal control steps—called microcode (built-in step-by-step hardware recipes)—far too much permanent data to waste expensive writable core memory on! HP solved this with a masterpiece of physical manufacturing: a **printed-circuit ROM** (read-only memory), a permanent digital memory whose `0`s and `1`s are physically etched into copper circuit-board traces rather than held in transistors or magnetic rings. Inside the 9100A sat a 16-layer fiberglass board packing 32,768 permanent bits (`512` words of `64` bits each). When a timing pulse drove a copper word line, sense traces woven around or past that line acted like microscopic transformers—one routing path induced a positive voltage pulse (`1`), while the opposite routing induced a negative pulse (`0`). Frozen in solid copper, this **printed-circuit ROM** kept its microcode forever with power off and cost far less than core memory.",
+          "questions": [
+            {
+              "id": "q_085",
+              "prompt": "How did the HP 9100A's 16-layer printed-circuit ROM physically encode permanent 0s and 1s?",
+              "choices": [
+                "By circulating mechanical twist waves continuously along sixteen coiled nickel wires",
+                "By storing electric charges inside 32,768 discrete silicon MOS capacitor cells",
+                "By routing copper traces in opposing inductive loops that induced positive or negative pulses",
+                "By punching microscopic holes through removable cardboard strips fed into the back panel"
+              ],
+              "correct_index": 2,
+              "explanation": "HP's 16-layer PCB ROM acted like an array of tiny copper-trace transformers: the routing of each copper sense line determined whether a drive pulse induced a 1 or a 0."
+            },
+            {
+              "id": "q_086",
+              "prompt": "Why did HP build a printed-circuit ROM for the 9100A's trigonometric and logarithmic routines instead of storing them in writable core memory?",
+              "choices": [
+                "Copper-trace ROM cost far less than core memory and kept built-in routines permanently intact",
+                "Magnetic core memory was volatile and lost all stored instructions whenever power was switched off",
+                "Copper-trace ROM let users overwrite the built-in sine and cosine routines directly from the keypad",
+                "Writable core memory could store decimal digits but was physically unable to hold binary control bits"
+              ],
+              "correct_index": 0,
+              "explanation": "Fixed mathematical microcode never needed to be modified by the user, so weaving 32,768 permanent bits into a PCB ROM dramatically cut cost while staying completely non-volatile."
+            }
+          ]
+        },
+        {
+          "id": "ch_044",
+          "title": "CORDIC Intuition: Rotating Vectors Without a Multiplier",
+          "content_markdown": "Even with a spacious **printed-circuit ROM**, one formidable hurdle remained: computing sines, cosines, and arctangents normally demands heavy multiplication, yet a fast discrete-transistor hardware multiplier would never fit inside a desktop shell. HP bypassed hardware multipliers using the **CORDIC algorithm** (COordinate Rotation Digital Computer)—invented by Jack Volder in 1959 for aircraft navigation and adapted to decimal math by Dave Cochran for the 9100A! Here is the geometric magic: rotating a 2D point $$(x, y)$$ by a small step angle $$\\theta_i$$ gives new coordinates $$x - y \\tan(\\theta_i)$$ and $$y + x \\tan(\\theta_i)$$, aside from one predictable scaling factor $$\\cos(\\theta_i)$$ that we absorb once up front. Normally, multiplying by $$\\tan(\\theta_i)$$ requires a full multiplier. CORDIC's stroke of genius is choosing fixed step angles specifically so their tangents are exact powers of the number base—$$2^{-i}$$ in binary ($$45^\\circ, 26.6^\\circ, 14.0^\\circ, \\dots$$) or $$10^{-i}$$ in HP's decimal engine! Why? Because multiplying by $$2^{-i}$$ (or $$10^{-i}$$) needs *zero* multiplier gates—you merely shift the digits right by $$i$$ places!",
+          "questions": [
+            {
+              "id": "q_087",
+              "prompt": "Why does the CORDIC algorithm choose fixed rotation angles whose tangents equal powers of the base ($$2^{-i}$$ in binary or $$10^{-i}$$ in decimal)?",
+              "choices": [
+                "Because those are the only angles whose sine and cosine values are exact whole integers",
+                "Because a printed-circuit ROM can physically store only numbers that end in the digit zero",
+                "Because Reverse Polish Notation stacks overflow whenever an angle exceeds 45 degrees",
+                "Because multiplying by $$2^{-i}$$ or $$10^{-i}$$ reduces to a simple digit shift with no hardware multiplier"
+              ],
+              "correct_index": 3,
+              "explanation": "Choosing step angles where $$\\tan(\\theta_i) = 2^{-i}$$ (or $$10^{-i}$$ in decimal) turns every multiplication in the rotation formula into a trivial right shift by $$i$$ digits."
+            },
+            {
+              "id": "q_088",
+              "prompt": "What bulky piece of traditional scientific-computer hardware did the CORDIC algorithm allow the HP 9100A to eliminate?",
+              "choices": [
+                "The three-line green cathode-ray-tube screen showing stack registers",
+                "A large, transistor-hungry dedicated hardware multiplier circuit",
+                "The front-panel magnetic card slot used for saving user programs",
+                "The power transformer supplying direct current to discrete diodes"
+              ],
+              "correct_index": 1,
+              "explanation": "CORDIC replaced bulky hardware multiplier arrays with repeated shifts, additions/subtractions, and a tiny ROM table of precomputed step angles."
+            }
+          ]
+        },
+        {
+          "id": "ch_045",
+          "title": "Shift, Add, Converge—and the Big Lesson for Silicon",
+          "content_markdown": "Walk through a quick binary **CORDIC algorithm** run to see it converge! Suppose you want $$\\cos(30^\\circ)$$ and $$\\sin(30^\\circ)$$. Start a vector pointing right along the x-axis—pre-scaled by one fixed constant $$K \\approx 0.607$$ that absorbs every step's $$\\cos(\\theta_i)$$ shrink factor—and steer toward $$30^\\circ$$ using our tiny ROM angle table. Step 0 swings up $$+45^\\circ$$ (overshooting $$30^\\circ$$); Step 1 corrects downward by $$-26.6^\\circ$$ to $$18.4^\\circ$$; Step 2 swings up $$+14.0^\\circ$$ to $$32.4^\\circ$$; Step 3 nudges down $$-7.1^\\circ$$ to $$25.3^\\circ$$—tightening around $$30^\\circ$$ until the coordinates settle directly onto $$(\\cos 30^\\circ, \\sin 30^\\circ)$$! Every iteration executes nothing more than a **shift**, an **add or subtract**, and a ROM lookup—trading a few milliseconds of loop time to wipe out mountains of multiplier hardware. Look closely at the grand architectural lesson hiding inside HP's 9100A: a tiny, general shift-and-add engine guided by **ROM software** can mimic specialized hardware! One year later, in 1969, a brutal Japanese calculator war handed that exact idea to a tiny startup called Intel.",
+          "questions": [
+            {
+              "id": "q_089",
+              "prompt": "In the binary CORDIC walkthrough for $$30^\\circ$$, why does Step 1 rotate backward by $$-26.6^\\circ$$ immediately after Step 0 rotates forward by $$+45^\\circ$$?",
+              "choices": [
+                "Because $$+45^\\circ$$ overshot $$30^\\circ$$, so CORDIC corrects downward using the next smaller fixed angle",
+                "Because CORDIC hardware is physically forced to alternate plus and minus signs regardless of the target angle",
+                "Because subtracting $$26.6^\\circ$$ clears the RPN hardware stack so the next arctangent fits on the CRT",
+                "Because multiplying by $$2^{-1}$$ automatically flips the sign of every positive number in binary"
+              ],
+              "correct_index": 0,
+              "explanation": "At each iteration, CORDIC inspects whether the current angle is below or above the target and chooses the sign (`+` or `-`) of the next progressively smaller fixed step to home in on the target."
+            },
+            {
+              "id": "q_090",
+              "prompt": "What sweeping design insight from the HP 9100A directly foreshadowed the invention of the microprocessor?",
+              "choices": [
+                "Discrete transistors would permanently outperform integrated circuits in every consumer product",
+                "Every mathematical function required its own dedicated analog circuit board rather than shared code",
+                "High-speed bipolar minicomputers needed CRT screens before they could run trigonometric routines",
+                "A simple shift-and-add processor steered by permanent ROM software could replace bulky specialized hardware"
+              ],
+              "correct_index": 3,
+              "explanation": "By running CORDIC microcode from ROM on lean arithmetic hardware, the HP 9100A proved that simple, programmable engines guided by ROM could replace massive dedicated logic—the core idea behind early microprocessors."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_10",
+      "title": "10. The Japanese Calculator War \u0026 Busicom's Fateful 1969 Intel Contract",
+      "summary": "Trace how the cutthroat late-1960s Japanese calculator price war drove Busicom in 1969 to contract one-year-old memory startup Intel for twelve custom MOS LSI chips, each hardwired for a separate calculator task. Seeing why twelve high-pin-count custom chips collided with Intel's lean engineering team and low-cost 16-pin DIP packages reveals how Ted Hoff and Stanley Mazor—echoing minicomputer minimalism and ROM-based calculator microcode—pivoted toward a general-purpose, ROM-driven processor on the threshold of the single-chip era.",
+      "introduced_terms": [
+        "hardwired logic",
+        "dual in-line package (DIP)",
+        "ROM-driven processor"
+      ],
+      "chunks": [
+        {
+          "id": "ch_046",
+          "title": "The Cutthroat Japanese Calculator Price War",
+          "content_markdown": "By 1969, the quiet revolution started by desktop calculators had exploded into a ferocious commercial battle across Japan. Fierce rivals—Sharp, Casio, Canon, Sanyo, and Nippon Calculating Machine Corporation (**Busicom**)—were locked in an all-out 'calculator war' to shrink heavy, thousand-dollar discrete-transistor machines down into sleek, sub-400-dollar desktop and soon portable units. Every few months, a competitor unveiled a smaller, cheaper machine that threatened to wipe out everyone else's profit margins overnight! The sole weapon capable of winning that price war was **MOS LSI** silicon: replacing hundreds of hand-soldered transistors with a small set of custom chips slashed assembly time, cabinet size, power draw, and retail cost all at once. Because Japanese semiconductor firms could not yet supply enough cutting-edge MOS LSI wafers alone, ambitious calculator makers flew straight across the Pacific to California's emerging Silicon Valley in search of hungry chipmakers willing to build their next-generation designs.",
+          "questions": [
+            {
+              "id": "q_091",
+              "prompt": "What strategic weapon were rival Japanese makers like Sharp, Casio, Canon, and Busicom racing to adopt in the late-1960s calculator war?",
+              "choices": [
+                "Heavy magnetic core-memory stacks salvaged from retired IBM System/360 mainframes",
+                "Hand-assembled discrete-transistor racks housed inside refrigerator-sized steel cabinets",
+                "Coiled magnetostrictive delay lines paired with 16-layer copper printed-circuit ROM boards",
+                "Custom MOS LSI chips capable of slashing assembly labor, cabinet size, and retail prices"
+              ],
+              "correct_index": 3,
+              "explanation": "Shrinking hundreds of discrete transistors into a few custom MOS LSI chips was the decisive way to cut costs and win the brutal late-1960s Japanese calculator price war."
+            },
+            {
+              "id": "q_092",
+              "prompt": "Why did Japanese calculator makers look toward Silicon Valley startups in 1969?",
+              "choices": [
+                "Japanese engineers had not yet designed desktop calculators or printing mechanisms",
+                "Cutting-edge MOS LSI capacity was scarce, so firms sought American chipmakers to fabricate custom designs",
+                "U.S. trade rules required all electronic office calculators to contain California-made keyboards",
+                "Silicon Valley factories were already selling mass-produced single-chip microprocessors off the shelf"
+              ],
+              "correct_index": 1,
+              "explanation": "Needing advanced MOS LSI production faster than domestic capacity alone could supply, Japanese firms such as Sharp and Busicom contracted U.S. semiconductor companies—including tiny startup Intel."
+            }
+          ]
+        },
+        {
+          "id": "ch_047",
+          "title": "Busicom Knocks on Startup Intel's Door (1969)",
+          "content_markdown": "In mid-1969, executives and engineers from **Busicom** walked into the modest offices of **Intel**—a startup barely one year old, founded in July 1968 by Robert Noyce and Gordon Moore strictly to manufacture **semiconductor memory chips**, not processors! Busicom arrived with a lucrative custom-chip contract and a detailed engineering blueprint for a versatile new line of office machines, anchored by the **Busicom 141-PF** printing calculator. Their architecture called for Intel to design and fabricate **twelve distinct custom MOS LSI chips**! Why twelve separate chips? Because Busicom followed traditional calculator engineering using **hardwired logic**: fixed digital circuits permanently wired to execute one dedicated hardware chore rather than running flexible stored instructions. One custom chip scanned the keyboard, another drove the printer, others held decimal shift registers (chains of flip-flops sliding digits along one step at a time), and still others wired up fixed arithmetic control. For a cash-hungry memory startup, Busicom's contract meant vital revenue—yet its twelve-chip blueprint quickly set off alarm bells.",
+          "questions": [
+            {
+              "id": "q_093",
+              "prompt": "What was one-year-old Intel's original core business when Busicom approached the company in 1969?",
+              "choices": [
+                "Building 16-bit laboratory minicomputers to rival DEC and Data General",
+                "Publishing scientific software libraries on magnetic program cards for NASA",
+                "Manufacturing semiconductor memory chips rather than general-purpose processors",
+                "Assembling retail desktop calculators and office cash registers for Japanese stores"
+              ],
+              "correct_index": 2,
+              "explanation": "Founded in 1968 by Robert Noyce and Gordon Moore, Intel began purely as a semiconductor memory maker; Busicom's custom calculator contract unexpectedly drew it into processor design."
+            },
+            {
+              "id": "q_094",
+              "prompt": "Why did Busicom's original 1969 specification demand twelve separate custom MOS LSI chips?",
+              "choices": [
+                "Each fixed calculator task—keyboard scan, printer control, storage, and arithmetic—used a separate hardwired chip",
+                "It required twelve identical copies of a PDP-11 processor running in parallel to add decimal numbers",
+                "Intel's 1969 MOS wafers could hold at most ten transistors per chip, forcing every gate onto its own package",
+                "Japanese safety regulations forbade combining keyboard scanning and arithmetic inside the same calculator case"
+              ],
+              "correct_index": 0,
+              "explanation": "Traditional hardwired-logic calculator design split each fixed function—keyboard scan, display/printer control, decimal registers, arithmetic sequencing—into its own custom chip."
+            }
+          ]
+        },
+        {
+          "id": "ch_048",
+          "title": "The Twelve-Chip Crunch and the 16-Pin DIP Bottleneck",
+          "content_markdown": "When Intel's tiny engineering team examined Busicom's twelve-chip specification, two brutal bottlenecks jumped off the blueprints! First was sheer **non-recurring engineering (NRE)** overload: designing, debugging, and generating photomasks for twelve completely different custom **hardwired logic** chips would swamp Intel's small design staff and shatter Busicom's tight cost targets. Second was physical chip packaging! Most integrated circuits sit inside a **dual in-line package (DIP)**: a rectangular plastic or ceramic shell with two parallel rows of metal legs (pins) that plug neatly into a circuit board. Intel had built its fast, low-cost assembly line around compact **16-pin DIPs**, whereas Busicom's sprawling twelve-chip design demanded bulky, expensive **36-to-40-pin packages** just to string parallel control wires among all twelve specialized chips! Designing twelve pricey, high-pin-count custom chips—and then having to design *another* custom set every time Busicom wanted a slightly different calculator model—looked like an engineering and financial trap for both companies.",
+          "questions": [
+            {
+              "id": "q_095",
+              "prompt": "What physical packaging clash collided with Busicom's twelve-chip architecture at Intel in 1969?",
+              "choices": [
+                "Busicom wanted round vacuum-tube sockets while Intel only produced magnetic core frames",
+                "Busicom's interconnected chips needed costly 36-to-40-pin packages, while Intel specialized in cheap 16-pin DIPs",
+                "Intel's 16-pin DIPs were too large to fit inside a desktop printing calculator chassis",
+                "Busicom refused to accept any chip package containing more than four metal connecting pins"
+              ],
+              "correct_index": 1,
+              "explanation": "Passing signals across twelve hardwired chips demanded expensive 36-to-40-pin packages, colliding directly with Intel's low-cost, high-volume 16-pin DIP manufacturing line."
+            },
+            {
+              "id": "q_096",
+              "prompt": "Why was Busicom's twelve-chip hardwired approach also a long-term NRE trap as the calculator war intensified?",
+              "choices": [
+                "Hardwired MOS LSI chips stopped working permanently after printing ten thousand paper receipts",
+                "Sixteen-pin DIPs could never carry enough voltage to power a decimal shift register",
+                "Photomasks for twelve chips could legally be used for only thirty days before expiring",
+                "Launching a new calculator model with different features meant paying to redesign custom chips all over again"
+              ],
+              "correct_index": 3,
+              "explanation": "Because behavior was frozen into custom hardwired chips, modifying features for a new model triggered another expensive round of custom chip design and photomask NRE."
+            }
+          ]
+        },
+        {
+          "id": "ch_049",
+          "title": "Ted Hoff and Stanley Mazor's Radical Pivot",
+          "content_markdown": "Enter Intel applications engineer **Marcian 'Ted' Hoff**—a veteran who knew DEC's minimalist PDP-8 inside and out! Studying Busicom's twelve-chip diagram, Hoff was struck by an extraordinary realization: Busicom's hardwired calculator design was actually *more* complicated than a simple general-purpose computer! Soon joined by computer architect **Stanley Mazor**, Hoff sketched a radical counterproposal. Instead of twelve single-purpose **hardwired logic** chips, why not build a tiny, general-purpose **ROM-driven processor**—a miniature programmable 4-bit CPU whose behavior is defined entirely by instructions fetched from read-only memory rather than fixed dedicated wires? Paired with standard ROM chips (for program code), RAM chips (for decimal data), and a simple shift-register I/O chip, the whole family shrank from twelve custom designs down to just **four** chips—and by time-sharing (multiplexing) addresses and data across a narrow 4-bit bus, every chip fit neatly inside Intel's cheap **16-pin DIP**! Want a different calculator model? Keep the exact same processor and swap the ROM software!",
+          "questions": [
+            {
+              "id": "q_097",
+              "prompt": "How did Ted Hoff and Stanley Mazor's counterproposal transform Busicom's twelve-chip calculator specification?",
+              "choices": [
+                "They replaced twelve hardwired chips with one 4-bit ROM-driven processor plus standard ROM, RAM, and I/O",
+                "They added twelve extra bipolar minicomputer boards inside the calculator to speed up decimal printing",
+                "They replaced all MOS LSI silicon with Olivetti-style magnetostrictive delay lines to cut pin counts",
+                "They eliminated read-only memory altogether so users had to type calculator microcode from switches each morning"
+              ],
+              "correct_index": 0,
+              "explanation": "Hoff and Mazor proposed collapsing twelve fixed-function chips into a four-chip general-purpose architecture centered on a tiny 4-bit ROM-driven CPU that ran calculator features as software."
+            },
+            {
+              "id": "q_098",
+              "prompt": "What huge product-line advantage did a ROM-driven processor give Busicom over twelve hardwired logic chips?",
+              "choices": [
+                "It guaranteed the calculator would match a 16-bit PDP-11's speed on scientific simulations",
+                "It eliminated all RAM and I/O pins so the entire calculator ran on a single 2-pin battery wire",
+                "Different calculator models could reuse identical processor silicon and change features by swapping ROM software",
+                "Users could physically bend the 16-pin DIP legs to switch between printing and non-printing modes"
+              ],
+              "correct_index": 2,
+              "explanation": "Moving calculator logic out of fixed wiring and into ROM instructions let one general-purpose processor serve an entire product line—slashing NRE whenever features changed."
+            }
+          ]
+        },
+        {
+          "id": "ch_050",
+          "title": "On the Threshold of the Single Chip",
+          "content_markdown": "Pause at the close of 1969 and watch every thread of this module braid into one historic turning point! Minicomputers like DEC's 12-bit PDP-8 and Data General's 16-bit Nova proved *how* ruthless architectural minimalism could squeeze a real computer into a tiny **gate count** and **transistor budget**—while the PDP-11 stood waiting on the horizon as the orthogonal North Star for future decades. Desktop pioneers like Olivetti's Programma 101 and HP's 9100A proved that professionals hungered for personal programmable machines and demonstrated that lean shift-and-add engines steered by ROM software could replace mountains of **hardwired logic**. Finally, the brutal Japanese calculator price war supplied the mass-market volume to pay for **MOS LSI**, handing Intel's Ted Hoff and Stanley Mazor the perfect moment to propose a 16-pin **ROM-driven processor**. All that remained was turning their bold four-chip architecture into working silicon gates—the dramatic birth of the Intel 4004 waiting right ahead in Part 3!",
+          "questions": [
+            {
+              "id": "q_099",
+              "prompt": "Which historical synthesis best explains how minicomputers and desktop calculators together set up Intel's 1969 pivot?",
+              "choices": [
+                "Minicomputers supplied millions of office buyers while calculators supplied 16-bit orthogonal general-register banks",
+                "Calculators banned ROM software while minicomputers abandoned binary logic for magnetostrictive delay lines",
+                "Neither industry influenced Intel, which designed its 1969 architecture purely to replace glass-house mainframes",
+                "Minicomputers proved lean CPU design, while calculators supplied high-volume MOS LSI economics and ROM-driven lessons"
+              ],
+              "correct_index": 3,
+              "explanation": "Minicomputers (especially PDP-8's minimalism) inspired Hoff's lean stored-program approach, while calculators delivered the high-volume MOS LSI economics and ROM-based precedent that made the pivot irresistible."
+            },
+            {
+              "id": "q_100",
+              "prompt": "At the end of 1969, what decisive step still lay ahead after Ted Hoff and Stanley Mazor sketched their four-chip ROM-driven processor architecture?",
+              "choices": [
+                "Persuading DEC to discontinue the PDP-8 so Intel could borrow its discrete transistor modules",
+                "Translating their general-purpose 4-bit architecture into working MOS LSI silicon—producing the Intel 4004",
+                "Rewriting Unix in C so Busicom's desktop printing calculator could manage multi-user time-sharing",
+                "Expanding the calculator design back into twelve 40-pin hardwired chips to preserve speed"
+              ],
+              "correct_index": 1,
+              "explanation": "Hoff and Mazor established the breakthrough architectural pivot toward a 4-bit ROM-driven processor in late 1969; turning that blueprint into functioning silicon became the story of the Intel 4004 in Part 3."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

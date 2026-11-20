@@ -1,0 +1,1681 @@
+{
+  "id": "motorola_mos_axis_part_1",
+  "title": "The Motorola-MOS Axis I: The Motorola 6800, Clean 8-Bit Silicon, Pinball \u0026 Early ECUs (1974–1979)",
+  "summary": "Part 1 of the Motorola-MOS Axis Quest Arc: a relaxed, generalist-friendly yet architecturally substantive 100-question journey through the Motorola 6800 (1974–1979), explaining every hardware and programming abstraction from first principles. Building smoothly on Before the Single Chip IV, learners trace Mesa's PDP-11-inspired single-supply design, big-endian memory-mapped I/O, dual accumulators, top-of-memory interrupt vectors, the single X index register's block-copy bottleneck, and Chuck Peddle's PIA and ACIA support family before following the 6800 into the SWTPC 6800, Tektronix 4051, solid-state pinball, and automotive engine controllers on the threshold of the MOS 6502 breakaway and Motorola's single-chip 6801.",
+  "topic_prompt": "Teach the Motorola 6800 (1974–1979) from first principles at a relaxed, generalist-friendly conversational pace (10 sections, 50 chunks, ~15 concepts) while delivering real architectural depth. Open with Motorola's Mesa/Phoenix engineering bet and how DEC PDP-11 minicomputer sensibilities shaped the 6800 into a cleaner, board-friendlier alternative to Intel's 8080: explain why a single +5V power rail (paired with an external two-phase clock) dramatically simplified circuit design compared to triple-supply chips. Introduce big-endian byte ordering intuitively (human left-to-right reading order in memory dumps) and memory-mapped I/O (treating hardware devices as ordinary memory addresses instead of using separate IN/OUT instructions). Walk through the 6800 programmer's model step by step: the two symmetric 8-bit accumulators (A and B), condition codes, 16-bit stack pointer, clean vector-table interrupts at the top of memory, and core addressing modes (Immediate, fast page-zero Direct, Extended, and Indexed). Spotlight the single 16-bit X index register and walk through its famous block-copy bottleneck—why shuffling both a source and destination pointer through one register made memory copies awkward and directly motivated later chip designs. Explore Chuck Peddle's system-family philosophy through the MC6820/6821 PIA (parallel I/O) and MC6850 ACIA (serial communications) support chips. Close with four vivid commercial arenas where the 6800 excelled: the hobbyist SWTPC 6800 (SS-50 bus and MIKBUG monitor), the Tektronix 4051 storage-tube graphics computer, the transition from electromechanical relays to 6800-powered solid-state pinball machines, and early automotive electronic engine controllers that set the stage for both the MOS 6502 breakaway and Motorola's single-chip 6801.",
+  "tag_path": [
+    "History",
+    "History of Technology",
+    "Microprocessor History"
+  ],
+  "prerequisite_ids": [
+    "before_the_single_chip_part_4"
+  ],
+  "vetting_summary": "Conducted a full sequential college-freshman generalist vetting pass across all 10 sections (50 chunks and 100 multiple-choice questions), verifying prerequisite discipline against Before the Single Chip IV, LaTeX and JSON escaping integrity, 1-idea-per-chunk conversational pacing, and four-option parity. Refined 24 chunks and 9 questions/explanations to define every specialized hardware and assembly term in plain English on first appearance, remove premature references to later terms, and tighten choice-length balance.",
+  "created_at": "2026-11-20T01:26:14Z",
+  "sections": [
+    {
+      "id": "sec_01",
+      "title": "1. Mesa's Bet: Minicomputer Cleanliness on a Single 5-Volt Rail",
+      "summary": "Trace Motorola's 1972–1974 Mesa/Phoenix microprocessor push under chief architect Tom Bennett, showing how DEC PDP-11 minicomputer sensibilities inspired a cleaner, board-friendlier rival to Intel's 8080. Unpack why a single $$+5\\,\\text{V}$$ power rail matching standard 7400-series TTL boards drastically simplified circuit layouts compared to triple-supply chips needing $$+5\\,\\text{V}$$, $$+12\\,\\text{V}$$, and $$-5\\,\\text{V}$$, and weigh the hardware trade-off of pairing that single rail with a precise external non-overlapping two-phase clock ($$\\phi_1$$ and $$\\phi_2$$).",
+      "introduced_terms": [
+        "power rail",
+        "two-phase clock"
+      ],
+      "chunks": [
+        {
+          "id": "ch_001",
+          "title": "An Arizona Gambler Enters the Microprocessor Race",
+          "content_markdown": "In 1972, Motorola was famous for car radios, police two-way radios, and rugged individual transistors—not computers. Yet inside its Semiconductor Products Division in Mesa and Phoenix, Arizona, the company launched an ambitious bet on the brand-new world of single-chip processors. To lead the architecture, Motorola recruited Tom Bennett from calculator maker Victor Comptometer and surrounded him with sharp young engineers including Rod Orgill, Chuck Peddle, and Bill Mensch.\n\nIntel's pioneering microprocessors had already proved that a whole processor could fit on one piece of silicon, but hardware engineers building actual circuit boards complained that early chips felt prickly and awkward to wire up. Bennett's Mesa team looked instead to the beloved Digital Equipment Corporation (DEC) PDP-11 minicomputer, famous for its clean, orderly design. Their bold goal was the 1974 MC6800: a 40-pin general-purpose processor bringing minicomputer cleanliness straight to everyday circuit boards as a friendlier rival to Intel's 8080.",
+          "questions": [
+            {
+              "id": "q_001",
+              "prompt": "Why did Tom Bennett's Mesa engineering team draw inspiration from DEC's PDP-11 minicomputer while designing the 6800?",
+              "choices": [
+                "They needed full binary compatibility with existing DEC minicomputer software libraries",
+                "They wanted to reuse spare PDP-11 circuit boards inside Motorola's police radio factories",
+                "They admired its clean, orderly architecture and wanted a board-friendlier microprocessor",
+                "They planned to license DEC's proprietary 16-bit transistor process for desktop calculators"
+              ],
+              "correct_index": 2,
+              "explanation": "Motorola did not copy the 16-bit PDP-11 binary format; instead, Bennett's team adopted its clean, regular design sensibilities to build a simpler, easier-to-use 8-bit microprocessor."
+            },
+            {
+              "id": "q_002",
+              "prompt": "What major complaint among early hardware engineers helped motivate Motorola's 1974 MC6800 design?",
+              "choices": [
+                "Early rival microprocessors felt awkward and fussy to wire onto real circuit boards",
+                "Early rival microprocessors refused to operate inside standard 40-pin plastic packages",
+                "Early rival microprocessors lacked any support for general-purpose binary computation",
+                "Early rival microprocessors could only be purchased by government aerospace contractors"
+              ],
+              "correct_index": 0,
+              "explanation": "While early microprocessors proved single-chip computing worked, board designers found them finicky to integrate; Motorola aimed to make the 6800 noticeably cleaner to build around."
+            }
+          ]
+        },
+        {
+          "id": "ch_002",
+          "title": "The Magic of a Single 5-Volt Power Rail",
+          "content_markdown": "To understand why board designers cheered when the 6800 debuted, picture a **power rail**: a dedicated copper voltage track running across a circuit board to deliver steady electrical energy to chips. By 1974, almost every standard 7400-series TTL logic chip on an engineer's bench ran cheerfully on a single $$+5\\,\\text{V}$$ power rail.\n\nIntel's competing 8080 broke that neat harmony. Because of how its internal transistors were designed, the 8080 demanded three separate voltages at once: $$+5\\,\\text{V}$$, $$+12\\,\\text{V}$$, and $$-5\\,\\text{V}$$. Imagine buying a toaster that only worked if you plugged three different cords into three specialized wall outlets—and burst into smoke if you plugged them in out of order! Indeed, applying an 8080's power rails in the wrong startup sequence could permanently ruin the chip. Motorola solved that headache on silicon, engineering the MC6800 to run completely off the exact same single $$+5\\,\\text{V}$$ rail as surrounding TTL chips.",
+          "questions": [
+            {
+              "id": "q_003",
+              "prompt": "In circuit-board engineering, what is a power rail?",
+              "choices": [
+                "A metal bracket bolted beneath a microprocessor to pull excess heat into the cabinet",
+                "A dedicated voltage line routed across a circuit board to supply steady power to chips",
+                "A protective fuse wired in front of every logic gate to filter out radio interference",
+                "A special signal wire that carries timing pulses between a processor and external memory"
+              ],
+              "correct_index": 1,
+              "explanation": "A power rail is a steady supply-voltage line distributed across a printed circuit board so integrated circuits receive the exact operating voltage they need."
+            },
+            {
+              "id": "q_004",
+              "prompt": "Besides extra wiring, what serious practical hazard did triple-supply chips like the Intel 8080 pose to designers?",
+              "choices": [
+                "Their extra voltage pins left no physical room on the package for an 8-bit data bus",
+                "Their negative voltage rail prevented any 7400-series TTL chips from sharing the cabinet",
+                "Their higher supply voltage forced every connected memory chip to run at half speed",
+                "Applying their three supply voltages in the wrong power-up sequence could ruin the chip"
+              ],
+              "correct_index": 3,
+              "explanation": "Triple-supply chips like the 8080 required careful power-sequencing protection, because bringing up $$+5\\,\\text{V}$$, $$+12\\,\\text{V}$$, and $$-5\\,\\text{V}$$ in the wrong order could permanently damage the silicon."
+            }
+          ]
+        },
+        {
+          "id": "ch_003",
+          "title": "Designing a Real Circuit Board: One Rail Versus Three",
+          "content_markdown": "Walk through a concrete 1974 engineering desk comparison to feel the real-world difference. Suppose Engineer A builds an industrial timer around the triple-supply 8080. Before she writes a single line of software, her power supply needs a larger power transformer, three separate voltage regulators (chips that hold each supply voltage steady) bolted to metal cooling fins, and protective startup-sequencing circuits. On her crowded circuit board, three wide power tracks snake past every chip, stealing precious routing space from address and data wires.\n\nAcross the hall, Engineer B chooses the Motorola 6800. One compact $$+5\\,\\text{V}$$ regulator powers the processor, its memory chips, and every surrounding 7400-series TTL glue-logic chip through a single clean power grid. Her cabinet runs cooler, her total parts cost drops noticeably, and a field technician troubleshooting a broken machine later only needs to verify one steady $$+5\\,\\text{V}$$ reading with a voltmeter.",
+          "questions": [
+            {
+              "id": "q_005",
+              "prompt": "Why did switching from a triple-supply processor to the single-rail 6800 make circuit-board layout cleaner?",
+              "choices": [
+                "One shared 5-volt power grid left far more board space free for address and data traces",
+                "One shared 5-volt power grid removed the need for any ground return path on the board",
+                "One shared 5-volt power grid let memory chips store twice as many bytes per package",
+                "One shared 5-volt power grid automatically eliminated all external TTL glue logic"
+              ],
+              "correct_index": 0,
+              "explanation": "Routing only one supply voltage across a two-layer board freed up valuable copper real estate for signal lines while keeping the power network straightforward."
+            },
+            {
+              "id": "q_006",
+              "prompt": "How did the 6800's single 5-volt supply directly lower overall product cost and complexity?",
+              "choices": [
+                "It allowed designers to eliminate printed circuit boards and hand-wire sockets instead",
+                "It made the 6800 immune to static electricity during factory assembly and shipping",
+                "It cut out extra voltage regulators, heat sinks, and power-sequencing protection parts",
+                "It doubled the processor's clock frequency without needing faster external memory chips"
+              ],
+              "correct_index": 2,
+              "explanation": "Running on a single $$+5\\,\\text{V}$$ rail eliminated the extra transformers, regulators, heat sinks, and startup-sequencing circuits required by triple-supply competitors."
+            }
+          ]
+        },
+        {
+          "id": "ch_004",
+          "title": "The Catch: An External Two-Phase Clock",
+          "content_markdown": "Motorola's single-rail achievement came with one classic engineering twist. To fit a capable processor onto a manufacturable 1974 silicon die running at just $$+5\\,\\text{V}$$, the MC6800 used dynamic internal circuits—storing bits briefly as tiny pockets of electrical charge on transistor gates, a leaner cousin of earlier four-phase dynamic logic.\n\nMoving those delicate charges safely from stage to stage required an external **two-phase clock**: two alternating, strictly non-overlapping timing pulses named $$\\phi_1$$ and $$\\phi_2$$. Picture a submarine airlock with two watertight doors—door one must seal shut before door two opens, or water floods straight through. Similarly, $$\\phi_1$$ had to fall cleanly before $$\\phi_2$$ rose, forcing board builders to add a precision external clock chip such as Motorola's MC6870. Because dynamic charges leak away fast, the 6800 could not be paused indefinitely: dropping its clock below $$100\\,\\text{kHz}$$ (100,000 cycles per second) made its internal registers literally forget their contents!",
+          "questions": [
+            {
+              "id": "q_007",
+              "prompt": "Why did the 6800's external two-phase clock signals have to stay strictly non-overlapping?",
+              "choices": [
+                "Overlapping pulses would reverse the polarity of the board's single 5-volt power rail",
+                "Overlapping pulses would let charge bleed straight through sequential internal stages",
+                "Overlapping pulses would accidentally erase the permanently programmed boot memory",
+                "Overlapping pulses would force the processor to switch from 8-bit to 4-bit execution"
+              ],
+              "correct_index": 1,
+              "explanation": "Like an airlock whose first door must shut before the second opens, non-overlapping $$\\phi_1$$ and $$\\phi_2$$ pulses kept dynamic charge stages isolated as data stepped through the chip."
+            },
+            {
+              "id": "q_008",
+              "prompt": "What happened inside an original MC6800 if an engineer completely halted its external clock?",
+              "choices": [
+                "The chip entered a low-power sleep mode and preserved every register indefinitely",
+                "The chip automatically switched to a backup internal oscillator running at half speed",
+                "The chip blew an internal safety fuse to protect surrounding TTL circuits from heat",
+                "The chip's dynamic internal charges leaked away and its working registers lost state"
+              ],
+              "correct_index": 3,
+              "explanation": "Because the original 6800 relied on dynamic logic, its internal nodes required continuous refreshing above $$100\\,\\text{kHz}$$; stopping the clock let stored state fade away."
+            }
+          ]
+        },
+        {
+          "id": "ch_005",
+          "title": "Board-Friendly Silicon Sets the Stage",
+          "content_markdown": "Stepping back, Mesa's opening bet reveals an enduring lesson in computer engineering: the best processor on paper is not always the easiest one to ship inside a real product. Intel's 8080 arrived a few months earlier and earned massive momentum, yet Motorola won fierce loyalty among circuit-board designers by sweating the practicalities of power, cooling, and package simplicity.\n\nEven factoring in its demanding external two-phase clock chip, a single $$+5\\,\\text{V}$$ power rail paired seamlessly with standard TTL logic made the 6800 a dream to drop into cramped laboratory instruments, arcade cabinets, and industrial controllers. Still, tidy electrical wiring is only half of what makes a microprocessor approachable. Once the power switch flips on and the $$\\phi_1$$ and $$\\phi_2$$ pulses start marching, programmers need a clean way to read multi-byte numbers in memory and talk to external gadgets—which is where Motorola's PDP-11 inspiration really starts to shine.",
+          "questions": [
+            {
+              "id": "q_009",
+              "prompt": "Which engineering trade-off best captures Motorola's core hardware bet with the original MC6800?",
+              "choices": [
+                "Accepting three separate supply voltages in order to build an internal clock generator",
+                "Sacrificing TTL compatibility in order to pause the processor clock for single-stepping",
+                "Pairing a single 5-volt power rail with a strict external two-phase clock to simplify boards",
+                "Doubling the package pin count to 80 pins so every circuit could run without memory"
+              ],
+              "correct_index": 2,
+              "explanation": "Motorola traded away an internal clock and the ability to pause indefinitely so the 6800 could run on one TTL-friendly $$+5\\,\\text{V}$$ power rail, dramatically simplifying system boards."
+            },
+            {
+              "id": "q_010",
+              "prompt": "Why did the 6800's single-rail architecture resonate especially strongly with designers of compact instruments and controllers?",
+              "choices": [
+                "Compact enclosures benefited hugely from cooler operation and a single small power supply",
+                "Compact instruments never needed external clock pulses to keep track of elapsed time",
+                "Compact controllers could only execute programs written originally for DEC minicomputers",
+                "Compact cabinets prevented engineers from installing standard 7400-series TTL logic chips"
+              ],
+              "correct_index": 0,
+              "explanation": "Tight physical spaces had little room for bulky multi-voltage transformers and heat sinks, making a cool, single-rail $$+5\\,\\text{V}$$ system much easier to package reliably."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_02",
+      "title": "2. Big-Endian Byte Order and Memory-Mapped I/O",
+      "summary": "Explore how the 6800 organizes its 64 KB address space to make both debugging and hardware interfacing remarkably straightforward. Contrast little-endian storage with big-endian byte order—where 16-bit values store their most-significant byte first so memory dumps read naturally left to right—and unpack PDP-11-inspired memory-mapped I/O, where address decoding lets ordinary memory instructions talk directly to hardware devices without separate IN and OUT commands.",
+      "introduced_terms": [
+        "big-endian byte order",
+        "memory-mapped I/O",
+        "address decoding"
+      ],
+      "chunks": [
+        {
+          "id": "ch_006",
+          "title": "Reading a Memory Dump Without Standing on Your Head",
+          "content_markdown": "Imagine debugging a brand-new microprocessor program in 1975 by printing raw rows of memory onto a noisy paper roll. Each numbered mailbox in memory holds just 8 bits—one byte—conveniently printed as two hexadecimal (base-16) digits ranging from `00` through `FF`. Yet the Motorola 6800 has a 16-bit address bus (16 numbered address wires) capable of naming $$2^{16} = 65{,}536$$ individual bytes (64 KB). That creates an immediate puzzle: whenever a program stores a full 16-bit address like hexadecimal `1234`, it must split that number across *two* neighboring memory mailboxes.\n\nEarlier, you saw how Computer Terminal Corporation's Datapoint 2200 and Intel's 8008/8080 family chose little-endian byte order, tucking the low byte `34` into the first mailbox and `12` into the second. That worked neatly for bit-serial hardware, yet forced programmers scanning a printed memory dump to mentally flip every byte pair backward. Motorola's Mesa architects wondered: could memory read the way people actually write?",
+          "questions": [
+            {
+              "id": "q_011",
+              "prompt": "Why must a full Motorola 6800 memory address occupy two consecutive memory locations?",
+              "choices": [
+                "Because each memory slot holds only 4 bits while every address requires 8 bits",
+                "Because each memory slot holds 8 bits while a full 64 KB address requires 16 bits",
+                "Because the processor stores an identical backup copy of every address for safety",
+                "Because half of every memory slot is permanently reserved for clock-timing signals"
+              ],
+              "correct_index": 1,
+              "explanation": "The 6800 addresses $$2^{16} = 65{,}536$$ bytes using 16-bit addresses, whereas each individual memory cell stores a single 8-bit byte, so every full address spans two bytes."
+            },
+            {
+              "id": "q_012",
+              "prompt": "What everyday annoyance did little-endian storage create for engineers inspecting hexadecimal memory dumps?",
+              "choices": [
+                "It doubled the total number of bytes needed to hold any 16-bit memory address",
+                "It prevented printers from outputting standard hexadecimal digits above nine",
+                "It forced the processor to pause every time a program accessed odd addresses",
+                "It forced readers to mentally swap each adjacent byte pair to read 16-bit values"
+              ],
+              "correct_index": 3,
+              "explanation": "In little-endian order, `1234` prints across consecutive addresses as `34 12`, forcing human debuggers to reverse each byte pair mentally while reading left to right."
+            }
+          ]
+        },
+        {
+          "id": "ch_007",
+          "title": "Big-Endian Order: Natural Left-to-Right Storage",
+          "content_markdown": "Motorola answered with **big-endian byte order**: placing the 'big' (most-significant) byte at the lower memory address and the 'little' (least-significant) byte at the very next higher address. Think of writing the year `1974` across two numbered index cards laid side by side on a table. You put `19` on card 1 and `74` on card 2. Anyone glancing across the cards from left to right reads `1974` effortlessly.\n\nThe 6800 follows that same human-friendly convention everywhere. If an instruction jumps to hexadecimal address `1234`, the processor stores `12` at the first byte and `34` at the second. When an engineer prints a memory dump across a page, `12 34` jumps right off the paper in natural order. Echoing IBM's giant System/360 mainframes, big-endian byte order became a lifelong Motorola hallmark—carried forward into later chips and even into internet packet headers decades later.",
+          "questions": [
+            {
+              "id": "q_013",
+              "prompt": "In big-endian byte order, where does the most-significant byte of a 16-bit value sit?",
+              "choices": [
+                "At the lower memory address, followed immediately by the least-significant byte",
+                "At the higher memory address, preceded immediately by the least-significant byte",
+                "Inside a special 16-bit scratch register rather than in ordinary byte memory",
+                "At the very top of memory regardless of which address the instruction named"
+              ],
+              "correct_index": 0,
+              "explanation": "Big-endian storage always places the 'big end' (most-significant byte) first at the lower address and the least-significant byte at the next higher address."
+            },
+            {
+              "id": "q_014",
+              "prompt": "How would a Motorola 6800 store the 16-bit hexadecimal address `A40F` starting at memory address `0100`?",
+              "choices": [
+                "It stores `0F` at address `0100` and `A4` at address `0101`",
+                "It stores `F0` at address `0100` and `4A` at address `0101`",
+                "It stores `A4` at address `0100` and `0F` at address `0101`",
+                "It stores `A4` at address `0100` and `A4` at address `0101`"
+              ],
+              "correct_index": 2,
+              "explanation": "In big-endian order, the high byte `A4` goes into the lower address `0100`, and the low byte `0F` goes into the next address `0101`."
+            }
+          ]
+        },
+        {
+          "id": "ch_008",
+          "title": "One Address Map for Everything: Memory-Mapped I/O",
+          "content_markdown": "Having tidied up how numbers sit in memory, Motorola tackled how the 6800 talks to external devices like keyboards, indicator lamps, and printers. Intel's 8080 kept external hardware in a separate side corridor reached only by dedicated `IN` and `OUT` instructions and extra control pins. Taking a cue straight from DEC's PDP-11, Motorola abolished that separate corridor altogether in favor of **memory-mapped I/O**: assigning hardware devices ordinary addresses inside the exact same 64 KB space as writable working memory (RAM) and permanent read-only memory (ROM).\n\nPicture an office building where the copy room and mailroom simply have normal room numbers right alongside regular desks. How does the building route each request to the right chip? Simple logic gates (tiny electronic switches) perform **address decoding**—watching the upper wires of the 16-bit address bus to wake up only one chip at a time: RAM for low addresses (`0000`–`3FFF`), a peripheral chip in the middle (`8000`–`8003`), and startup ROM near the top (`E000`–`FFFF`).",
+          "questions": [
+            {
+              "id": "q_015",
+              "prompt": "How does memory-mapped I/O allow the Motorola 6800 to communicate with external hardware gadgets?",
+              "choices": [
+                "By switching the processor into a special peripheral mode using an extra voltage rail",
+                "By routing peripheral data through a separate 8-pin side bus isolated from main memory",
+                "By executing dedicated IN and OUT instructions reserved strictly for external device ports",
+                "By assigning hardware control ports ordinary addresses inside the shared 64 KB memory space"
+              ],
+              "correct_index": 3,
+              "explanation": "Memory-mapped I/O places hardware device registers directly inside the regular 64 KB address space, eliminating separate I/O instructions and control pins."
+            },
+            {
+              "id": "q_016",
+              "prompt": "What essential job does address decoding perform inside a 6800-based computer?",
+              "choices": [
+                "It translates human-readable hexadecimal digits into binary voltages inside the CPU",
+                "It inspects upper address lines to enable only the single memory or device chip targeted",
+                "It rearranges incoming little-endian bytes into big-endian order before saving to RAM",
+                "It divides the external two-phase clock down to match slow mechanical keyboards"
+              ],
+              "correct_index": 1,
+              "explanation": "Address-decoding logic checks the high address bits so that RAM, ROM, and peripheral chips each respond only to their assigned address range without colliding on the data bus."
+            }
+          ]
+        },
+        {
+          "id": "ch_009",
+          "title": "Superpowered Hardware Control—and Its Quiet Cost",
+          "content_markdown": "Memory-mapped I/O handed 6800 programmers an unexpected superpower. On an Intel 8080, talking to an I/O port forced every byte through one specific working register via `IN` or `OUT` before you could inspect or modify it. On the 6800, because a hardware port behaves just like any byte in RAM, *every* ordinary memory instruction works on external hardware directly. Want to clear an output port, increment a hardware counter, test a sensor bit, or shift a byte straight out to a display? You can do it in one clean instruction without extra shuffling.\n\nNaturally, there is a subtle trade-off. Every address block handed over to hardware devices is a slice you cannot populate with ordinary RAM. In tiny low-cost boards, engineers sometimes saved pennies by using minimal address decoding—only checking a few top address wires—which caused a single four-byte device to 'echo' like a hall of mirrors across thousands of unused addresses, shrinking the system's usable memory map.",
+          "questions": [
+            {
+              "id": "q_017",
+              "prompt": "What major programming perk did memory-mapped I/O give 6800 coders compared to separate IN and OUT commands?",
+              "choices": [
+                "Hardware devices automatically ran twice as fast as ordinary RAM chips on the bus",
+                "External gadgets could draw unlimited electrical current straight from the address pins",
+                "Any regular memory instruction could read, clear, test, or shift a hardware port directly",
+                "Programmers could attach peripherals without wiring any address-decoding logic at all"
+              ],
+              "correct_index": 2,
+              "explanation": "Because hardware registers sit in the regular memory space, the 6800's full repertoire of memory instructions can test, modify, or clear device bits directly."
+            },
+            {
+              "id": "q_018",
+              "prompt": "What quiet system trade-off comes with placing hardware devices inside the main 64 KB address map?",
+              "choices": [
+                "Address ranges claimed by devices—especially under coarse decoding—reduce space left for RAM",
+                "The processor can no longer store big-endian numbers anywhere near a hardware address",
+                "Hardware chips must be permanently soldered into memory sockets rather than plugged in",
+                "The CPU must stop executing instructions for several milliseconds after every port read"
+              ],
+              "correct_index": 0,
+              "explanation": "Device addresses consume portions of the 64 KB map, and cheap partial address decoding can cause a single device to mirror across large swaths of address space."
+            }
+          ]
+        },
+        {
+          "id": "ch_010",
+          "title": "A Unified Landscape Ready for Work",
+          "content_markdown": "Step back and admire how cleanly Sections 1 and 2 fit together. Electrically, the 6800 unified the circuit board around one $$+5\\,\\text{V}$$ power rail. Conceptually, big-endian byte order and memory-mapped I/O unified the programmer's entire world into one tidy 64 KB street of addresses. Sixteen-bit numbers read naturally left to right on paper printouts, and keyboards, lamps, RAM, and ROM all live behind ordinary street numbers sorted cleanly by address decoding—with zero special I/O instructions to clutter the chip's pin budget.\n\nSo far, though, we have only explored the neighborhood *outside* the 6800's 40-pin package. What happens when a byte actually travels down the data bus and steps through the processor's front door? In the next section, we open the hood and inspect the 6800's crisp internal workbench—where two equal workspaces and a handful of tiny status flags drive every calculation and decision.",
+          "questions": [
+            {
+              "id": "q_019",
+              "prompt": "Which pair of design choices together created the 6800's unified, human-readable view of memory and peripherals?",
+              "choices": [
+                "Triple power rails paired with dedicated IN and OUT peripheral instructions",
+                "Big-endian byte order paired with PDP-11-inspired memory-mapped I/O",
+                "Little-endian byte order paired with four-phase dynamic timing circuits",
+                "Bit-serial arithmetic paired with a separate 16-pin peripheral data corridor"
+              ],
+              "correct_index": 1,
+              "explanation": "Big-endian storage kept 16-bit values readable left to right in dumps, while memory-mapped I/O unified RAM, ROM, and hardware devices under one 64 KB address map."
+            },
+            {
+              "id": "q_020",
+              "prompt": "Why did dropping separate IN and OUT commands also benefit the physical 40-pin 6800 chip itself?",
+              "choices": [
+                "It allowed the chip to run without needing any external two-phase clock signals",
+                "It doubled the chip's addressable memory range from 64 KB up to 128 KB",
+                "It replaced all 16 address pins with a single serial wire to external devices",
+                "It simplified the chip's pin budget and control logic by treating all bus traffic uniformly"
+              ],
+              "correct_index": 3,
+              "explanation": "Without a separate I/O address space, the 6800 needed no extra I/O-select pins or special I/O bus cycles—every transfer used the exact same clean memory protocol."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_03",
+      "title": "3. Inside the 6800: Dual Accumulators and Condition Codes",
+      "summary": "Step inside the 6800 programmer's model to see how Motorola kept its register set compact yet comfortable to code. Meet the two symmetric 8-bit accumulators (A and B) that let programmers juggle two independent working values without constant shuffling, and unpack the Condition Code Register's six status flags (H, I, N, Z, V, and C)—highlighting how a dedicated signed overflow flag makes clean signed and unsigned conditional branching effortless.",
+      "introduced_terms": [
+        "accumulator",
+        "condition code register",
+        "signed overflow"
+      ],
+      "chunks": [
+        {
+          "id": "ch_011",
+          "title": "Cooking With Two Hands Instead of One",
+          "content_markdown": "Imagine cooking dinner in a tiny kitchen that owns only a single mixing bowl. Whenever you need to whisk a sauce while folding batter, you have to scoop the batter into a jar, rinse the bowl, whisk the sauce, pour that into another jar, and dump the batter back in. Several early 8-bit processors—including Intel's 8080—worked rather like that: almost every arithmetic or logic operation had to pass through one privileged working slot while the remaining registers played narrower helper roles.\n\nWhen Motorola's Mesa architects designed the 6800's programmer's model—the compact set of fast, on-chip storage slots directly visible to software—they rejected lopsided odd-job registers. Borrowing the clean, regular spirit of DEC's PDP-11 while keeping transistor count modest enough for 1974 silicon, they asked a simple ergonomic question: what if the chip gave programmers two equal, full-strength hands?",
+          "questions": [
+            {
+              "id": "q_021",
+              "prompt": "What programming bottleneck happens when a CPU routes almost all arithmetic through a single primary register?",
+              "choices": [
+                "The processor can no longer access memory addresses above the first 256 bytes",
+                "The processor must switch to little-endian storage whenever two numbers are added",
+                "Code must constantly move temporary results out and back whenever juggling two values",
+                "Hardware interrupts stop working until the single register is manually cleared to zero"
+              ],
+              "correct_index": 2,
+              "explanation": "With only one primary math register, working on two independent values at once forces repeated saves and reloads—like sharing a single mixing bowl between two recipes."
+            },
+            {
+              "id": "q_022",
+              "prompt": "What does a microprocessor's 'programmer's model' refer to?",
+              "choices": [
+                "The small set of fast on-chip registers and status flags directly visible to software",
+                "The physical arrangement of 40 metallic pins along the edges of the plastic package",
+                "The printed circuit board diagram showing how voltage regulators wire to the chip",
+                "The factory price list comparing different microprocessor speeds and memory sizes"
+              ],
+              "correct_index": 0,
+              "explanation": "A programmer's model is the software-facing blueprint of internal registers and flags that instructions read, modify, and test."
+            }
+          ]
+        },
+        {
+          "id": "ch_012",
+          "title": "Two Equal Workbenches: Accumulators A and B",
+          "content_markdown": "At the center of the 6800's internal workbench sit two nearly identical 8-bit slots called **accumulators**, named `A` and `B`. In computing, an accumulator is a central working register where numbers are held during math, logic, and bit shifts—so named because running totals 'accumulate' inside it across successive steps.\n\nRather than making `B` a second-class assistant, Motorola wired both `A` and `B` directly to the chip's arithmetic-logic unit (its built-in math and logic engine) with almost identical capabilities. Nearly anything you can do with `A`—loading a byte from memory, adding or subtracting, testing bits, shifting left or right, or storing back to RAM—you can do just as easily with `B`. Need to keep a running byte total in `A` while inspecting an incoming keyboard code in `B`, or combine them directly with one `ABA` ('add B to A') instruction? Two symmetric accumulators turn awkward juggling acts into crisp, readable code.",
+          "questions": [
+            {
+              "id": "q_023",
+              "prompt": "Why is a processor's central arithmetic register traditionally called an accumulator?",
+              "choices": [
+                "Because it stores extra electrical charge to keep the chip running during power dips",
+                "Because it collects incoming address lines before sending them to external RAM chips",
+                "Because it gathers multiple hardware interrupts into a queue until a loop finishes",
+                "Because running totals and step-by-step math results literally accumulate inside it"
+              ],
+              "correct_index": 3,
+              "explanation": "An accumulator holds the working operand and receives the updated result of each arithmetic or logic step, accumulating totals over time."
+            },
+            {
+              "id": "q_024",
+              "prompt": "How did giving the 6800 two symmetric accumulators (A and B) simplify everyday assembly coding?",
+              "choices": [
+                "It doubled the data bus width from 8 bits to 16 bits on every memory read",
+                "It let code track and compute on two independent 8-bit values without constant swapping",
+                "It allowed both accumulators to hold full 16-bit memory addresses simultaneously",
+                "It eliminated the need for any external RAM chips in small industrial controllers"
+              ],
+              "correct_index": 1,
+              "explanation": "Because both `A` and `B` support almost the same full set of math, load, and store operations, programs can work with two independent 8-bit values side by side."
+            }
+          ]
+        },
+        {
+          "id": "ch_013",
+          "title": "Six Tiny Indicator Lights: The Condition Code Register",
+          "content_markdown": "Calculating a sum is useless unless a program can *react* to the answer. For that, the 6800 maintains an 8-bit **condition code register** (CCR): a compact row of single-bit status flags that flip automatically to `1` or `0` after math and data-movement instructions, like dashboard warning lights telling the next branch instruction what just happened.\n\nSix bits carry active meanings (while the unused top two bits remain permanently `1`). `Z` (Zero) lights up whenever a result equals zero; `N` (Negative) mirrors bit 7 so negative signed results stand out immediately; `C` (Carry) signals when an unsigned addition rolls past $$255$$ or a subtraction borrows. `H` (Half-Carry) catches carries crossing from bit 3 into bit 4 to simplify base-10 decimal math adjustments, `I` masks ordinary external interrupts, and `V` flags signed trouble. Try adding `01` to hexadecimal `FF` ($$255$$) in accumulator `A`: the 8-bit sum wraps around to `00`, instantly lighting both `Z` and `C`!",
+          "questions": [
+            {
+              "id": "q_025",
+              "prompt": "When an 8-bit accumulator holding hexadecimal `FF` ($$255$$) has `01` added to it, which two status flags immediately light up?",
+              "choices": [
+                "Zero (Z) because the 8-bit result is `00`, and Carry (C) because it rolled past $$255$$",
+                "Negative (N) because bit 7 turned on, and Interrupt Mask (I) because a wrap occurred",
+                "Zero (Z) because the result is `00`, and Negative (N) because the value dropped",
+                "Carry (C) because it rolled past $$255$$, and Interrupt Mask (I) to pause hardware"
+              ],
+              "correct_index": 0,
+              "explanation": "Adding `01` to `FF` produces `100` in hex: the low 8 bits left in the accumulator are `00` (setting `Z`), while the 9th bit sets the Carry flag (`C`)."
+            },
+            {
+              "id": "q_026",
+              "prompt": "What specific purpose does the Half-Carry (H) bit in the Condition Code Register serve?",
+              "choices": [
+                "It warns the programmer whenever half of the 64 KB memory space is full",
+                "It pauses the external two-phase clock halfway through long arithmetic loops",
+                "It records a carry between the low and high 4-bit halves to aid base-10 decimal math",
+                "It splits accumulator A into two separate 4-bit counters for parallel displays"
+              ],
+              "correct_index": 2,
+              "explanation": "Base-10 decimal digits pack neatly into 4-bit halves, so tracking a carry from bit 3 to bit 4 (`H`) lets a decimal-adjust instruction convert binary sums back into clean decimal."
+            }
+          ]
+        },
+        {
+          "id": "ch_014",
+          "title": "The Unsung Hero: Signed Overflow (V)",
+          "content_markdown": "You might wonder why Motorola included a separate Overflow (`V`) flag right beside Carry (`C`). Suppose a 6800 thermostat stores signed 8-bit numbers spanning $$-128$$ to $$+127$$ using standard 'two's-complement' encoding—where negative values count backward below zero so bit 7 signals the sign (`0` for positive, `1` for negative). Now add $$+100$$ (`01100100`) and $$+50$$ (`00110010`).\n\nLook at the raw 8-bit sum: `10010110`. That fits comfortably inside 8 bits without spilling out the top, so Carry stays peacefully off (`C = 0`). Yet bit 7 just flipped from `0` to `1`! Read as a signed number, two positive temperatures just added up to $$-106$$! That silent sign reversal is **signed overflow**: when the true signed answer bursts above $$+127$$ or below $$-128$$ and wraps into the opposite sign. Intel's 8080 lacked a dedicated signed overflow flag, forcing clunky extra checks; the 6800's `V` flag caught that wraparound automatically on every add or subtract.",
+          "questions": [
+            {
+              "id": "q_027",
+              "prompt": "Why does adding $$+100$$ and $$+50$$ in signed 8-bit arithmetic trigger signed overflow (V) without lighting the Carry (C) flag?",
+              "choices": [
+                "Because the 6800 disables its Carry flag whenever bit 7 of an accumulator is zero",
+                "Because the sum equals zero in binary and forces both accumulators to reset together",
+                "Because signed addition automatically skips bit 7 to avoid colliding with decimal math",
+                "Because $$150$$ fits inside 8 unsigned bits yet exceeds $$+127$$ and flips the sign bit to negative"
+              ],
+              "correct_index": 3,
+              "explanation": "Unsigned $$150$$ does not exceed $$255$$ (so `C = 0`), but in signed 8-bit range ($$-128$$ to $$+127$$), $$150$$ spills into bit 7 and appears negative, setting `V = 1`."
+            },
+            {
+              "id": "q_028",
+              "prompt": "How did the 6800's dedicated V flag improve programming compared to Intel's 8080?",
+              "choices": [
+                "It doubled the maximum positive signed number an 8-bit accumulator could hold",
+                "It detected signed sign-wrap errors directly in hardware without awkward extra tests",
+                "It automatically halted the CPU whenever a negative number appeared in accumulator B",
+                "It converted signed negative inputs into positive unsigned bytes during memory loads"
+              ],
+              "correct_index": 1,
+              "explanation": "Because the 8080 lacked a dedicated signed overflow flag, testing signed inequalities was awkward; the 6800's `V` flag made signed arithmetic clean and direct."
+            }
+          ]
+        },
+        {
+          "id": "ch_015",
+          "title": "Clean Decisions, Crisp Branches—and What About Interruptions?",
+          "content_markdown": "Because the 6800 tracks `N`, `Z`, `V`, and `C` together, Motorola gave programmers a wonderfully symmetrical family of conditional branch instructions. Comparing unsigned counts like loop totals or memory sizes? Pick clean unsigned branches (`BHI` for higher, `BLS` for lower-or-same) driven by `C` and `Z`. Comparing signed quantities like temperature deltas or balance changes? Pick signed branches (`BGT` for greater-than, `BLT` for less-than) that automatically combine `N`, `V`, and `Z` so even a signed overflow never fools your logic.\n\nPaired with equal accumulators `A` and `B`, everyday 6800 calculation felt remarkably tidy and minicomputer-like. Still, real programs rarely run from top to bottom in quiet isolation. Code calls reusable helper routines, and impatient external hardware taps the processor on the shoulder demanding immediate service. Next, we meet the 6800's 16-bit stack pointer and discover how Motorola built one of the cleanest interrupt systems of the 1970s.",
+          "questions": [
+            {
+              "id": "q_029",
+              "prompt": "Why did the Motorola 6800 offer separate conditional branch pairs for unsigned versus signed comparisons?",
+              "choices": [
+                "Because unsigned branches read accumulator A while signed branches only read accumulator B",
+                "Because unsigned branches worked only in RAM while signed branches worked only in ROM",
+                "Because unsigned comparisons rely on C and Z whereas signed ones must account for N, V, and Z",
+                "Because unsigned branches could jump backward while signed branches could only jump forward"
+              ],
+              "correct_index": 2,
+              "explanation": "Unsigned order depends on Carry (`C`) and Zero (`Z`), whereas signed order depends on Negative (`N`), Overflow (`V`), and Zero (`Z`) so sign flips never break comparisons."
+            },
+            {
+              "id": "q_030",
+              "prompt": "How did dual accumulators and a six-flag Condition Code Register reflect Motorola's minicomputer-inspired design goals?",
+              "choices": [
+                "They prioritized regular, readable software flow over cramming in asymmetric special registers",
+                "They copied the Intel 8080's exact register layout so 8080 binaries ran without changes",
+                "They removed conditional branching so hardware logic could execute every path simultaneously",
+                "They traded away signed arithmetic completely in order to speed up unsigned addition"
+              ],
+              "correct_index": 0,
+              "explanation": "Like DEC's PDP-11, the 6800 favored symmetry and clean condition-code semantics—giving programmers two equal accumulators and proper signed branching."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_04",
+      "title": "4. The 16-Bit Stack Pointer and Top-of-Memory Interrupt Vectors",
+      "summary": "Follow how the 6800 manages subroutines, crashes, and real-time hardware events cleanly through its 16-bit stack pointer in external RAM. Discover why the 6800 automatically pushes all working registers onto the stack when an interrupt strikes—restoring them in a single RTI instruction—and walk through the tidy four-entry vector table parked at the very top of memory (hexadecimal FFF8–FFFF) for IRQ, SWI, NMI, and RESET.",
+      "introduced_terms": [
+        "interrupt vector table",
+        "non-maskable interrupt"
+      ],
+      "chunks": [
+        {
+          "id": "ch_016",
+          "title": "Dropping Everything Mid-Sentence—Without Losing Your Place",
+          "content_markdown": "Imagine you are halfway through balancing a checkbook when a smoke alarm chirps in the hallway. You drop your pencil, investigate the alarm, and walk back to the kitchen table ten minutes later. If you did not jot down which row you were checking and the subtotal sitting in your head, you have to start over—or worse, write a bogus total.\n\nA microprocessor faces that exact dilemma thousands of times every second. A keyboard press, an expiring timer, or a factory sensor can trigger a hardware interrupt right between two ordinary instructions. On some early microprocessors, answering an interrupt felt painfully clumsy: external glue chips had to jam a jump opcode (the numeric code naming a machine instruction) onto the data bus at just the right instant, and software had to save every working register by hand. Motorola's Mesa team wanted an interrupt system that saved your place automatically and pointed straight to the right emergency code.",
+          "questions": [
+            {
+              "id": "q_031",
+              "prompt": "Why must a processor save its active registers before executing a hardware interrupt handler?",
+              "choices": [
+                "Because reading an interrupt wire physically wipes all external RAM chips to zero",
+                "Because the handler will reuse those registers and would otherwise overwrite unfinished work",
+                "Because the two-phase clock slows down until every accumulator contains the value zero",
+                "Because big-endian numbers temporarily flip into little-endian format during an interrupt"
+              ],
+              "correct_index": 1,
+              "explanation": "An interrupt routine needs the CPU's accumulators and flags to do its own work; saving the interrupted program's state first ensures it can resume cleanly afterward."
+            },
+            {
+              "id": "q_032",
+              "prompt": "What extra burden did some rival 1970s microprocessors impose on hardware designers and coders when an interrupt occurred?",
+              "choices": [
+                "They banned subroutines from running whenever external interrupts were enabled",
+                "They required a dedicated fourth power rail strictly to wake the interrupt circuitry",
+                "They could only check for external interrupts right after a complete system power-off",
+                "They needed external logic to inject jump opcodes and manual code to save registers"
+              ],
+              "correct_index": 3,
+              "explanation": "Systems like the 8080 relied on external hardware to place a restart opcode onto the bus and left full register-saving chores up to the programmer."
+            }
+          ]
+        },
+        {
+          "id": "ch_017",
+          "title": "The 16-Bit Stack Pointer and One-Step Full Context Save",
+          "content_markdown": "Remember the stack pointer from earlier: an address keeper managing a last-in, first-out pile like spring-loaded cafeteria trays where the newest tray on top always comes off first. Rather than trapping calls inside a tiny fixed hardware call stack on the chip, the 6800 carries a full 16-bit Stack Pointer (`SP`) pointing into ordinary RAM anywhere in the 64 KB map, growing downward toward lower addresses as bytes are pushed.\n\nWhen code calls a reusable helper routine (a *subroutine*, via `BSR` or `JSR`), the 6800 pushes just the 2-byte big-endian return address from the Program Counter (`PC`, the chip's bookmark holding the next instruction's address), and `RTS` pulls it back. During an interrupt, however, the 6800 goes dramatically further: its hardware *automatically* pushes all seven bytes of live CPU state—`PC`, its 16-bit addressing register, Accumulator `A`, Accumulator `B`, and the Condition Code Register—onto the RAM stack! When the handler finishes, one `RTI` ('Return from Interrupt') instruction pops all seven bytes back.",
+          "questions": [
+            {
+              "id": "q_033",
+              "prompt": "How does what the 6800 pushes onto the RAM stack during a hardware interrupt differ from a normal subroutine call?",
+              "choices": [
+                "An interrupt pushes all seven bytes of CPU state automatically, whereas a call pushes only the return address",
+                "An interrupt pushes only Accumulator A and B, whereas a subroutine call pushes all seven bytes of state",
+                "An interrupt stores its saved bytes in permanent ROM, whereas a subroutine call writes into RAM",
+                "An interrupt pushes bytes upward toward higher addresses, whereas a subroutine call grows downward"
+              ],
+              "correct_index": 0,
+              "explanation": "A normal subroutine call (`BSR`/`JSR`) only needs to remember where to return (`PC`), whereas an unpredictable interrupt automatically stacks all working registers and flags too."
+            },
+            {
+              "id": "q_034",
+              "prompt": "What does the 6800's single `RTI` instruction accomplish at the end of an interrupt routine?",
+              "choices": [
+                "It resets the Stack Pointer back to address `0000` and clears both accumulators",
+                "It disables all future hardware interrupts until the computer's power switch is cycled",
+                "It pulls all seven saved register and address bytes off the stack to resume cleanly",
+                "It copies the interrupt handler from permanent ROM into fast low-memory RAM"
+              ],
+              "correct_index": 2,
+              "explanation": "`RTI` ('Return from Interrupt') automatically unstacks the Condition Code Register, accumulators, 16-bit addressing register, and Program Counter in one neat instruction."
+            }
+          ]
+        },
+        {
+          "id": "ch_018",
+          "title": "The Top-of-Memory Directory: The Interrupt Vector Table",
+          "content_markdown": "Once the 6800 tucks your unfinished work safely onto the stack, how does it find the right emergency routine? Motorola anchored a tidy four-slot **interrupt vector table**—a fixed lookup directory of 16-bit starting addresses—in the very last eight bytes of memory, from hexadecimal `FFF8` through `FFFF`. Because each destination is a 2-byte big-endian address, four distinct paths fit cleanly side by side:\n\n`FFF8`–`FFF9` points to `IRQ` (regular external hardware Interrupt Request); `FFFA`–`FFFB` points to `SWI` (Software Interrupt, intentionally triggered by code for debugging breakpoints or system calls); `FFFC`–`FFFD` handles urgent unignorable alarms; and `FFFE`–`FFFF` holds `RESET`, the chip's power-on starting address. Watch a cold startup unfold: you flip the power switch, the 6800 fetches two bytes from `FFFE` and `FFFF` inside permanent ROM—say `E0` and `00`—assembles big-endian address `E000`, and begins executing startup code immediately.",
+          "questions": [
+            {
+              "id": "q_035",
+              "prompt": "Where inside the 64 KB address map did Motorola locate the 6800's four-entry interrupt vector table?",
+              "choices": [
+                "In the very first eight bytes of low memory from hexadecimal `0000` through `0007`",
+                "In a private 8-byte internal register block unreachable by normal memory addresses",
+                "Right in the exact midpoint of the address map from hexadecimal `8000` through `8007`",
+                "In the very last eight bytes at the top of memory from hexadecimal `FFF8` through `FFFF`"
+              ],
+              "correct_index": 3,
+              "explanation": "Motorola placed the four 2-byte big-endian vectors (`IRQ`, `SWI`, `NMI`, `RESET`) at the top eight bytes of the 64 KB address space (`FFF8`–`FFFF`)."
+            },
+            {
+              "id": "q_036",
+              "prompt": "If permanent boot ROM contains hexadecimal `E0` at `FFFE` and `00` at `FFFF`, where does the 6800 jump right after RESET?",
+              "choices": [
+                "It jumps to hexadecimal address `00E0` by reversing the two bytes",
+                "It jumps to hexadecimal address `E000` using big-endian byte order",
+                "It jumps to hexadecimal address `FFFE` and executes `E0` as an opcode",
+                "It halts until an external device jams a starting address onto the bus"
+              ],
+              "correct_index": 1,
+              "explanation": "The 6800 reads the 16-bit RESET vector at `FFFE`–`FFFF` in big-endian order—high byte `E0` followed by low byte `00`—loading `E000` into the Program Counter."
+            }
+          ]
+        },
+        {
+          "id": "ch_019",
+          "title": "The Unignorable Alarm: Non-Maskable Interrupts and Subtle Traps",
+          "content_markdown": "Recall the `I` (Interrupt Mask) bit inside the Condition Code Register. When software sets `I = 1`, the 6800 politely postpones ordinary `IRQ` signals so delicate multi-step updates finish undisturbed. Yet some emergencies simply cannot wait—imagine a power-failure sensor warning that wall electricity just dropped and the board's power-supply capacitors (temporary energy reservoirs) can keep it alive for only five more milliseconds!\n\nFor crises like that, Motorola wired a dedicated **non-maskable interrupt** (`NMI`) pin to vector `FFFC`–`FFFD`. Even when `I = 1`, a signal on `NMI` forces the 6800 to stack its seven register bytes immediately and jump straight to the emergency routine. Here lies a classic beginner trap: because `NMI` cannot be silenced, startup code must load a valid RAM address into the Stack Pointer (`SP`) at the very start of booting. If an accidental `NMI` fires before `SP` is set, the CPU dutifully pushes seven register bytes into random, uninitialized memory—crashing before the computer finishes waking up!",
+          "questions": [
+            {
+              "id": "q_037",
+              "prompt": "How does a non-maskable interrupt (NMI) behave differently from a standard IRQ signal on the Motorola 6800?",
+              "choices": [
+                "NMI skips saving registers onto the stack so it can react faster than IRQ",
+                "NMI only triggers when software explicitly executes a special breakpoint opcode",
+                "NMI forces immediate service even when the Condition Code Register's I mask bit is set",
+                "NMI clears the entire Condition Code Register to zero instead of jumping to a vector"
+              ],
+              "correct_index": 2,
+              "explanation": "Unlike ordinary `IRQ` requests, which are delayed whenever `I = 1`, a non-maskable interrupt (`NMI`) cannot be ignored by software and immediately vectors via `FFFC`–`FFFD`."
+            },
+            {
+              "id": "q_038",
+              "prompt": "Why must 6800 startup code initialize the Stack Pointer right away before any NMI might arrive?",
+              "choices": [
+                "Because an NMI automatically pushes seven bytes via SP and would write into random memory otherwise",
+                "Because the RESET vector at `FFFE`–`FFFF` cannot be fetched until SP points to boot ROM",
+                "Because accumulators A and B stay locked at zero until SP holds a valid 16-bit value",
+                "Because leaving SP uninitialized automatically disables the external two-phase clock"
+              ],
+              "correct_index": 0,
+              "explanation": "Since `NMI` cannot be masked out and unconditionally stacks seven bytes of CPU state, `SP` must point to valid writable RAM before an `NMI` can safely occur."
+            }
+          ]
+        },
+        {
+          "id": "ch_020",
+          "title": "Clean Interrupts Complete—Now How Do Instructions Find Data?",
+          "content_markdown": "Pause and compare Motorola's top-of-memory vector table with Intel's 8080. On an 8080 board, getting an interrupting peripheral to steer the CPU to the right handler meant adding extra external glue chips to shove a special restart opcode onto the data bus during a tightly timed reply cycle. On the 6800, a device simply tugs `IRQ` low, the processor automatically stacks all seven bytes of live state, fetches the handler's big-endian address from permanent boot ROM at `FFF8`–`FFF9`, and later resumes everything with a single `RTI`. Parking the vector table at the top of memory kept low memory wide open for fast RAM while putting fixed startup and interrupt pointers safely in ROM.\n\nWe now understand how the 6800 powers up, maps memory, calculates in dual accumulators, branches on flags, and survives interrupts. Next comes the heart of daily 6800 coding: how an instruction actually specifies *where* its data lives across 65,536 bytes of memory.",
+          "questions": [
+            {
+              "id": "q_039",
+              "prompt": "Why did the 6800's interrupt vector table eliminate extra glue logic compared to Intel's 8080 interrupt scheme?",
+              "choices": [
+                "Devices transmitted full 16-bit routines over a dedicated serial cable directly into accumulator A",
+                "Devices simply pulled an interrupt pin low while the CPU fetched the handler address itself from memory",
+                "The 6800 ignored all external devices until software manually read every address in the 64 KB map",
+                "The 6800 forced all four interrupt types to share one permanent handler hardwired inside the CPU"
+              ],
+              "correct_index": 1,
+              "explanation": "Instead of requiring external hardware to jam a jump opcode onto the data bus, the 6800 reads the destination vector directly from fixed top-of-memory ROM addresses."
+            },
+            {
+              "id": "q_040",
+              "prompt": "Why was anchoring the RESET and interrupt vectors at the very top of memory (`FFF8`–`FFFF`) convenient for system builders?",
+              "choices": [
+                "Top-of-memory addresses ran at double clock speed compared to addresses near `0000`",
+                "Top-of-memory slots did not require any address decoding to separate RAM from peripherals",
+                "Only top-of-memory bytes could store numbers in human-readable big-endian byte order",
+                "Fixed startup and interrupt vectors sat cleanly in top-of-memory boot ROM while low RAM stayed free"
+              ],
+              "correct_index": 3,
+              "explanation": "Boot ROM naturally occupies the top of the 64 KB map so the permanent `RESET` and interrupt vectors live safely in ROM, leaving low addresses free for writable RAM."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_05",
+      "title": "5. Core Addressing Modes: Immediate, Page-Zero Direct, Extended \u0026 Indexed",
+      "summary": "Walk step by step through the four core addressing modes that let compact 6800 instructions reach constants, scratchpad variables, full memory, and structured data tables. Compare Immediate constants, fast one-byte page-zero Direct addresses targeting the first 256 bytes of RAM (hexadecimal 0000–00FF), full 16-bit Extended addresses across 64 KB, and Indexed access that adds an unsigned 8-bit offset to the 16-bit X index register.",
+      "introduced_terms": [
+        "addressing mode",
+        "page-zero direct addressing",
+        "index register"
+      ],
+      "chunks": [
+        {
+          "id": "ch_021",
+          "title": "How an Instruction Finds Its Target—Starting With Immediate Mode",
+          "content_markdown": "Suppose a kitchen note simply reads 'Add 5.' Does that mean add the literal number 5, add whatever sits in jar number 5, or count 5 shelves past your bookmark? An 8-bit processor faces that exact question on nearly every instruction. Because RAM and ROM were scarce and costly in 1974—often just a few kilobytes on an early board—attaching a full 16-bit address to every single command wasted both memory bytes and precious clock cycles.\n\nMotorola's solution was a compact menu of **addressing modes**: the specific rules an instruction uses to locate its data value (its *operand*). The simplest of the four core data modes is *Immediate* addressing, where the literal constant sits directly inside the instruction bytes themselves, like handing the CPU a number written on a sticky note. Executing `LDAA #42` drops the exact number $$42$$ straight into Accumulator `A` in just 2 bytes and 2 clock cycles—no extra memory trip required.",
+          "questions": [
+            {
+              "id": "q_041",
+              "prompt": "Why do microprocessors provide multiple addressing modes instead of always attaching a full 16-bit address to every command?",
+              "choices": [
+                "Because full 16-bit addresses only work when a board runs on three separate power rails",
+                "Because the Condition Code Register resets to zero whenever a 16-bit address is read",
+                "Because tailoring how data is located saves scarce memory bytes and reduces clock cycles",
+                "Because big-endian processors can only decode 16-bit addresses inside permanent boot ROM"
+              ],
+              "correct_index": 2,
+              "explanation": "Different tasks need constants, quick variables, or dynamic tables; tailored addressing modes keep code smaller and faster than attaching 2-byte addresses everywhere."
+            },
+            {
+              "id": "q_042",
+              "prompt": "In Immediate addressing mode, where does the Motorola 6800 obtain the operand value?",
+              "choices": [
+                "Directly from the constant byte embedded immediately after the instruction opcode",
+                "From the top eight bytes of memory alongside the hardware interrupt vector table",
+                "From whatever value was pushed most recently onto the RAM call stack by `SP`",
+                "From a fixed memory-mapped hardware port wired to the board's front switches"
+              ],
+              "correct_index": 0,
+              "explanation": "Immediate mode bakes a literal constant directly into the instruction stream so the processor uses it right away without looking up another address."
+            }
+          ]
+        },
+        {
+          "id": "ch_022",
+          "title": "The Fast Lane: Page-Zero Direct Versus Full Extended Addressing",
+          "content_markdown": "When data lives in changeable RAM rather than as a fixed constant, the 6800 can always use *Extended* addressing: an opcode followed by a full 2-byte big-endian address (`0000`–`FFFF`). Extended mode reaches all 65,536 memory locations, yet every instruction takes 3 bytes of program code and extra cycles to fetch both address bytes.\n\nProgrammers quickly noticed, however, that most programs keep a small set of busy variables—loop counters, flags, and running scores—they touch constantly. Motorola therefore created a fast lane called **page-zero direct addressing** (labeled 'Direct' mode in Motorola manuals). Picture dialing a 3-digit internal office extension instead of a full 10-digit phone number: the instruction supplies only a single 8-bit address (`00`–`FF`), and the 6800 automatically assumes a high byte of `00`, reaching the first 256 bytes of memory (`0000`–`00FF`). Shaving off one byte and one clock cycle on every access effectively turned page zero into 256 fast scratchpad slots.",
+          "questions": [
+            {
+              "id": "q_043",
+              "prompt": "How does page-zero direct addressing make 6800 instructions both shorter and faster than Extended addressing?",
+              "choices": [
+                "It stores variables inside the external clock chip rather than on the main memory bus",
+                "It compresses two 8-bit variables into a single 4-bit half-byte before saving to RAM",
+                "It skips updating the Condition Code Register whenever Accumulator A loads a byte",
+                "It supplies only a 1-byte address and automatically assumes `00` for the high address byte"
+              ],
+              "correct_index": 3,
+              "explanation": "By supplying just the low address byte (`00`–`FF`) and implicitly supplying `00` for the upper byte, Direct mode reaches `0000`–`00FF` in 2 bytes and 1 fewer cycle."
+            },
+            {
+              "id": "q_044",
+              "prompt": "When must a 6800 programmer use Extended addressing instead of page-zero Direct addressing?",
+              "choices": [
+                "Whenever loading a fixed literal constant directly into Accumulator A or B",
+                "Whenever accessing a fixed RAM location, ROM byte, or hardware port above `00FF`",
+                "Whenever checking whether an 8-bit subtraction triggered the signed overflow flag",
+                "Whenever returning from a hardware interrupt using the `RTI` instruction"
+              ],
+              "correct_index": 1,
+              "explanation": "Direct mode can only reach addresses `0000` through `00FF`; any fixed address above `00FF`—such as higher RAM or memory-mapped devices—requires 16-bit Extended mode."
+            }
+          ]
+        },
+        {
+          "id": "ch_023",
+          "title": "Stepping Through Tables: The X Index Register and Indexed Mode",
+          "content_markdown": "Immediate, Direct, and Extended modes all hardwire fixed numbers or fixed addresses into the program itself. What if you need one reusable loop to scan a 50-character message or read fields from several player records? Meet the 6800's 16-bit **index register**, named `X`: a dedicated on-chip address keeper built to point at the starting spot of a table or structure in memory.\n\nIn *Indexed* addressing mode, an instruction carries a single unsigned 8-bit offset ($$0$$ to $$255$$), and the CPU adds it on the fly to compute $$X + \\text{offset}$$ without changing `X` itself. Walk through a concrete case: suppose `X` points to Player One's 8-byte record at hexadecimal `0200`. Reading the score at offset `0`, extra lives at offset `2`, and bonus level at offset `5` takes three tiny 2-byte indexed instructions (`LDAA 0,X`, `LDAA 2,X`, `LDAA 5,X`). Point `X` at Player Two (`0208`), and the exact same routine works immediately!",
+          "questions": [
+            {
+              "id": "q_045",
+              "prompt": "How does the Motorola 6800 calculate the target address during an Indexed addressing instruction?",
+              "choices": [
+                "It adds the instruction's unsigned 8-bit offset to the 16-bit X index register without altering X",
+                "It multiplies the 16-bit X index register by Accumulator B and overwrites X with the product",
+                "It replaces the low byte of the Stack Pointer with the value currently inside Accumulator A",
+                "It concatenates Accumulator A as the high byte and Accumulator B as the low byte"
+              ],
+              "correct_index": 0,
+              "explanation": "Indexed mode forms an effective address equal to $$X + \\text{offset}$$ using an unsigned 8-bit offset ($$0$$–$$255$$), leaving `X` intact so neighboring fields stay easy to reach."
+            },
+            {
+              "id": "q_046",
+              "prompt": "Why is Indexed addressing especially useful when a program manages multiple structured records or data tables?",
+              "choices": [
+                "It lets each memory byte store two separate 8-bit fields at the exact same address",
+                "It eliminates the need to initialize `X` before reading data from external RAM",
+                "One routine can reuse fixed field offsets on any record simply by changing the base address in X",
+                "It forces all records to live permanently inside the first 256 bytes of page zero"
+              ],
+              "correct_index": 2,
+              "explanation": "By keeping field offsets constant inside the code and moving only the base pointer in `X`, a single subroutine cleanly processes any number of identically shaped records."
+            }
+          ]
+        },
+        {
+          "id": "ch_024",
+          "title": "Unsigned Offsets and Relative Jumps: Two Clever Boundaries",
+          "content_markdown": "Look closely at two thoughtful quirks tucked inside the 6800's addressing math. First, the 8-bit offset in Indexed mode is strictly *unsigned* ($$0$$ to $$255$$), never negative. That means `X` can only reach *forward* from its current address—never backward—so programmers always park `X` at the lowest-numbered byte of a table or structure and step forward with `INX` ('increment X') or reach ahead up to $$255$$ bytes.\n\nSecond, Motorola gave conditional branch instructions (`BEQ`, `BNE`, `BGT`, and friends) their own compact *Relative* addressing mode using a *signed* 8-bit offset ranging from $$-128$$ to $$+127$$ bytes from the next instruction. Because most loops and `if`-checks hop only a few dozen bytes, relative branching shrinks every conditional jump from 3 bytes down to 2—and lets small routines relocate anywhere in memory without rewriting their internal branch addresses!",
+          "questions": [
+            {
+              "id": "q_047",
+              "prompt": "Why must a 6800 programmer point the X register to the lowest address of a data record when using Indexed mode?",
+              "choices": [
+                "Because the X register automatically resets to zero if it crosses an odd memory address",
+                "Because the 8-bit indexed offset is strictly unsigned ($$0$$ to $$255$$) and can only reach forward",
+                "Because memory-mapped hardware ports always block reads from addresses below `X`",
+                "Because the 6800 refuses to add any offset larger than `127` to the X register"
+              ],
+              "correct_index": 1,
+              "explanation": "Indexed offsets are unsigned bytes from $$0$$ to $$255$$, so `X + offset` always points at or ahead of `X`, never to a lower memory address behind it."
+            },
+            {
+              "id": "q_048",
+              "prompt": "What two benefits did using a signed 8-bit Relative offset bring to the 6800's conditional branch instructions?",
+              "choices": [
+                "Branches could jump straight across the entire 64 KB map and save all registers on the stack",
+                "Branches ran without consulting the Condition Code Register and worked only in page zero",
+                "Branches automatically converted little-endian addresses into big-endian vectors at runtime",
+                "Branches stayed compact at 2 bytes and stayed valid even when small routines moved in memory"
+              ],
+              "correct_index": 3,
+              "explanation": "A signed 1-byte offset ($$-128$$ to $$+127$$) kept local branches short at 2 bytes while letting small blocks of code move to different memory addresses without rewriting internal jumps."
+            }
+          ]
+        },
+        {
+          "id": "ch_025",
+          "title": "Right Mode for the Job—and One Looming Limit",
+          "content_markdown": "Line up the four core data-access modes side by side and Motorola's balance of speed, size, and reach becomes crystal clear. Immediate mode embeds literal constants right in the code (2 bytes); Page-Zero Direct reaches 256 hot scratchpad variables at `0000`–`00FF` (2 bytes, 3 cycles for a load); Extended reaches anywhere in 64 KB (3 bytes, 4 cycles); and Indexed walks tables and records via $$X + \\text{offset}$$ (2 bytes, 5 cycles). Rounded out by 1-byte register-only ('Inherent') instructions like `ABA` and compact Relative branches, 6800 assembly felt clean, compact, and pleasantly minicomputer-like.\n\nYet take one more inventory of the 6800's internal registers: two accumulators (`A` and `B`), a Program Counter (`PC`), a Stack Pointer (`SP`), a Condition Code Register (`CCR`), and… just *one* 16-bit index register (`X`). Everything runs smoothly when you traverse one table at a time—until the day you need to point at *two* places in memory at once.",
+          "questions": [
+            {
+              "id": "q_049",
+              "prompt": "Which addressing mode gives a 6800 program the shortest, fastest way to read and update frequently accessed RAM variables?",
+              "choices": [
+                "Extended mode, because 16-bit addresses bypass the board's address-decoding gates",
+                "Immediate mode, because literal constants can be overwritten directly inside ROM",
+                "Page-Zero Direct mode, because 1-byte addresses reach `0000`–`00FF` in fewer bytes and cycles",
+                "Indexed mode, because adding an offset to X takes fewer cycles than Direct mode"
+              ],
+              "correct_index": 2,
+              "explanation": "Page-Zero Direct mode accesses `0000`–`00FF` using a 2-byte instruction (3 cycles for `LDAA`), beating Extended (3 bytes, 4 cycles) and Indexed (2 bytes, 5 cycles)."
+            },
+            {
+              "id": "q_050",
+              "prompt": "Which gap in the 6800's register inventory creates immediate awkwardness whenever code must track two moving addresses at once?",
+              "choices": [
+                "The processor provides only a single 16-bit index register (`X`) for general pointer indexing",
+                "The processor provides only a single 8-bit accumulator for arithmetic and logic steps",
+                "The processor lacks any 16-bit stack pointer for saving subroutine return addresses",
+                "The processor restricts Extended addressing exclusively to permanent startup ROM chips"
+              ],
+              "correct_index": 0,
+              "explanation": "While the 6800 gives programmers two equal accumulators (`A` and `B`), it has only one general-purpose 16-bit index register (`X`), creating trouble for two-pointer tasks."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_06",
+      "title": "6. One Pointer Too Few: The X Register and the Block-Copy Bottleneck",
+      "summary": "Spotlight the 6800's single 16-bit X index register—a transistor-saving choice in 1974 that created the processor's most famous software headache. Trace a real memory block copy byte by byte to feel the register pressure of shuffling both a source and destination pointer back and forth through page-zero RAM without push-X or pull-X instructions, examine clever programmer workarounds, and see how this exact bottleneck directly shaped the MOS 6502's dual index registers and indirect addressing as well as Motorola's later 6801 and 6809.",
+      "introduced_terms": [
+        "register pressure",
+        "indirect addressing"
+      ],
+      "chunks": [
+        {
+          "id": "ch_026",
+          "title": "One Bookmark, Two Aisles",
+          "content_markdown": "Imagine moving fifty fragile spice jars from a shelf in Aisle 3 to an empty shelf in Aisle 9—except store rules let you hold only *one* aisle marker at a time. For every single jar, you check Aisle 3's marker, pick up one jar, scribble down the next spot in Aisle 3 on a notepad, look up Aisle 9's spot, set the jar down, scribble down the next spot in Aisle 9, and walk all the way back.\n\nThat tedious dance is the exact problem Motorola 6800 programmers hit during one of computing's most ordinary tasks: copying data from a source buffer (a block of memory holding bytes) to a destination buffer. Why did Motorola—otherwise so thoughtful about programmer comfort—include only one 16-bit `X` index register? In 1974, manufacturing yield (the share of working chips per silicon wafer) fell sharply as chip area grew, so keeping the MC6800 near 4,100 transistors left room for just one `X` register.",
+          "questions": [
+            {
+              "id": "q_051",
+              "prompt": "Why did Motorola's architects put only a single 16-bit index register (`X`) inside the original 1974 MC6800?",
+              "choices": [
+                "Because DEC's PDP-11 minicomputer only possessed a single register for all tasks",
+                "Because keeping transistor count modest near 4,100 was vital for manufacturable 1974 silicon yield",
+                "Because big-endian byte order prevented two 16-bit pointers from coexisting on one bus",
+                "Because memory-mapped I/O required half the chip's registers to stay reserved for ports"
+              ],
+              "correct_index": 1,
+              "explanation": "In 1974, adding another 16-bit register and its internal buses would have enlarged the silicon die and cut wafer yield; Motorola kept to one `X` register to stay buildable."
+            },
+            {
+              "id": "q_052",
+              "prompt": "Which everyday programming task immediately exposed the weakness of having only a single index register?",
+              "choices": [
+                "Adding two 8-bit signed numbers together inside Accumulators A and B",
+                "Reading a single constant byte from ROM using Immediate addressing",
+                "Saving all CPU registers automatically when a hardware interrupt fired",
+                "Copying a block of bytes from one memory buffer to a separate memory buffer"
+              ],
+              "correct_index": 3,
+              "explanation": "Copying data between two separate areas of memory requires tracking both a moving source address and a moving destination address simultaneously."
+            }
+          ]
+        },
+        {
+          "id": "ch_027",
+          "title": "When Registers Run Out: Register Pressure",
+          "content_markdown": "Computer architects call this exact squeeze **register pressure**: what happens when a program needs to keep more active values handy than the CPU has on-chip registers to hold, forcing software to repeatedly spill values out to slower RAM and reload them later.\n\nWhen a 6800 loop walked through *one* array—say adding up a list of numbers—register pressure stayed delightfully low: park `X` at the start, read `0,X`, step with `INX`, and loop. The moment a program needed *two* moving addresses at once—copying text, comparing two strings, or merging two lists—register pressure spiked sharply. Making life even harder, the original 1974 MC6800 lacked `PSHX` and `PULX` instructions to save or restore `X` quickly on the stack, and had no instruction to add an accumulator directly to `X`. To swap pointers, software had to explicitly store both bytes of `X` into named RAM variables (`STX`) and load the other pointer back in (`LDX`).",
+          "questions": [
+            {
+              "id": "q_053",
+              "prompt": "What does the architectural term 'register pressure' describe?",
+              "choices": [
+                "Running out of on-chip registers so code must repeatedly spill and reload working values in RAM",
+                "Overheating the silicon package when both accumulators hold hexadecimal `FF` simultaneously",
+                "Driving too many external TTL inputs from a single output pin on a circuit board",
+                "Filling all 256 bytes of page-zero memory with permanent read-only startup vectors"
+              ],
+              "correct_index": 0,
+              "explanation": "Register pressure occurs whenever active data or pointers exceed the available CPU registers, forcing slow extra memory stores and reloads."
+            },
+            {
+              "id": "q_054",
+              "prompt": "Which missing instructions on the original 1974 MC6800 made juggling the X register even more awkward?",
+              "choices": [
+                "It lacked any instructions to increment `X` or load a 16-bit address from memory",
+                "It lacked conditional branches for comparing two unsigned numbers inside Accumulator A",
+                "It lacked `PSHX` and `PULX` to push or pull `X` on the stack, and had no add-to-X command",
+                "It lacked any way to store `X` into page-zero RAM using Direct addressing mode"
+              ],
+              "correct_index": 2,
+              "explanation": "Because the original 6800 could neither push/pull `X` directly on the stack nor add an accumulator offset to `X`, programmers had to shuttle `X` through named RAM variables."
+            }
+          ]
+        },
+        {
+          "id": "ch_028",
+          "title": "Byte by Byte Through the Famous Block-Copy Loop",
+          "content_markdown": "Walk step by step through copying a block of bytes from a source buffer (say `1000`) to a distant destination buffer (say `2400`) on an original 6800. Because only one `X` register exists, the programmer reserves two 2-byte pointer variables in fast page-zero RAM: `SRC` and `DST`.\n\nNow count the exhausting choreography required for *each single byte* copied. First, load `X` from `SRC` (`LDX SRC`), read one byte into Accumulator `A` (`LDAA 0,X`), advance `X` (`INX`), and save the updated source pointer back out to page zero (`STX SRC`). Next, load `X` from `DST` (`LDX DST`), write Accumulator `A` to the destination (`STAA 0,X`), advance `X` (`INX`), and save the updated destination pointer back out (`STX DST`), before finally decrementing a byte counter and looping! Moving a single byte consumes roughly forty clock cycles—and nearly all that work goes into swapping two pointers in and out of one overworked `X` register.",
+          "questions": [
+            {
+              "id": "q_055",
+              "prompt": "Why does a general 6800 memory copy between two distant buffers have to execute `LDX` and `STX` twice for every single byte moved?",
+              "choices": [
+                "Because big-endian memory requires reading each data byte twice to verify its high bit",
+                "Because the 6800 automatically clears `X` to zero after every Indexed load or store",
+                "Because Accumulator A can only hold 4 bits at a time during a block transfer",
+                "Because `X` must be swapped between the saved source and destination pointers on every byte"
+              ],
+              "correct_index": 3,
+              "explanation": "With only one `X` register, each byte transfer must load `SRC`, read, bump and save `SRC`, then load `DST`, write, bump and save `DST`."
+            },
+            {
+              "id": "q_056",
+              "prompt": "Why did 6800 programmers almost always park the `SRC` and `DST` pointer variables inside page-zero RAM?",
+              "choices": [
+                "Because `LDX` and `STX` refused to operate on addresses above hexadecimal `00FF`",
+                "Because page-zero Direct mode shaved cycles and bytes off every repeated pointer load and store",
+                "Because page-zero RAM automatically incremented 16-bit pointers without needing `INX`",
+                "Because the 6800's hardware interrupts were permanently paused while accessing page zero"
+              ],
+              "correct_index": 1,
+              "explanation": "Since `LDX` and `STX` ran twice per byte inside the tight copy loop, placing `SRC` and `DST` in page zero (`0000`–`00FF`) saved precious cycles on every single iteration."
+            }
+          ]
+        },
+        {
+          "id": "ch_029",
+          "title": "Clever Hacks—and Where They Break Down",
+          "content_markdown": "Resourceful 1970s programmers hated wasting forty cycles per byte, so they invented clever workarounds. Whenever the source and destination sat within $$255$$ bytes of each other—say copying `0200` to `0240`—you could point `X` at the source and pair `LDAA 0,X` straight with `STAA 64,X`! No pointer swapping at all, because Indexed mode's offset bridged the fixed gap.\n\nFor longer copies where speed mattered desperately, daring coders tried an even wilder trick: save the real Stack Pointer (`SP`) into RAM, mask ordinary interrupts (`SEI`, 'Set Interrupt Mask'), and hijack `SP` as a makeshift second pointer—using fast `PULA` instructions (pulling a byte off the stack into Accumulator `A`) to read source bytes while `X` wrote them out! Yet both tricks hit hard walls. The offset shortcut fails past $$255$$ bytes, and hijacking `SP` invites disaster if an unignorable `NMI` arrives mid-copy and pushes seven register bytes straight over your source data!",
+          "questions": [
+            {
+              "id": "q_057",
+              "prompt": "Under what narrow condition could a 6800 copy loop avoid swapping source and destination pointers through X?",
+              "choices": [
+                "Whenever both buffers resided completely inside permanent top-of-memory boot ROM",
+                "Whenever the total number of bytes being copied was an exact multiple of sixteen",
+                "Whenever the destination started within $$255$$ bytes ahead of the source so an indexed offset reached it",
+                "Whenever the programmer switched the CPU from big-endian mode into little-endian mode"
+              ],
+              "correct_index": 2,
+              "explanation": "If the destination lay $$0$$ to $$255$$ bytes past the source, `X` could point at the source while an unsigned indexed offset reached the destination without reloading `X`."
+            },
+            {
+              "id": "q_058",
+              "prompt": "What serious hazard made hijacking the Stack Pointer (`SP`) as a makeshift second copy pointer risky even with `IRQ` masked?",
+              "choices": [
+                "A non-maskable interrupt (NMI) could still fire and overwrite the data buffer with seven pushed register bytes",
+                "Masking ordinary interrupts permanently erased the saved Stack Pointer sitting in page-zero RAM",
+                "Pulling bytes with `PULA` corrupted the Condition Code Register's Half-Carry flag on every read",
+                "Using `SP` for data reads forced the external two-phase clock to drop below $$100\\,\\text{kHz}$$"
+              ],
+              "correct_index": 0,
+              "explanation": "Because `NMI` cannot be blocked by the `I` mask bit, an arriving `NMI` would dutifully push seven bytes of CPU state straight over whatever buffer `SP` was pointing to."
+            }
+          ]
+        },
+        {
+          "id": "ch_030",
+          "title": "The Bottleneck That Shaped Two Famous Successors",
+          "content_markdown": "Few silicon compromises in computing history sparked more creative follow-ups than the 6800's single `X` register. Watching real programmers wrestle with block-copy register pressure directly shaped two legendary architectures. When Chuck Peddle and Bill Mensch left Motorola to create the 1975 MOS 6502, they gave it *two* 8-bit index registers (`X` and `Y`) and paired them with **indirect addressing**—a mode where the CPU looks up a 16-bit address stored inside page-zero RAM and immediately follows that pointer to the actual data, turning page zero into dozens of active memory pointers without constant shuffling!\n\nMotorola learned the lesson too: its 1978 MC6801 added `PSHX`, `PULX`, and `ABX` to make `X` far nimbler, and its 1979 MC6809 delivered *two* full 16-bit index registers (`X` and `Y`) plus dual stack pointers. Yet before Chuck Peddle ever broke away, he left another transformative mark on the 6800 itself: turning a lone microprocessor into a complete, plug-and-play chip family.",
+          "questions": [
+            {
+              "id": "q_059",
+              "prompt": "How does indirect addressing through page zero relieve register pressure when a program needs multiple moving pointers?",
+              "choices": [
+                "It doubles the number of physical pins on the chip so two RAM boards plug in side by side",
+                "It prevents the processor from saving working registers during hardware interrupts",
+                "It forces every instruction in memory to shrink down to a single 8-bit opcode",
+                "It lets instructions follow 16-bit pointers stored directly in page-zero RAM without crowding one CPU register"
+              ],
+              "correct_index": 3,
+              "explanation": "With indirect addressing, the CPU fetches the target 16-bit address straight from a page-zero pointer variable on the fly, letting many pointers stay active at once."
+            },
+            {
+              "id": "q_060",
+              "prompt": "How did both MOS Technology (with the 6502) and Motorola (with the 6801 and 6809) respond to the 6800's single-X bottleneck?",
+              "choices": [
+                "Both removed index registers completely and required Extended addressing for every loop",
+                "MOS added dual index registers plus indirect zero-page modes, while Motorola added X-stacking and dual 16-bit indexers",
+                "Both switched back to triple power supplies so extra registers could fit on larger circuit boards",
+                "MOS kept a single X register unchanged while Motorola abandoned 8-bit accumulators altogether"
+              ],
+              "correct_index": 1,
+              "explanation": "The 6502 solved pointer pressure with `X`/`Y` plus zero-page indirect addressing, while Motorola added `PSHX`/`PULX`/`ABX` in the 6801 and full dual `X`/`Y` registers in the 6809."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_07",
+      "title": "7. Chuck Peddle's System Family: The MC6820/6821 PIA and MC6850 ACIA",
+      "summary": "Discover Chuck Peddle's system-family philosophy: selling a coordinated set of single-supply, synchronous-bus support chips so engineers could build complete computers without a sprawl of generic TTL glue logic. Unpack the two flagship companions wired straight into the 6800's memory map—the MC6820/6821 Peripheral Interface Adapter (PIA) with software-configurable bidirectional parallel I/O ports and handshake lines, and the MC6850 Asynchronous Communications Interface Adapter (ACIA) for terminal and modem serial links.",
+      "introduced_terms": [
+        "parallel I/O",
+        "asynchronous serial communication"
+      ],
+      "chunks": [
+        {
+          "id": "ch_031",
+          "title": "Selling a Whole Orchestra, Not Just a Solo Violinist",
+          "content_markdown": "Imagine unboxing a brand-new microprocessor in 1974—only to realize you still have to wire up thirty or forty generic 7400-series TTL glue-logic chips just to read a keyboard, drive indicator lamps, and talk to a printer. Early semiconductor companies often treated the processor as a solo star and left designers to hand-build every interface from separate tiny holding and timing chips.\n\nInside Motorola's Mesa group, charismatic systems engineer Chuck Peddle pushed a smarter idea: never sell a lonely CPU—sell a complete, matched *system family*. Every chip in the M6800 family—the MC6800 processor, MCM6810 128-byte RAM, MCM6830 1 KB ROM, and smart input/output controllers—shared the exact same single $$+5\\,\\text{V}$$ power rail, marched in synchronous lockstep with the same $$\\phi_2$$ clock pulse, and dropped cleanly into the 6800's unified memory map with barely a handful of glue chips.",
+          "questions": [
+            {
+              "id": "q_061",
+              "prompt": "What major headache for early hardware designers did Chuck Peddle's M6800 system-family philosophy aim to eliminate?",
+              "choices": [
+                "Having to rewrite big-endian programs into little-endian code before burning boot ROMs",
+                "Having to fabricate custom transistor wafers inside their own company laboratories",
+                "Having to surround a lone microprocessor with dozens of generic TTL glue chips for basic I/O",
+                "Having to replace external memory chips every time an interrupt vector changed"
+              ],
+              "correct_index": 2,
+              "explanation": "Rather than selling an isolated CPU, Peddle championed matched single-supply peripheral chips that wired straight to the 6800 bus and replaced whole forests of TTL glue logic."
+            },
+            {
+              "id": "q_062",
+              "prompt": "What shared electrical and bus conventions allowed M6800 family chips to connect cleanly to the MC6800 CPU?",
+              "choices": [
+                "A single 5-volt power rail, shared synchronous clock timing, and unified memory-mapped addresses",
+                "Three separate power rails, dedicated IN/OUT pins, and asynchronous bus handshaking",
+                "A four-phase dynamic clock, bit-serial address lines, and isolated peripheral address space",
+                "An internal hardware call stack, fixed 4-bit half-bytes, and front-panel toggle registers"
+              ],
+              "correct_index": 0,
+              "explanation": "All M6800 family parts ran from one $$+5\\,\\text{V}$$ supply, timed transfers to the shared $$\\phi_2$$ clock, and appeared as ordinary memory-mapped registers."
+            }
+          ]
+        },
+        {
+          "id": "ch_032",
+          "title": "The MC6820/6821 PIA: Software-Shaped Parallel I/O",
+          "content_markdown": "The workhorse star of Motorola's support family was the **MC6820 Peripheral Interface Adapter (PIA)**—soon upgraded electrically to the **MC6821** so its pins could drive multiple connected TTL chip inputs with greater muscle. Its job was **parallel I/O**: moving an entire 8-bit group of signals simultaneously across eight side-by-side wires, like an eight-lane highway sending eight bits abreast to a printer, numeric display, or bank of front-panel switches.\n\nInstead of forcing engineers to solder fixed input or output helper chips onto each new product, the PIA provided *two* versatile 8-bit ports (Port A and Port B) controlled by internal Data Direction Registers. By writing a single setup byte during startup, software configured *each individual pin* as either an input or an output! Need five sensor inputs and three motor controls on one board, and eight lamp outputs on the next? Use the exact same PIA chip—just change two lines of startup code.",
+          "questions": [
+            {
+              "id": "q_063",
+              "prompt": "What characterizes parallel I/O when a microprocessor communicates with attached hardware?",
+              "choices": [
+                "Sending a single continuous stream of bits one after another down one wire",
+                "Sharing one voltage wire simultaneously for both electrical power and sensor readings",
+                "Routing all hardware signals through the external two-phase clock generator first",
+                "Transferring a whole group of bits simultaneously across multiple side-by-side wires"
+              ],
+              "correct_index": 3,
+              "explanation": "Parallel I/O moves multiple bits—typically an entire 8-bit byte—at once across parallel wires, ideal for local switches, lamps, displays, and printers."
+            },
+            {
+              "id": "q_064",
+              "prompt": "How did the MC6820/6821 PIA let designers reuse the exact same support chip across completely different boards?",
+              "choices": [
+                "Its pins automatically detected whether a sensor or a motor was attached at power-up",
+                "Software could program each individual pin on Ports A and B as an input or output via Data Direction Registers",
+                "Engineers could physically snap off unused pins so the chip shrank into a smaller socket",
+                "Its internal ROM permanently contained prewritten drivers for printers, keyboards, and displays"
+              ],
+              "correct_index": 1,
+              "explanation": "Programmable Data Direction Registers let startup code configure every single line of Port A and Port B independently as either an input or an output."
+            }
+          ]
+        },
+        {
+          "id": "ch_033",
+          "title": "Shaking Hands With Hardware: PIA Control Lines and Interrupts",
+          "content_markdown": "Putting eight data bits onto a printer cable is only half the story—how does a slow printer tell the speedy 6800 'I finished that letter, send the next one,' or how does a freshly pressed keyboard key get immediate attention? Alongside Ports A and B, Motorola built four dedicated handshake lines—extra 'ready' and 'received' coordination wires (`CA1`, `CA2`, `CB1`, and `CB2`)—straight into the PIA.\n\nWatch a clean keyboard cycle unfold. When a user taps a key, the keyboard places the 8-bit character onto Port A's wires and pulses `CA1`. Instantly, the PIA raises an internal flag and pulls the 6800's `IRQ` pin low. The CPU automatically stacks its seven register bytes, jumps through vector `FFF8`–`FFF9`, and executes one ordinary memory read of Port A's address—and that single read grabs the keystroke while automatically clearing the PIA's interrupt flag! Astonishingly, both 8-bit ports, their Data Direction Registers, and all four handshake controllers fit cleanly into just *four* consecutive memory addresses.",
+          "questions": [
+            {
+              "id": "q_065",
+              "prompt": "What purpose did the MC6820/6821 PIA's four control lines (`CA1`, `CA2`, `CB1`, `CB2`) serve alongside Ports A and B?",
+              "choices": [
+                "They coordinated hardware handshaking and triggered clean CPU interrupts when external devices were ready",
+                "They supplied auxiliary $$+12\\,\\text{V}$$ and $$-5\\,\\text{V}$$ voltages to heavy mechanical printers",
+                "They carried the upper four bits of the 16-bit address bus to expand memory past 64 KB",
+                "They generated the non-overlapping $$\\phi_1$$ and $$\\phi_2$$ clock pulses needed by the MC6800"
+              ],
+              "correct_index": 0,
+              "explanation": "The PIA's handshake lines signaled events like 'data ready' or 'device busy' and could automatically assert `IRQ` to notify the 6800 without wastefully checking the port over and over."
+            },
+            {
+              "id": "q_066",
+              "prompt": "How many memory-mapped addresses did a complete dual-port MC6820/6821 PIA occupy inside the 6800's address space?",
+              "choices": [
+                "Sixteen consecutive addresses, one for every physical I/O pin on Ports A and B",
+                "Two hundred fifty-six addresses, reserving the entire page-zero direct scratchpad",
+                "Four consecutive addresses, neatly sharing register slots via internal control bits",
+                "Sixty-four addresses, leaving enough room to hold a full line of keyboard text"
+              ],
+              "correct_index": 2,
+              "explanation": "By using a control bit inside each port's Control Register to toggle between the Data Direction Register and the actual data port, the whole PIA needed only four addresses."
+            }
+          ]
+        },
+        {
+          "id": "ch_034",
+          "title": "The MC6850 ACIA: Turning Bytes Into Single-File Serial Bits",
+          "content_markdown": "Eight-lane parallel cables work brilliantly across a few inches inside a metal box, yet running ten parallel wires across an office to a teletype terminal—or down a telephone line through a modem—is bulky and costly. Motorola solved longer links with its second iconic support chip: the **MC6850 Asynchronous Communications Interface Adapter (ACIA)**.\n\nThe ACIA handled **asynchronous serial communication**: shipping each 8-bit byte single-file, one bit at a time over one data wire, *without* running a separate clock wire between sender and receiver. Instead, both ends agree on a fixed tempo (such as 300 or 1,200 bits per second) and wrap every byte in a neat envelope—a 'start bit' signaling arrival, optional parity (an extra bit that flags garbled transmissions), and 'stop' bit(s) marking the end. Inside the 6800's memory map, the ACIA achieved extraordinary elegance: its entire Control, Status, Transmit, and Receive interface consumed just *two* addresses—writing address 0 configured control while reading it checked status, and address 1 split transmit writes from receive reads!",
+          "questions": [
+            {
+              "id": "q_067",
+              "prompt": "How does asynchronous serial communication keep transmitter and receiver synchronized without a shared clock wire?",
+              "choices": [
+                "By pausing the main CPU clock for one full millisecond after every transmitted bit",
+                "By agreeing on a fixed bit rate and framing each byte with start and stop bits",
+                "By sending all eight bits simultaneously on different voltage levels down one wire",
+                "By forcing the receiving terminal to echo every single bit back before the next leaves"
+              ],
+              "correct_index": 1,
+              "explanation": "Asynchronous serial links rely on a pre-agreed bit rate plus start and stop framing bits so the receiver re-syncs cleanly at the beginning of every single byte."
+            },
+            {
+              "id": "q_068",
+              "prompt": "How did Motorola's MC6850 ACIA pack four separate functions (control, status, transmit, and receive) into only two memory addresses?",
+              "choices": [
+                "It merged all four registers into a single 32-bit big-endian word read across four cycles",
+                "It hid transmit and receive buffers inside page-zero RAM rather than on the ACIA die",
+                "It required programmers to flip an external physical toggle switch between sending and receiving",
+                "It assigned write-only and read-only registers to the same two addresses depending on read/write direction"
+              ],
+              "correct_index": 3,
+              "explanation": "Using the CPU's Read/Write signal, address 0 served writes to Control and reads from Status, while address 1 served writes to Transmit and reads from Receive."
+            }
+          ]
+        },
+        {
+          "id": "ch_035",
+          "title": "Minimum-Chip Systems Ready for the Real World",
+          "content_markdown": "Step back and appreciate what Chuck Peddle's system-family strategy achieved. By matching an MC6800 processor with permanent ROM, small RAM, a parallel MC6820/6821 PIA, and a serial MC6850 ACIA—all sharing one $$+5\\,\\text{V}$$ power rail, one synchronous clock bus, and one memory map—an engineer could assemble a responsive, interrupt-driven computer from a tiny handful of chips instead of a sprawling sea of generic TTL.\n\nThat synchronous peripheral bus proved so clean that it outlived the 6800 itself: when Peddle's team later created the MOS 6502, they preserved full compatibility with Motorola's peripheral timing so 6821 PIAs and 6850 ACIAs could plug straight into 6502 boards too! Now that we understand the entire M6800 silicon toolkit from power rail to support chips, it is time to step out of the datasheets and see four vivid real-world arenas where the 6800 flourished—beginning right on the desks of 1970s hobbyists and scientists.",
+          "questions": [
+            {
+              "id": "q_069",
+              "prompt": "Which pair of M6800 companion chips gave a single board both configurable local multi-wire I/O and single-wire terminal communication?",
+              "choices": [
+                "The MCM6810 128-byte RAM chip paired with the MCM6830 1 KB ROM chip",
+                "The MC6870 two-phase clock generator paired with the 7400-series TTL address decoder",
+                "The MC6820/6821 PIA for parallel I/O paired with the MC6850 ACIA for asynchronous serial links",
+                "The MC6800 processor paired with a second MC6800 dedicated strictly to terminal links"
+              ],
+              "correct_index": 2,
+              "explanation": "The PIA handled software-configurable 8-bit parallel ports and handshakes, while the ACIA handled asynchronous serial links to teletypes, terminals, and modems."
+            },
+            {
+              "id": "q_070",
+              "prompt": "What enduring legacy did the M6800's synchronous peripheral bus leave across the wider 8-bit microprocessor era?",
+              "choices": [
+                "Later processors like the MOS 6502 kept compatible bus timing so M6800 support chips plugged right in",
+                "Every rival processor including the Intel 8080 abandoned separate I/O ports to copy it immediately",
+                "All 1980s personal computers banned parallel I/O in favor of wiring everything through ACIAs",
+                "Chipmakers stopped using address decoding because peripheral chips negotiated addresses automatically"
+              ],
+              "correct_index": 0,
+              "explanation": "Chuck Peddle carried the M6800's clean synchronous bus timing straight over to the MOS 6502, allowing M6800 family peripheral chips to work seamlessly across both ecosystems."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_08",
+      "title": "8. Deskside 6800 Computers: The SWTPC 6800 and Tektronix 4051",
+      "summary": "Step out of the datasheet into two iconic interactive 6800 computers that showcased the architecture's board-level elegance. Contrast the hobbyist SWTPC 6800 kit—whose modular SS-50 bus and Motorola MIKBUG ROM monitor replaced tedious toggle switches with an instant serial terminal prompt—with the professional Tektronix 4051 desktop workstation, which paired a 6800 and built-in BASIC with a direct-view storage tube to draw razor-sharp vector graphics without expensive frame-buffer RAM.",
+      "introduced_terms": [
+        "ROM monitor",
+        "direct-view storage tube"
+      ],
+      "chunks": [
+        {
+          "id": "ch_036",
+          "title": "Escaping the Wall of Blinking Toggle Switches",
+          "content_markdown": "If you built a famous 1975 Intel 8080 hobbyist kit like the MITS Altair 8800, starting a computing session tested your patience immediately. Every time you switched it on, you had to flip rows of metal toggle switches up and down in raw binary just to hand-enter a tiny bootstrap loader—the starter program that wakes a computer up enough to load bigger software—and one slip meant starting over!\n\nLate in 1975, a lean electronics kit firm in San Antonio, Texas—Southwest Technical Products Corporation (SWTPC), led by Daniel Meyer with chief designer Gary Kay—unveiled a remarkably calmer hobbyist computer built around the Motorola 6800: the **SWTPC 6800**. Its sleek brushed-aluminum faceplate held just *two* switches: Power and Reset. No rows of flashing red lights, no binary toggle gymnastics—you flipped Power on, tapped Reset, and an interactive command prompt appeared instantly on your keyboard-and-screen serial terminal. How did SWTPC pull off that effortless startup?",
+          "questions": [
+            {
+              "id": "q_071",
+              "prompt": "What tedious everyday startup chore on rival 1975 hobbyist computers did the SWTPC 6800 famously eliminate?",
+              "choices": [
+                "Manually calibrating the external two-phase clock with an oscilloscope every morning",
+                "Hand-toggling binary bootstrap loaders into memory through rows of front-panel switches",
+                "Rewiring the triple-supply voltage regulators whenever a new memory card was added",
+                "Translating little-endian programs into big-endian bytes on graph paper before running them"
+              ],
+              "correct_index": 1,
+              "explanation": "Unlike toggle-switch front-panel machines such as the Altair 8800, the SWTPC 6800 booted immediately into an interactive serial prompt with just Power and Reset switches."
+            },
+            {
+              "id": "q_072",
+              "prompt": "What deliberately minimal controls sat on the brushed-aluminum front panel of an SWTPC 6800?",
+              "choices": [
+                "Sixteen binary address toggles paired with eight red data indicator lamps",
+                "A full typewriter keyboard wired directly into Accumulators A and B",
+                "Four rotary dials for manually selecting page-zero Direct memory addresses",
+                "Just two switches—Power and Reset—leaving all interaction to a serial terminal"
+              ],
+              "correct_index": 3,
+              "explanation": "By relying on permanent boot firmware and a serial terminal connection, the SWTPC 6800 needed only Power and Reset on its clean front panel."
+            }
+          ]
+        },
+        {
+          "id": "ch_037",
+          "title": "MIKBUG and the SS-50 Bus: Modular Simplicity in Action",
+          "content_markdown": "The SWTPC 6800's instant-on polish combined two clever engineering choices: a built-in **ROM monitor** and a tidy expansion bus. A ROM monitor is a permanent startup utility stored in read-only memory at the top of the address map so the CPU's `FFFE`–`FFFF` reset vector jumps straight into an interactive console the instant power arrives. SWTPC shipped Motorola's own 1 KB **MIKBUG** monitor (inside an MCM6830 ROM), letting users type crisp single-letter terminal commands—`M` to inspect or change bytes, `G` to run code, or `L` to load programs formatted as hexadecimal 'S-records' from paper tape or audio cassette.\n\nUnder the hood, Gary Kay avoided sprawling, electrically noisy 100-pin backplanes (the main plug-in circuit boards holding expansion cards) by designing the clean **SS-50 bus**: a 50-pin motherboard for CPU and RAM cards paired with a separate 30-pin I/O bus carrying pre-decoded addresses straight to compact MC6821 PIA and MC6850 ACIA cards!",
+          "questions": [
+            {
+              "id": "q_073",
+              "prompt": "What job does a ROM monitor such as Motorola's MIKBUG perform when a 6800 computer powers on?",
+              "choices": [
+                "It launches straight from the top-of-memory reset vector to give an instant interactive prompt for inspecting and loading code",
+                "It watches the board's single 5-volt power rail and shuts down the processor if the temperature climbs too high",
+                "It translates high-level BASIC programs into 6800 machine instructions automatically inside hardware registers",
+                "It scans all 65,536 memory addresses at startup and compresses empty RAM slots into page zero"
+              ],
+              "correct_index": 0,
+              "explanation": "Placed in top-of-memory ROM alongside the `RESET` vector, MIKBUG woke up immediately over a serial terminal so users could view/edit memory and load S-record programs."
+            },
+            {
+              "id": "q_074",
+              "prompt": "How did Gary Kay's SS-50 bus architecture simplify building and expanding an SWTPC 6800?",
+              "choices": [
+                "It crammed CPU, RAM, video graphics, and magnetic tape drives onto a single non-expandable board",
+                "It replaced all memory-mapped I/O ports with dedicated front-panel switches wired to the CPU",
+                "It paired a clean 50-pin CPU/memory backplane with a pre-decoded 30-pin I/O bus for PIA and ACIA cards",
+                "It doubled the data bus width to 16 bits so each slot could hold two separate 6800 processors"
+              ],
+              "correct_index": 2,
+              "explanation": "Separating the 50-pin CPU/memory bus from a pre-decoded 30-pin I/O bus kept expansion cards small, clean, and cheap—freeing I/O cards from duplicating address-decoding gates."
+            }
+          ]
+        },
+        {
+          "id": "ch_038",
+          "title": "From Hobbyist Bench to Engineering Desk: The Tektronix 4051",
+          "content_markdown": "While hobbyists assembled SWTPC kits on kitchen tables, precision oscilloscope maker Tektronix in Beaverton, Oregon proved in 1975 that the 6800 could anchor a serious scientific workstation. Its **Tektronix 4051** Graphics Computing System packed a Motorola 6800, 32 KB of permanent ROM holding the friendly BASIC programming language with built-in decimal math, expandable workspace RAM, an integrated 3M magnetic tape cartridge drive, and a standard IEEE-488 laboratory instrument connector managed by MC6820 PIAs.\n\nPicture an aerospace or electronics engineer in 1976 sitting down at a 4051: no shared mainframe waiting line, no overnight delay at a plotting room. Within minutes, a short BASIC program could read live measurements directly from lab meters over the IEEE-488 port and draw razor-sharp *vector graphics*—pictures traced as clean point-to-point glowing green lines rather than blocky dots—producing curves, schematics, and 3D outlines at $$1024 \\times 780$$ resolution.",
+          "questions": [
+            {
+              "id": "q_075",
+              "prompt": "What combination of built-in features made the 6800-powered Tektronix 4051 immediately productive on an engineer's desk in 1975?",
+              "choices": [
+                "A wall of binary toggle switches, a paper-tape punch, and dual 16-bit index registers",
+                "A color television modulator, game joysticks, and an external mainframe telephone coupler",
+                "A triple-supply Intel bus adapter, removable floppy disks, and a dot-matrix receipt printer",
+                "Built-in ROM BASIC, an integrated magnetic tape drive, lab-instrument I/O, and high-resolution vector graphics"
+              ],
+              "correct_index": 3,
+              "explanation": "The turnkey 4051 combined a 6800, 32 KB ROM BASIC, a 3M tape drive, PIA-driven IEEE-488 lab interfacing, and crisp vector plotting right on a desktop."
+            },
+            {
+              "id": "q_076",
+              "prompt": "Which M6800 family chips helped the Tektronix 4051 talk to external scientific instruments over its parallel IEEE-488 port?",
+              "choices": [
+                "MC6850 ACIAs converting instrument voltage pulses into asynchronous serial streams",
+                "MC6820 PIAs providing software-configurable parallel I/O and handshake lines",
+                "MCM6830 MIKBUG ROM chips storing prewritten oscilloscope driver tables",
+                "MC6870 clock generators synchronizing every lab meter to the 6800's $$\\phi_1$$ pulse"
+              ],
+              "correct_index": 1,
+              "explanation": "The IEEE-488 General Purpose Interface Bus is a parallel byte-and-handshake instrument bus, making Motorola's MC6820 PIA a natural fit."
+            }
+          ]
+        },
+        {
+          "id": "ch_039",
+          "title": "Razor-Sharp Vector Graphics Without Expensive Frame-Buffer RAM",
+          "content_markdown": "Hold on—how could an 8-bit 6800 in 1975 draw crisp $$1024 \\times 780$$ graphics? Storing just one on/off bit for every dot in a dedicated chunk of video memory—a *frame buffer*—would eat nearly $$100\\,\\text{KB}$$ of RAM, larger than the 6800's entire 64 KB address space and astronomically costly in 1975!\n\nTektronix sidestepped that impossibility with its celebrated **direct-view storage tube** (DVST): a specialized screen coated in glow-retaining green phosphor glass that *physically remembered* every line traced by its electron beam, holding the entire drawing steady with zero flicker until a brief bright-green full-screen flash wiped it clean. Because the glass itself acted as the graphics memory, the 6800 only sent start and end coordinates to line-drawing circuits—achieving hairline precision with zero frame-buffer RAM! The charming twist? You could not erase one mistyped word or animate smooth moving shapes; changing even one line meant flashing the whole screen blank and redrawing everything anew.",
+          "questions": [
+            {
+              "id": "q_077",
+              "prompt": "How did Tektronix's direct-view storage tube let a 6800 display $$1024 \\times 780$$ graphics despite having no large video frame buffer?",
+              "choices": [
+                "It compressed the entire image into the first 256 bytes of page-zero RAM on every frame",
+                "It wired two separate 6800 processors together to double the 64 KB memory limit",
+                "Its special phosphor glass physically remembered every traced electron-beam line without needing refresh RAM",
+                "It printed every single line onto green photographic film inside the monitor cabinet"
+              ],
+              "correct_index": 2,
+              "explanation": "A direct-view storage tube stores the drawn image right in the glowing phosphor coating, freeing the 6800 from keeping a massive pixel array in expensive RAM."
+            },
+            {
+              "id": "q_078",
+              "prompt": "What notable interactive trade-off came with using a direct-view storage tube display?",
+              "choices": [
+                "You could not selectively erase one part of the image without flashing and redrawing the entire screen",
+                "The screen could display only 40 columns of blocky text and refused to draw diagonal lines",
+                "The display lost its entire image whenever the 6800 paused to read data from its tape cartridge",
+                "Engineers had to reboot the computer via RESET before switching from text mode to graphics mode"
+              ],
+              "correct_index": 0,
+              "explanation": "Because the phosphor held glowing charge across the entire glass face, removing even a single line required a bright full-screen erase pulse followed by a complete redraw."
+            }
+          ]
+        },
+        {
+          "id": "ch_040",
+          "title": "Two Deskside Triumphs—Now Into the Arcade Noise",
+          "content_markdown": "Place the SWTPC 6800 and the Tektronix 4051 side by side, and you can see why Motorola's clean architecture won over such wildly different builders. One was a budget-conscious modular hobbyist kit whose SS-50 bus and MIKBUG ROM monitor rescued enthusiasts from tedious front-panel switches; the other was a sleek, high-precision desktop engineering workstation delivering storage-tube vector plots and lab automation years ahead of its time. Both thrived because a single $$+5\\,\\text{V}$$ supply, top-of-memory boot vectors, memory-mapped I/O, and matching PIA and ACIA chips let engineers focus on creative machines instead of wrestling messy glue logic.\n\nYet quiet home workbenches and carpeted engineering offices were only the opening act. Far louder, higher-voltage, and more physically punishing worlds were clamoring for reliable digital brains—starting right inside the flashing, thumping cabinets of late-1970s pinball arcades!",
+          "questions": [
+            {
+              "id": "q_079",
+              "prompt": "What shared architectural strengths allowed the Motorola 6800 to excel in both the hobbyist SWTPC 6800 and the professional Tektronix 4051?",
+              "choices": [
+                "Built-in video frame buffers, triple voltage supplies, and dedicated IN/OUT instructions",
+                "Dual 16-bit index registers, hardware floating-point units, and an internal clock oscillator",
+                "Full binary compatibility with Intel 8080 kits and a standardized 100-pin motherboard bus",
+                "A single 5-volt rail, clean top-of-memory ROM booting, and matched memory-mapped PIA/ACIA chips"
+              ],
+              "correct_index": 3,
+              "explanation": "Whether building an affordable modular kit or a turnkey lab workstation, Motorola's board-friendly single supply, ROM vector boot, and PIA/ACIA family kept designs clean."
+            },
+            {
+              "id": "q_080",
+              "prompt": "How did both the SWTPC 6800 and the Tektronix 4051 exploit Motorola's top-of-memory reset vector design?",
+              "choices": [
+                "Both ignored the reset vector and required users to key in starting addresses at power-up",
+                "Both booted directly into permanent top-of-memory ROM firmware—MIKBUG on the SWTPC and BASIC on the 4051",
+                "Both placed their writable user RAM at `FFFF` so programs started inside page zero automatically",
+                "Both used the non-maskable interrupt pin exclusively to start programs from magnetic tape"
+              ],
+              "correct_index": 1,
+              "explanation": "Anchoring `RESET` at `FFFE`–`FFFF` let both computers jump straight into instant-on permanent ROM firmware the moment power came on."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_09",
+      "title": "9. From Relays to Silicon: 6800-Powered Solid-State Pinball",
+      "summary": "Follow the 6800 into loud, high-voltage 1970s arcades, where makers like Bally and Williams replaced heavy banks of wearing electromechanical relays and score reels with rugged solid-state 6800 control boards. See how the 6800 and MC6820/6821 PIAs scanned dozens of playfield contacts through a switch matrix, pulsed multiplexed bulbs and high-power bumper solenoids, drove digital score displays, and unlocked programmable rulesets and push-button self-diagnostics.",
+      "introduced_terms": [
+        "electromechanical relay",
+        "switch matrix"
+      ],
+      "chunks": [
+        {
+          "id": "ch_041",
+          "title": "Inside the Clacking Mechanical Jungle of Pre-1976 Pinball",
+          "content_markdown": "Lift the glass and prop up the wooden playfield of a classic 1972 pinball machine, and you stared down into a roaring mechanical jungle: hundreds of feet of bundled copper wires, spinning motorized cam shafts, spring-driven mechanical score reels, and whole racks of clicking **electromechanical relays**. An electromechanical relay is an electrically operated physical switch—sending current through a small wire coil creates a magnet that snaps a metal lever shut, closing or opening separate power contacts.\n\nEvery bumper kick, bonus countdown, and tilt penalty inside an electromechanical cabinet depended on tiny metal blades slamming together and sparking across thousands of hectic games. Route mechanics spent endless hours filing pitted contacts, adjusting bent switch blades, and unjamming sticky score wheels. Worse still, adding richer game rules literally meant bolting even more physical relays and mechanical stepping counters into an already packed wooden box—pushing electromechanical pinball to its practical ceiling.",
+          "questions": [
+            {
+              "id": "q_081",
+              "prompt": "How does an electromechanical relay operate inside a classic pre-solid-state pinball cabinet?",
+              "choices": [
+                "It stores player scores inside magnetic core rings wired directly to a serial bus",
+                "It translates digital binary codes into glowing lines on a phosphor glass screen",
+                "It energizes a wire coil to magnetically snap a physical metal switch open or closed",
+                "It converts a single 5-volt power rail into three separate transistor bias voltages"
+              ],
+              "correct_index": 2,
+              "explanation": "An electromechanical relay uses an electromagnet coil to physically pull metal switch contacts together or apart, allowing one circuit to control another."
+            },
+            {
+              "id": "q_082",
+              "prompt": "Why were traditional electromechanical pinball machines costly to service and hard to make more sophisticated?",
+              "choices": [
+                "Moving metal contacts wore out under constant arcing, and richer rules demanded even more bulky relays",
+                "Mechanical score reels required an external two-phase clock running above $$100\\,\\text{kHz}$$",
+                "Relays could only count in hexadecimal digits and confused players reading decimal scores",
+                "Cabinet wiring had to be completely replaced whenever a light bulb burned out on the playfield"
+              ],
+              "correct_index": 0,
+              "explanation": "Physical switches oxidized, bent, and jammed over thousands of games, and every added game feature required installing extra relays, steppers, and wiring."
+            }
+          ]
+        },
+        {
+          "id": "ch_042",
+          "title": "Bally, Williams, and the 6800 Solid-State Revolution",
+          "content_markdown": "Between 1976 and 1979, Chicago's powerhouse pinball makers staged a dramatic shift from clattering relays to *solid-state* silicon—electronics with no moving mechanical parts—and the Motorola 6800 became their champion. **Bally** launched its legendary AS-2518 (MPU-17) 6800 board across smash hits like *Eight Ball*, *Mata Hari*, and *KISS*, while rival **Williams** built its celebrated System 3 through System 6 6800-family boards behind classics like *Flash*, *Gorgar*, and *Firepower*.\n\nWhy did arcade engineers embrace the 6800 so enthusiastically? First, its single $$+5\\,\\text{V}$$ power rail kept the delicate processor board simple and cleanly isolated from the cabinet's heavy lamp and coil supplies. Second, pairing the CPU with memory-mapped MC6820/6821 PIAs gave software dozens of flexible parallel I/O lines without piles of TTL glue logic. Third, parking game logic inside top-of-memory ROM meant one standardized circuit board could run dozens of completely different pinball titles simply by swapping ROM chips!",
+          "questions": [
+            {
+              "id": "q_083",
+              "prompt": "Which two major Chicago pinball manufacturers led the late-1970s transition to Motorola 6800 solid-state control boards?",
+              "choices": [
+                "Southwest Technical Products and Tektronix",
+                "Bally and Williams",
+                "Intel and Digital Equipment Corporation",
+                "MOS Technology and Victor Comptometer"
+              ],
+              "correct_index": 1,
+              "explanation": "Bally (with its AS-2518/MPU-17 line) and Williams (with its System 3 through System 6 boards) pioneered 6800-powered solid-state pinball."
+            },
+            {
+              "id": "q_084",
+              "prompt": "How did adopting standardized 6800 ROM boards transform how factories produced different pinball titles?",
+              "choices": [
+                "Factories stopped installing physical bumpers and rendered the entire playfield on storage tubes",
+                "Factories wired every switch directly into Accumulators A and B without any memory chips",
+                "Factories eliminated all power supplies and ran mechanical kickers straight from $$+5\\,\\text{V}$$ logic",
+                "Factories reused the exact same core control board across many titles simply by swapping game ROMs"
+              ],
+              "correct_index": 3,
+              "explanation": "Putting game rules in software inside interchangeable ROM chips let Bally and Williams manufacture one common 6800 MPU board for dozens of distinct pinball machines."
+            }
+          ]
+        },
+        {
+          "id": "ch_043",
+          "title": "Scanning Sixty Switches on Sixteen Wires: The Switch Matrix",
+          "content_markdown": "Pinball designers faced a clever wiring puzzle: a busy playfield packs 40 to 64 rollovers, targets, spinners, and drop targets. Wiring every switch to its own input pin would eat up four entire PIA chips and a massive bundle of cables! Instead, 6800 engineers organized playfield contacts into a **switch matrix**: an $$8 \\times 8$$ grid of eight output 'strobe' columns crossing eight input 'return' rows—reading up to $$64$$ individual switches using only *16* PIA pins.\n\nWatch the 6800 scan the entire board hundreds of times each second. Port A energizes Column 1 while Port B reads all eight rows; if Row 3 signals closed, software instantly knows Switch (1, 3)—say the left slingshot—was hit by the steel ball! Column 2 fires next, sweeping all eight columns faster than a human blink. Better yet, the exact same grid trick rapidly took turns lighting dozens of flashing playfield bulbs in a matching lamp matrix, while tiny one-way electrical valves called *diodes* blocked phantom 'ghost' hits whenever several switches closed simultaneously.",
+          "questions": [
+            {
+              "id": "q_085",
+              "prompt": "How does an $$8 \\times 8$$ switch matrix allow a single dual-port MC6820/6821 PIA to monitor up to 64 pinball switches?",
+              "choices": [
+                "By energizing one of eight column wires at a time while reading eight intersecting row wires",
+                "By encoding all 64 switches into an asynchronous serial stream sent down a single wire",
+                "By dividing a single $$+5\\,\\text{V}$$ signal into 64 distinct analog voltage levels",
+                "By wiring eight switches in series onto each of the processor's interrupt vector addresses"
+              ],
+              "correct_index": 0,
+              "explanation": "Arranging switches across 8 strobe columns and 8 return rows lets software sweep all 64 intersections rapidly using just 16 parallel I/O pins."
+            },
+            {
+              "id": "q_086",
+              "prompt": "Why did pinball designers place tiny one-way diodes at switches inside a solid-state switch matrix?",
+              "choices": [
+                "To boost the gentle $$+5\\,\\text{V}$$ PIA logic signal up to $$50\\,\\text{V}$$ for kicking the pinball",
+                "To store each player's high score permanently when the arcade unplugged the cabinet",
+                "To prevent stray current paths from triggering false phantom hits when several switches closed at once",
+                "To slow down the 6800's external two-phase clock whenever a ball hit a bumper"
+              ],
+              "correct_index": 2,
+              "explanation": "Without a steering diode on each switch, three simultaneously closed switches in a grid can create a sneak current path that falsely reports a fourth 'ghost' switch closure."
+            }
+          ]
+        },
+        {
+          "id": "ch_044",
+          "title": "Taming High-Voltage Kicks, Digital Displays, and Self-Diagnostics",
+          "content_markdown": "There was one dramatic electrical gap to bridge. An MC6821 PIA output whispers at a gentle $$+5\\,\\text{V}$$ and tiny milliamps (thousandths of an amp), whereas a pinball pop bumper or kickout coil—called a *solenoid*, a wire coil that yanks a steel plunger when energized—gulps $$24\\,\\text{V}$$ to $$50\\,\\text{V}$$ at heavy surges of current. Connect a coil straight to a PIA pin and the chip instantly fries!\n\nSolid-state 6800 boards bridged that gap by routing PIA signals through rugged power-transistor driver switches (protected by diodes that absorb dangerous backward voltage surges when a coil shuts off) so software could pulse each solenoid for exact millisecond kicks—while also refreshing glowing 7-segment digital score displays (calculator-style numbers) and electronic sound boards! Best of all, 6800 firmware handed arcade mechanics a gift relays never offered: press one test button inside the coin door, and the 6800 flashed every lamp, fired every solenoid in order, cycled all digits, and displayed the exact number of any stuck switch!",
+          "questions": [
+            {
+              "id": "q_087",
+              "prompt": "Why did 6800 pinball boards require power-transistor driver stages between MC6821 PIA pins and playfield bumper coils?",
+              "choices": [
+                "Because PIA pins only output asynchronous serial bits rather than steady on/off signals",
+                "Because bumper coils require alternating $$\\phi_1$$ and $$\\phi_2$$ clock pulses to retract",
+                "Because the 6800 could only address memory-mapped solenoids inside page-zero RAM",
+                "Because low-current 5-volt logic pins would be instantly destroyed by high-voltage, high-current coils"
+              ],
+              "correct_index": 3,
+              "explanation": "Solenoids draw heavy current at $$24\\,\\text{V}$$ to $$50\\,\\text{V}$$ and generate sharp backward voltage surges when switched off, so PIA signals drove rugged external power transistors instead."
+            },
+            {
+              "id": "q_088",
+              "prompt": "What major servicing breakthrough did 6800 ROM software provide to arcade technicians inside the coin door?",
+              "choices": [
+                "An automated mechanical arm that filed oxidized relay contacts after every hundred games",
+                "Built-in push-button self-diagnostics that tested lamps, coils, displays, and reported stuck switches by number",
+                "A wireless radio link that beamed broken program bytes straight back to Motorola in Arizona",
+                "An automatic power-rail booster that kept games running even when wall electricity failed"
+              ],
+              "correct_index": 1,
+              "explanation": "Built-in diagnostic routines in ROM let operators press a test switch to exercise every lamp, solenoid, display digit, and identify faulty switch-matrix contacts immediately."
+            }
+          ]
+        },
+        {
+          "id": "ch_045",
+          "title": "Software-Defined Gameplay—and an Even Tougher Arena Ahead",
+          "content_markdown": "Dropping a 6800 into a pinball cabinet transformed far more than maintenance bills. Software unlocked rich four-player memory that faithfully remembered every player's personal lit targets and bonus multipliers between balls, battery-backed high-score records that lured players back for bragging rights, automated coin-audit accounting for arcade operators, and dazzling new rulesets culminating in multiball chaos and even early synthesized speech in Williams's 1979 *Gorgar*.\n\nJust as importantly, pinball proved the Motorola 6800 and its PIA companions could survive real-time abuse in the wild: thumping vibration, dirty arcade power lines, and roaring high-voltage coils right next door to delicate $$+5\\,\\text{V}$$ logic. Yet as the 1970s drew to a close, an even hotter, harsher, and far larger embedded arena was calling Motorola's name—tucked directly beneath the steel hoods of millions of American automobiles.",
+          "questions": [
+            {
+              "id": "q_089",
+              "prompt": "Beyond cutting down worn mechanical parts, what new gameplay capability did 6800 RAM and ROM unlock for pinball players?",
+              "choices": [
+                "Drawing custom $$1024 \\times 780$$ wireframe graphics directly onto the glass playfield cover",
+                "Allowing players to rewrite the machine's assembly code through front-panel toggle switches",
+                "Tracking per-player progress, persistent high scores, complex rulesets, and electronic sound or speech",
+                "Eliminating steel pinballs altogether in favor of silent optical light beams across the table"
+              ],
+              "correct_index": 2,
+              "explanation": "Programmable 6800 memory let cabinets track complex per-player states across turns, retain battery-backed high scores, audit coins, and run rich audio-visual rulesets."
+            },
+            {
+              "id": "q_090",
+              "prompt": "What did the triumph of 6800-powered solid-state pinball demonstrate to engineers in other industries?",
+              "choices": [
+                "That the 6800 and PIA family handled real-time control amid vibration and electrical noise",
+                "That microprocessors could only operate reliably inside air-conditioned scientific laboratories",
+                "That 8-bit processors needed triple power supplies whenever driving mechanical devices",
+                "That memory-mapped I/O was too slow to scan more than eight external switches per second"
+              ],
+              "correct_index": 0,
+              "explanation": "Surviving noisy, vibrating, high-voltage pinball cabinets proved the 6800 system family was rugged enough for tough real-time industrial and embedded environments."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_10",
+      "title": "10. Under the Hood and at the Crossroads: Automotive ECUs, the 6502 Breakaway \u0026 the 6801",
+      "summary": "Close the 6800 era in its toughest commercial arena: late-1970s automotive engine control units (ECUs), where emissions and fuel-economy mandates pushed Detroit to run real-time spark and fuel loops on rugged 6800-family silicon under the hood. Trace how automotive integration needs drove Motorola to pack CPU, memory, I/O, and X-register fixes onto the single-chip MC6801 while pricing and design clashes sparked Chuck Peddle's affordable MOS 6502 breakaway—setting up both branches of the Motorola-MOS axis.",
+      "introduced_terms": [
+        "engine control unit (ECU)",
+        "single-chip microcontroller"
+      ],
+      "chunks": [
+        {
+          "id": "ch_046",
+          "title": "Detroit's Smog and Oil Crisis Outgrows Mechanical Carburetors",
+          "content_markdown": "For seventy years, gasoline engines ran on ingenious mechanical clockwork: spinning counterweights, rubber vacuum hoses, and tiny brass carburetor jets guessed how much fuel to mist into incoming air and when to fire each spark plug. Then two giant pressures collided in Detroit during the 1970s. Tightening federal Clean Air Act emissions rules introduced exhaust-cleaning catalytic converters that only scrubbed smog cleanly when the air-to-fuel ratio hovered right near a razor-thin $$14.7:1$$ sweet spot—while the 1973 oil shock brought strict federal fuel-economy mandates.\n\nMechanical springs and vacuum diaphragms drifted with altitude, freezing mornings, and age; they simply could not hold that exact chemical balance across every hill and highway merge. Automakers urgently needed an electronic **engine control unit (ECU)**: a real-time digital computer wired to engine sensors and actuators (electrically driven valves and igniters) to calculate exact fuel mixture and spark timing on every rotation of the main engine shaft.",
+          "questions": [
+            {
+              "id": "q_091",
+              "prompt": "Why could traditional mechanical carburetors and vacuum spark controls no longer satisfy late-1970s automotive rules?",
+              "choices": [
+                "Because new gasoline blends physically dissolved standard brass jets within a few hundred miles",
+                "Because mechanical springs drifted too far to maintain tight emissions and fuel-economy ratios",
+                "Because federal highway laws banned all mechanical linkages from inside passenger cars after 1975",
+                "Because mechanical distributors could not spin fast enough once cars switched to digital speedometers"
+              ],
+              "correct_index": 1,
+              "explanation": "Meeting both strict Clean Air Act catalytic-converter tolerances (near $$14.7:1$$ air-to-fuel) and post-oil-shock fuel economy rules demanded continuous, drift-free electronic precision."
+            },
+            {
+              "id": "q_092",
+              "prompt": "What real-time task does an automotive engine control unit (ECU) execute while a car is running?",
+              "choices": [
+                "It replaces the battery and alternator by generating all $$12\\,\\text{V}$$ electrical power from silicon",
+                "It plays preprogrammed arcade tunes through dashboard speakers whenever the driver accelerates",
+                "It stores printed road maps in page-zero RAM to steer the front wheels automatically",
+                "It continuously reads engine sensors to calculate and adjust fuel delivery and spark timing"
+              ],
+              "correct_index": 3,
+              "explanation": "An ECU reads live sensor inputs—such as exhaust oxygen, temperature, and engine speed—and dynamically adjusts fuel metering and ignition timing in real time."
+            }
+          ]
+        },
+        {
+          "id": "ch_047",
+          "title": "6800 Silicon Under the Hood: Real-Time Loops in Brutal Conditions",
+          "content_markdown": "When General Motors (through its Delco Electronics arm) and Ford went hunting for microprocessor partners, Motorola held a decisive edge: Detroit already trusted Motorola from decades of supplying rugged car radios and automotive electronics, and the 6800 family ran cleanly off one regulated $$+5\\,\\text{V}$$ rail derived straight from a car's $$12\\,\\text{V}$$ battery. Custom 6800-family silicon soon anchored GM's pioneering Computer Command Control (C-3) engine computers.\n\nConsider the brutal battlefield awaiting those chips: frigid winter cranking at $$-40\\,^\\circ\\text{C}$$, scorching summer heat past $$+85\\,^\\circ\\text{C}$$, endless pothole shock, and violent electrical voltage spikes from charging alternators and ignition coils. Inside that storm, real-time 6800 loops sampled exhaust oxygen, coolant temperature, intake air pressure, and engine-speed sensors continuously, looked up calibrated spark and mixture values from permanent ROM tables using Indexed addressing, and pulsed fuel-metering solenoids cleanly—slashing smog while boosting drivability.",
+          "questions": [
+            {
+              "id": "q_093",
+              "prompt": "What combination of business and technical advantages made Motorola's 6800 family attractive for early Detroit ECUs?",
+              "choices": [
+                "Motorola's trusted automotive track record paired with a clean single-rail 5-volt system family",
+                "Motorola's willingness to include a direct-view storage tube inside every passenger car dashboard",
+                "Motorola's triple-supply power pins matching the exact voltage outputs of a standard car alternator",
+                "Motorola's built-in MIKBUG monitor letting drivers edit engine assembly code from the back seat"
+              ],
+              "correct_index": 0,
+              "explanation": "Detroit already trusted Motorola's automotive quality, and stepping a car battery cleanly down to one $$+5\\,\\text{V}$$ rail for a cohesive CPU-plus-I/O family beat multi-supply rivals."
+            },
+            {
+              "id": "q_094",
+              "prompt": "How did an early 6800-based engine computer use ROM and Indexed addressing during live driving?",
+              "choices": [
+                "It rewrote permanent ROM tables on the fly whenever the driver pressed the brake pedal",
+                "It copied the entire 64 KB address map into page zero before every single spark fired",
+                "It looked up factory-calibrated fuel and spark curves stored in ROM tables based on live sensor readings",
+                "It suspended all real-time interrupts whenever the car accelerated onto a highway"
+              ],
+              "correct_index": 2,
+              "explanation": "Engine calibration engineers stored multi-point fuel and ignition lookup tables in ROM; the 6800 used live sensor values and Indexed addressing to retrieve the exact right settings."
+            }
+          ]
+        },
+        {
+          "id": "ch_048",
+          "title": "GM's Push Births the Single-Chip MC6801",
+          "content_markdown": "Shipping multi-chip 6800 engine boards—separate CPU, ROM, RAM, clock generator, timer, and PIAs—across millions of vehicles exposed a glaring financial reality: every extra silicon package and solder joint drove up costs and created another tiny link that could crack after years of road vibration. Responding directly to General Motors' call for tighter integration, Motorola unveiled a landmark 1978 evolution: the **MC6801**, a full **single-chip microcontroller**.\n\nUnlike a bare microprocessor needing external memory and I/O chips just to turn on, a single-chip microcontroller packs an entire self-contained computer onto one silicon die: the MC6801 squeezed an enhanced 6800 CPU, 2 KB of ROM, 128 bytes of RAM, a built-in clock generator, a 16-bit timer, a serial port, and parallel I/O pins inside one 40-pin package! Better still, Motorola answered 6800 programmers' prayers by adding `PSHX` and `PULX` to stack `X`, `ABX` to add `B` straight to `X`, a joined 16-bit `D` accumulator (`A` plus `B`), and built-in 8-bit hardware multiplication (`MUL`) tailor-made for real-time engine math!",
+          "questions": [
+            {
+              "id": "q_095",
+              "prompt": "What distinguishes a single-chip microcontroller like Motorola's 1978 MC6801 from the original 1974 MC6800 microprocessor?",
+              "choices": [
+                "A microcontroller removes all RAM and ROM completely so every board runs purely from relays",
+                "A microcontroller drops 8-bit arithmetic and reverts to a 4-bit calculator data path",
+                "A microcontroller eliminates the Reset vector and requires front-panel toggle switches to boot",
+                "A microcontroller integrates CPU, ROM, RAM, clock, timer, and serial/parallel I/O onto one single die"
+              ],
+              "correct_index": 3,
+              "explanation": "Driven by automotive cost and reliability targets, the MC6801 collapsed an entire multi-chip 6800 board into one self-contained microcontroller chip."
+            },
+            {
+              "id": "q_096",
+              "prompt": "Which new instructions inside the MC6801 directly addressed earlier 6800 pain points and automotive math demands?",
+              "choices": [
+                "Separate `IN` and `OUT` commands replacing memory-mapped I/O across all 64 KB",
+                "`PSHX`, `PULX`, and `ABX` for `X` handling, plus 16-bit `D` and hardware `MUL`",
+                "Little-endian address swapping opcodes and a four-phase external clock controller",
+                "Built-in direct-view storage-tube line-drawing instructions and a cassette tape loader"
+              ],
+              "correct_index": 1,
+              "explanation": "The MC6801 preserved 6800 compatibility while adding stackable `X` (`PSHX`/`PULX`), `ABX`, combined 16-bit `D` arithmetic, and an 8-by-8 hardware multiply (`MUL`)."
+            }
+          ]
+        },
+        {
+          "id": "ch_049",
+          "title": "The Twenty-Five-Dollar Rebellion: Chuck Peddle's MOS 6502 Breakaway",
+          "content_markdown": "Yet even as Motorola refined the 6800 for lucrative industrial and Detroit automotive contracts, a legendary breakaway had already reshaped silicon history back in 1974 and 1975. Motorola initially priced the MC6800 steeply—launching near 360 dollars before cutting to 175 dollars—fine for a Tektronix workstation, yet wildly too pricey for budget cash registers, home computers, or video games.\n\nChuck Peddle, who had crossed the country pitching the 6800 system family to customers, urged Motorola executives to build a streamlined twenty-five-dollar microprocessor for mass consumer markets. When management formally ordered him to drop the idea, Peddle, Bill Mensch, and several Mesa teammates resigned and joined small Pennsylvania chipmaker **MOS Technology**. In September 1975, they stunned the world with the twenty-five-dollar **MOS 6502**: carrying forward the 6800's single $$+5\\,\\text{V}$$ rail, memory-mapped I/O, synchronous peripheral bus, and fast zero page—while trimming silicon area and curing the single-`X` bottleneck with dual `X` and `Y` index registers plus zero-page indirect addressing!",
+          "questions": [
+            {
+              "id": "q_097",
+              "prompt": "What strategic disagreement led Chuck Peddle, Bill Mensch, and several teammates to leave Motorola and create the MOS 6502?",
+              "choices": [
+                "Motorola insisted on switching to triple power rails while Peddle wanted a four-rail supply",
+                "Motorola wanted to abandon automotive contracts while Peddle wanted to build exclusively for Detroit",
+                "Peddle championed an affordable twenty-five-dollar consumer chip while Motorola defended high premium pricing",
+                "Peddle demanded little-endian toggle switches while Motorola wanted storage-tube graphics inside the CPU"
+              ],
+              "correct_index": 2,
+              "explanation": "Seeing huge untapped demand for low-cost embedded and consumer computers, Peddle pushed for a twenty-five-dollar processor; when Motorola refused, his team built the 6502 at MOS Technology."
+            },
+            {
+              "id": "q_098",
+              "prompt": "Which foundational 6800 design traits did the breakaway MOS 6502 keep even as it solved the single-index-register bottleneck?",
+              "choices": [
+                "Single 5-volt power, memory-mapped I/O, fast zero-page access, and compatible synchronous peripheral timing",
+                "Big-endian byte ordering, dual 8-bit accumulators A and B, and 100-percent binary opcode compatibility",
+                "Triple supply voltages, separate IN/OUT instructions, and external opcode-jamming interrupts",
+                "An external four-phase dynamic clock, bit-serial addition, and a fixed on-chip hardware call stack"
+              ],
+              "correct_index": 0,
+              "explanation": "Although the 6502 switched to little-endian and one accumulator with two index registers (`X`/`Y`), it preserved the 6800's single $$+5\\,\\text{V}$$ rail, memory-mapped I/O, zero page, and synchronous bus."
+            }
+          ]
+        },
+        {
+          "id": "ch_050",
+          "title": "Two Branches of One Axis: The 6800's Enduring Legacy",
+          "content_markdown": "Zoom out across our entire 1974–1979 arc, and the Motorola 6800 stands revealed as one of computing's great architectural headwaters. Mesa's bet on minicomputer cleanliness—a single $$+5\\,\\text{V}$$ power rail, human-readable big-endian dumps, memory-mapped I/O, dual accumulators, clean top-of-memory interrupt vectors, fast page-zero access, and Chuck Peddle's plug-and-play PIA and ACIA family—powered an astonishing range of machines, from the modular SWTPC 6800 and Tektronix 4051 to roaring Bally and Williams pinball tables and Detroit's computerized engines.\n\nEven its famous compromise—the single `X` index register's block-copy bottleneck—propelled silicon history forward along *two* mighty branches of the Motorola-MOS axis. One branch grew into Motorola's enduring embedded empire—the single-chip MC6801, the elegant dual-index MC6809, and the ubiquitous 68HC11 that ran cars and appliances for decades. The other branch burst free as MOS Technology's twenty-five-dollar 6502—ready in our next chapter to spark the Apple II, Atari, Nintendo, and the home-computing explosion!",
+          "questions": [
+            {
+              "id": "q_099",
+              "prompt": "Which two major processor lineages grew directly out of the Motorola 6800's design philosophy and real-world lessons?",
+              "choices": [
+                "The Intel 4004 four-bit calculator line and the Zilog Z80 CP/M desktop family",
+                "The IBM System/360 mainframe dynasty and the DEC PDP-11 minicomputer family",
+                "The Garrett F-14 flight-control chipset and the Datapoint 2200 terminal lineage",
+                "Motorola's embedded 6801/6809/68HC11 lineage and MOS Technology's breakaway 6502 consumer revolution"
+              ],
+              "correct_index": 3,
+              "explanation": "The 6800 branched both internally into Motorola's hugely successful 6801/6809/68HC11 embedded family and externally via Chuck Peddle's breakaway MOS 6502."
+            },
+            {
+              "id": "q_100",
+              "prompt": "Looking across hobby kits, engineering plotters, solid-state pinball, and car engines, what best explains the Motorola 6800's broad success?",
+              "choices": [
+                "It won solely because its 360-dollar launch price undercut every competing microprocessor on the market",
+                "Its board-friendly single 5-volt rail, clean memory-mapped programmer's model, and matched I/O chip family simplified real systems",
+                "It relied on a built-in storage-tube controller and hardware floating-point unit integrated inside the CPU",
+                "It copied Intel's 8080 machine code byte for byte so hobbyists could run Altair software unmodified"
+              ],
+              "correct_index": 1,
+              "explanation": "Rather than chasing raw hype, Motorola optimized the whole system—single-rail power, clean PDP-11-inspired memory/interrupt architecture, and plug-and-play PIA/ACIA chips."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

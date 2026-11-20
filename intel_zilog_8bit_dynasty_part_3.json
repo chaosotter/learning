@@ -1,0 +1,1684 @@
+{
+  "id": "intel_zilog_8bit_dynasty_part_3",
+  "title": "The Intel-Zilog 8-Bit Dynasty III: The Intel 8085 — Single-Supply Silicon, Secret Opcodes \u0026 Mars (1976–1997)",
+  "summary": "Part 3 of the Intel-Zilog 8-Bit Dynasty Quest Arc traces how Intel's 1976 8085 cured the 8080's triple-voltage, three-chip system headaches through depletion-load NMOS, a time-multiplexed AD0–AD7 bus, built-in prioritized interrupts, and bit-banged serial pins while preserving 100% 8080 binary compatibility. Building directly on Part II's Intel 8080 foundation for an educated generalist, learners unravel the detective story and 8086-migration politics behind the 8085's ten undocumented opcodes before following low-power CMOS 80C85 silicon into the TRS-80 Model 100 laptop and NASA's 1997 Mars Pathfinder Sojourner rover—setting the stage for Zilog's radically different Z80 response in Part IV.",
+  "topic_prompt": "Design a relaxed, generalist-friendly yet architecturally substantive 10-section (50-chunk) module on the Intel 8085 (1976–1997), Part III of the Intel-Zilog 8-Bit Dynasty Quest Arc, building directly on Part II's Intel 8080. Explain hardware trade-offs and instruction-set politics clearly for an educated generalist. Cover ~13 focused concepts: (1) why Intel built the 8085 to cure the 8080's triple-voltage and 3-chip system pain amid growing competition; (2) depletion-load NMOS enabling a single +5V power supply (giving the 8085 its final digit) while integrating the clock generator and system controller onto the CPU die; (3) the 40-pin compromise—reintroducing a time-multiplexed AD0–AD7 address/data bus with an ALE (Address Latch Enable) strobe, contrasting it with the 8008's clumsy 3-cycle multiplexing and showing how it previewed the 16-bit 8086; (4) spending the freed pins on prioritized hardware vectored interrupts (non-maskable TRAP plus maskable RST 7.5, 6.5, and 5.5) to cut embedded glue logic; (5) spending two pins on SID and SOD serial I/O controlled by the RIM and SIM instructions, demystifying software bit-banging without a dedicated UART; (6) 100% 8080 binary compatibility paired with subtle internal enhancements; (7) the detective story of the 10 undocumented opcodes (DSUB, ARHL, RDEL, LDHI, LDSI, LHLX, SHLX, RSTV, JNX5, JX5) and hidden V and X5 flags designed to speed up 16-bit pointer math and compilers; (8) why Intel scrubbed those opcodes from official manuals to keep automated assembly translation to the upcoming 16-bit 8086 clean; (9) the 8085's embedded and portable triumphs—especially the CMOS 80C85-powered Kyocera / RadioShack TRS-80 Model 100 laptop (instant-on, AA battery life, and Bill Gates's last hands-on ROM software) alongside the IBM System/23 Datamaster; and (10) spaceflight durability—how a radiation-hardened 80C85RH drove NASA's Mars Pathfinder Sojourner rover across Mars in 1997, bridging into Zilog's radically different 1976 response in Part IV.",
+  "tag_path": [
+    "History",
+    "History of Technology",
+    "Microprocessor History"
+  ],
+  "vetting_summary": "Conducted a strict sequential college-freshman generalist review across all 50 chunks and 100 questions in section_01.json through section_10.json (assuming zero prerequisite modules). Refined 23 chunks and 28 questions to eliminate unexplained acronyms and hardware jargon, remove subtle forward references, decompress dense instruction lists (especially splitting the seven undocumented opcodes across ch_032 and ch_033 and converting ch_018's numbered list into conversational prose), and rebalance multiple-choice answer indices and option lengths across all ten sections.",
+  "created_at": "2026-11-20T00:32:38Z",
+  "sections": [
+    {
+      "id": "sec_01",
+      "title": "1. The 8080's Hidden Burden: Three Voltages, Three Chips \u0026 Rising Rivals",
+      "summary": "Stepping back from the Intel 8080's triumph to look at a complete circuit board, this section unpacks why turning an 8080 into a working product was expensive and finicky: it demanded three separate power rails ($$+5\\,\\text{V}$$, $$+12\\,\\text{V}$$, and $$-5\\,\\text{V}$$) plus two mandatory companion chips—the 8224 clock generator and 8228 system controller—surrounded by extra glue logic. As single-supply rivals like the Motorola 6800 and MOS 6502 gained momentum and former Intel architects at startup Zilog prepared a challenger, Intel launched the 1976 8085 to slash total system chip count and board cost without abandoning 8080 software.",
+      "introduced_terms": [
+        "power rail",
+        "system chip count",
+        "glue logic"
+      ],
+      "chunks": [
+        {
+          "id": "ch_001",
+          "title": "The Hidden Cost Behind a Hit Processor",
+          "content_markdown": "By early 1976, Intel's 8080 microprocessor—the tiny silicon brain, or central processing unit (CPU), introduced in 1974—looked unstoppable. It powered early hobbyist machines like the Altair 8800, factory controllers, cash registers, and office terminals. Yet engineers who actually opened the lid of an 8080 computer saw a frustrating surprise. Buying the 8080 chip itself was only the beginning.\n\nAround that single processor sat a sprawling neighborhood of bulky power transformers, voltage regulators, and dozens of extra helper chips. To understand why Intel rushed to design a successor just two years later, we have to zoom out from the microprocessor alone and look at the entire circuit board. In commercial electronics, customers rarely care how clever one chip is if the finished product costs too much to power, cool, and assemble. That board-level reality set the stage for the Intel 8085.",
+          "questions": [
+            {
+              "id": "q_001",
+              "prompt": "Why did engineers building commercial products around the Intel 8080 in 1976 still face high manufacturing costs despite the chip's popularity?",
+              "choices": [
+                "The 8080 could only run software stored on bulky mainframe magnetic tape drives.",
+                "The 8080 was legally restricted to hobbyist kits and barred from factory equipment.",
+                "The 8080 required a heavy power supply and many extra support chips around it.",
+                "The 8080 lacked any ability to connect to memory chips made by outside suppliers."
+              ],
+              "correct_index": 2,
+              "explanation": "Turning an 8080 into a working machine required complex power circuitry and numerous supporting chips, driving up total board cost, size, and assembly effort."
+            },
+            {
+              "id": "q_002",
+              "prompt": "What perspective shift best explains why Intel designed a successor to the 8080 only two years after its debut?",
+              "choices": [
+                "Evaluating the cost and complexity of the entire circuit board rather than the CPU alone.",
+                "Focusing strictly on raw laboratory clock speed rather than practical board wiring.",
+                "Abandoning industrial embedded equipment to concentrate strictly on home video games.",
+                "Replacing silicon microchips with discrete vacuum tubes to boost electrical stability."
+              ],
+              "correct_index": 0,
+              "explanation": "Product makers paid for the complete board—including power, cooling, and support circuitry—so reducing total system complexity mattered far more than CPU price alone."
+            }
+          ]
+        },
+        {
+          "id": "ch_002",
+          "title": "Three Power Rails and a Fragile Startup",
+          "content_markdown": "The 8080's biggest electrical headache was its appetite for three separate **power rails**—dedicated steady voltage lines running across a circuit board to feed the chips. Standard digital support chips happily ran on a single $$+5\\,\\text{V}$$ line, like household appliances sharing one wall voltage. The 8080, however, demanded $$+5\\,\\text{V}$$, $$+12\\,\\text{V}$$, and $$-5\\,\\text{V}$$ all at once.\n\nImagine buying a kitchen toaster that required three different wall outlets wired to three separate voltages—and caught fire if you plugged them in out of order. That was life with the 8080. Designers had to build heavier, pricier multi-voltage power supplies and carefully route extra copper traces across crowded boards. Even worse, if the $$-5\\,\\text{V}$$ supply failed or came up too late during power-on, the 8080 could draw destructive current and burn itself out in moments.",
+          "questions": [
+            {
+              "id": "q_003",
+              "prompt": "In circuit-board design, what is a power rail?",
+              "choices": [
+                "A metal bracket bolted beneath a microprocessor to dissipate excess operating heat.",
+                "A dedicated steady voltage line running across a board to supply power to chips.",
+                "A row of external toggle switches used by operators to enter numbers by hand.",
+                "A protective glass track that shields silicon wafers during factory fabrication."
+              ],
+              "correct_index": 1,
+              "explanation": "A power rail is a steady voltage supply line distributed across a circuit board to power its electronic components."
+            },
+            {
+              "id": "q_004",
+              "prompt": "Beyond adding power-supply expense and wiring clutter, what severe operational hazard came with the 8080's three-voltage design?",
+              "choices": [
+                "The processor automatically erased its attached memory whenever the board warmed up.",
+                "The chip locked itself into slow test mode whenever all three voltage lines ran.",
+                "Using three voltages stopped the processor from connecting to ordinary printer ports.",
+                "Losing or delaying the negative five-volt rail during startup could destroy the chip."
+              ],
+              "correct_index": 3,
+              "explanation": "Because the 8080 depended on proper power-up sequencing, a missing or delayed -5 V rail could cause damaging current surges and ruin the processor."
+            }
+          ]
+        },
+        {
+          "id": "ch_003",
+          "title": "The Three-Chip Minimum and Glue Logic Clutter",
+          "content_markdown": "Even after solving power delivery, an engineer could not simply wire an 8080 straight to memory. Every practical 8080 core was really a three-chip set. First came the 8080 CPU itself. Second came the **8224 clock generator**, which produced two tricky, non-overlapping $$12\\,\\text{V}$$ timing pulses to march the processor forward step by step. Third came the **8228 system controller**, which listened to brief status codes sent out on the data wires and translated them into clear read and write commands for memory and peripheral devices.\n\nSurrounding that trio sat extra **glue logic**—small supporting chips and wiring used to patch together mismatched voltages, timing signals, and control wires between major components. Together, these pieces inflated the board's **system chip count**, meaning the total number of integrated circuits needed for a working computer. Every extra chip added sockets, solder joints, heat, and failure points.",
+          "questions": [
+            {
+              "id": "q_005",
+              "prompt": "Why was a practical Intel 8080 processor core commonly described as a three-chip system?",
+              "choices": [
+                "It split every single instruction across three identical 8080 processors working together.",
+                "It required separate processor chips for arithmetic, text display, and keyboard input.",
+                "It paired the 8080 CPU with the 8224 clock generator and the 8228 system controller.",
+                "It bundled one 8080 silicon chip inside three stacked ceramic shells to shed heat."
+              ],
+              "correct_index": 2,
+              "explanation": "An 8080 depended on the 8224 to supply its two-phase 12 V clock signals and the 8228 to decode status signals into clean memory and I/O control lines."
+            },
+            {
+              "id": "q_006",
+              "prompt": "What does the engineering phrase 'glue logic' refer to on a computer circuit board?",
+              "choices": [
+                "Epoxy adhesive applied around chip legs to prevent vibration damage during transit.",
+                "Small support chips and wiring that bridge mismatched signals between major parts.",
+                "Software routines that stitch two independent programs into a single storage file.",
+                "Memory tables that hold permanent startup code inside read-only storage chips."
+              ],
+              "correct_index": 1,
+              "explanation": "Glue logic consists of small auxiliary circuits used to adapt timing, voltage, or control signals so larger chips can communicate cleanly."
+            }
+          ]
+        },
+        {
+          "id": "ch_004",
+          "title": "Rivals at Five Volts—and Defectors Next Door",
+          "content_markdown": "If Intel had owned the market alone, customers might have grumbled and paid for three power rails forever. By 1975, however, agile competitors were attacking right where the 8080 hurt most. Motorola's 6800 and MOS Technology's inexpensive 6502 both ran cleanly off a single $$+5\\,\\text{V}$$ rail and needed far fewer supporting chips. For manufacturers building traffic controllers, appliances, or low-cost terminals, dropping two extra power rails saved real money on every unit shipped.\n\nEven more alarming to Intel's leadership was a rumor coming from just down the road in Silicon Valley. Federico Faggin and Masatoshi Shima—two star engineers who had helped bring the 8080 to life—had left Intel in late 1974 to start a rival company called Zilog. Word spread that they were crafting an upgraded, single-voltage processor able to run 8080 software directly. Intel could not afford to stand still.",
+          "questions": [
+            {
+              "id": "q_007",
+              "prompt": "What practical board-level advantage gave the Motorola 6800 and MOS 6502 strong appeal against the Intel 8080 in 1975?",
+              "choices": [
+                "They executed native 8080 software twice as fast without needing any changes.",
+                "They included built-in color video hardware and magnetic floppy disk controllers.",
+                "They required zero external memory chips because all user code lived inside the CPU.",
+                "They ran on a single five-volt supply and needed fewer surrounding support chips."
+              ],
+              "correct_index": 3,
+              "explanation": "Both the Motorola 6800 and MOS 6502 eliminated triple-voltage power supplies and cut supporting chip clutter, lowering overall board costs."
+            },
+            {
+              "id": "q_008",
+              "prompt": "Why did the young startup Zilog pose an especially urgent threat to Intel in 1975 and 1976?",
+              "choices": [
+                "Zilog was founded by former Intel 8080 engineers building a single-supply compatible rival.",
+                "Zilog held exclusive government patents barring Intel from selling chips to factories.",
+                "Zilog had already purchased Motorola and MOS Technology to control five-volt silicon.",
+                "Zilog focused solely on giant room-sized mainframes that replaced small microcomputers."
+              ],
+              "correct_index": 0,
+              "explanation": "Former Intel designers Federico Faggin and Masatoshi Shima launched Zilog to create a single-voltage processor capable of running existing 8080 software."
+            }
+          ]
+        },
+        {
+          "id": "ch_005",
+          "title": "Intel's 1976 Mission: Simplify the System, Keep the Software",
+          "content_markdown": "Facing both single-voltage competitors and Zilog's looming challenge, Intel gave its engineers a laser-focused mission for March 1976: build the **Intel 8085**. Notice what Intel did not ask for. It did not ask to tear up the 8080's programming model or force thousands of loyal customers to rewrite their working software from scratch. Protecting that growing library of 8080 code was sacred.\n\nInstead, the 8085 targeted the real bottleneck—total **system chip count**, power complexity, and board clutter. Intel aimed to collapse the 8080's three-voltage, three-chip core into a single $$+5\\,\\text{V}$$ processor supported by matching companion chips, letting designers assemble a complete small computer on a palm-sized board. Yet one tough physics puzzle stood in the way first: how do you teach a silicon chip designed around three voltages to run smoothly on just one?",
+          "questions": [
+            {
+              "id": "q_009",
+              "prompt": "What was Intel's top engineering priority when designing the 8085 in 1976?",
+              "choices": [
+                "Inventing a brand-new 32-bit design that required rewriting all existing 8080 software.",
+                "Doubling the number of voltage rails so the CPU could drive factory motors directly.",
+                "Replacing the single-chip CPU with a four-chip rack-mounted mainframe controller.",
+                "Cutting system chip count and power complexity while keeping 8080 software working."
+              ],
+              "correct_index": 3,
+              "explanation": "Intel created the 8085 to cure the 8080's triple-voltage and multi-chip system burden while safeguarding customers' existing investment in 8080 programs."
+            },
+            {
+              "id": "q_010",
+              "prompt": "Why does 'system chip count' matter so heavily to companies building embedded electronics?",
+              "choices": [
+                "Processors with fewer companion chips automatically gain unlimited internal storage.",
+                "Every additional chip increases board area, assembly cost, heat, and failure points.",
+                "Industry safety rules taxed circuit boards strictly by their total number of sockets.",
+                "Embedded programs refuse to boot whenever more than three chips share one power rail."
+              ],
+              "correct_index": 1,
+              "explanation": "Lowering system chip count shrinks circuit boards, cuts component and soldering costs, reduces heat, and improves overall hardware reliability."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_02",
+      "title": "2. Depletion-Load NMOS: How the 8085 Earned Its Final Digit",
+      "summary": "Exploring the silicon manufacturing breakthrough that literally gave the 8085 its final digit, this section explains in plain language how depletion-load NMOS—using ion-implanted, normally-on pull-up transistors—eliminated the 8080's $$+12\\,\\text{V}$$ and $$-5\\,\\text{V}$$ power rails in favor of a single $$+5\\,\\text{V}$$ supply. With denser, faster silicon, Intel folded both the 8224's clock circuitry (now driven by a simple quartz crystal across pins X1 and X2) and the 8228's system controller (direct RD, WR, and IO/M control strobes) straight onto the CPU die, making compact three-chip MCS-85 computers possible.",
+      "introduced_terms": [
+        "depletion-load NMOS",
+        "on-chip clock generator",
+        "control strobe"
+      ],
+      "chunks": [
+        {
+          "id": "ch_006",
+          "title": "The Meaning Hidden in the Final Digit",
+          "content_markdown": "Engineers at Intel rarely chose model numbers by accident. After the 4-bit 4004 came the 8-bit 8008—where *bits* are the basic binary digits (ones and zeros) a processor handles at once—and then the breakout 8080. When the 1976 successor arrived as the **8085**, many observers assumed Intel had simply skipped four numbers for marketing flair. In truth, that final digit '5' was a proud technical badge: the 8085 ran entirely on a single $$+5\\,\\text{V}$$ power supply.\n\nDropping the $$+12\\,\\text{V}$$ and $$-5\\,\\text{V}$$ power rails was not a matter of clipping two wires off an old 8080 blueprint. Those extra voltages existed because of how microscopic transistor switches—tiny solid-state electrical valves etched onto silicon—behaved inside the 1974 chip. To eliminate two whole power supplies without slowing the processor down, Intel had to upgrade the underlying silicon recipe itself.",
+          "questions": [
+            {
+              "id": "q_011",
+              "prompt": "What specific hardware milestone did the final digit '5' in the Intel 8085's name celebrate?",
+              "choices": [
+                "Its expansion from eight-bit words to a five-byte internal data pathway.",
+                "Its ability to run off a single five-volt electrical power supply.",
+                "Its requirement for five external companion chips on every circuit board.",
+                "Its debut as the fifth unrelated microprocessor architecture built by Intel."
+              ],
+              "correct_index": 1,
+              "explanation": "Intel named the chip the 8085 specifically to highlight that it operated from a single +5 V power rail rather than the 8080's triple-voltage supply."
+            },
+            {
+              "id": "q_012",
+              "prompt": "Why couldn't Intel drop the 8080's extra voltage rails simply by removing two pins from the original 1974 design?",
+              "choices": [
+                "Industry safety codes required every 1974 microchip to carry three power terminals.",
+                "Removing two pins would have erased the chip's built-in 8080 software library.",
+                "Standard circuit boards in 1976 could not carry steady five-volt power safely.",
+                "The original transistor circuit design physically relied on those rails to switch cleanly."
+              ],
+              "correct_index": 3,
+              "explanation": "The 8080's internal transistor switches depended electrically on +12 V and -5 V rails, so switching to a single +5 V supply required a new silicon circuit technique."
+            }
+          ]
+        },
+        {
+          "id": "ch_007",
+          "title": "Depletion-Load NMOS: Fixing the Stiff Valve",
+          "content_markdown": "Inside a digital logic gate—a tiny electronic decision switch on the chip—each output wire needs two helpers: a bottom switch that pulls the voltage down to $$0\\,\\text{V}$$ (a logic zero) and a top pull-up switch that lifts it to $$+5\\,\\text{V}$$ (a logic one). In the 8080's older NMOS silicon (a family of fast, negative-channel silicon transistors), the top pull-up switch was naturally turned off and acted like a stiff spring. Pushing it fully open to deliver a clean $$+5\\,\\text{V}$$ required an extra $$+12\\,\\text{V}$$ boost, while a $$-5\\,\\text{V}$$ supply steadied the silicon base underneath.\n\nIntel's breakthrough for the 8085 was **depletion-load NMOS**. During fabrication, engineers fired microscopic doses of impurity atoms into the top pull-up transistor's channel so it became *normally on*—like a valve gently held open by default. Now a single $$+5\\,\\text{V}$$ rail swung signals cleanly all the way from $$0\\,\\text{V}$$ to $$+5\\,\\text{V}$$, switching faster while burning less heat.",
+          "questions": [
+            {
+              "id": "q_013",
+              "prompt": "How did depletion-load NMOS eliminate the 8080's need for an extra twelve-volt supply rail?",
+              "choices": [
+                "It stepped down external power inside a miniature copper transformer etched on silicon.",
+                "It halved the processor's clock speed so weaker two-volt signals remained reliable.",
+                "It altered the top pull-up transistors to stay normally on for clean five-volt swings.",
+                "It replaced silicon transistors with microscopic magnetic relays built into the package."
+              ],
+              "correct_index": 2,
+              "explanation": "By implanting impurities so pull-up load transistors conducted naturally (normally on), depletion-load NMOS delivered full 0 V to +5 V logic swings from a single +5 V rail."
+            },
+            {
+              "id": "q_014",
+              "prompt": "In plain terms, why had the older 8080 needed a plus-twelve-volt boost on its top pull-up switches?",
+              "choices": [
+                "Its normally-off pull-up switches needed extra gate voltage to pass a crisp five-volt high.",
+                "Its output wires lost half their electrical charge when crossing plastic chip packages.",
+                "Its binary software instructions represented every digit one as a twelve-volt signal.",
+                "Its companion clock chip refused to run unless fed twelve volts through the CPU."
+              ],
+              "correct_index": 0,
+              "explanation": "The 8080's enhancement-mode pull-up transistors dropped voltage unless driven by a higher gate voltage (+12 V) to deliver a strong +5 V high signal."
+            }
+          ]
+        },
+        {
+          "id": "ch_008",
+          "title": "Pulling the Clock and Controller Inside the Silicon",
+          "content_markdown": "Depletion-load NMOS did more than simplify power; its tighter transistors gave Intel room for roughly 6,500 switches on the 8085 **die**—the bare sliver of silicon inside the chip's package—enough budget to swallow both mandatory 8080 support chips whole.\n\nFirst, Intel absorbed the 8224 by building an **on-chip clock generator**—internal timing circuitry that creates the processor's steady rhythmic heartbeat inside the CPU. An engineer simply wired a cheap quartz crystal across two pins named `X1` and `X2`. A $$6.144\\,\\text{MHz}$$ (megahertz, or millions of ticks per second) crystal was divided cleanly by two inside the chip to yield a crisp $$3.072\\,\\text{MHz}$$ rhythm, while `CLK OUT` shared that beat externally.\n\nSecond, Intel absorbed the 8228 by exposing direct **control strobes**—short, unmistakable timing pulses on dedicated pins (`RD` for Read, `WR` for Write, and `IO/M` distinguishing input/output devices from memory). No external chip had to spy on the data bus—the shared highway of data wires—to decode what the CPU wanted.",
+          "questions": [
+            {
+              "id": "q_015",
+              "prompt": "What external component did a designer typically connect to pins X1 and X2 of the 8085 to run its on-chip clock generator?",
+              "choices": [
+                "A full-sized 8224 clock generator chip powered by a separate twelve-volt rail.",
+                "A pair of external batteries wired backward to stabilize the silicon base layer.",
+                "An external 8228 controller decoding timing signals off the eight data wires.",
+                "An inexpensive quartz crystal whose frequency the 8085 divided internally by two."
+              ],
+              "correct_index": 3,
+              "explanation": "Because the clock generator lived on the 8085 die, connecting a simple quartz crystal across X1 and X2 supplied the base frequency, which the chip halved internally."
+            },
+            {
+              "id": "q_016",
+              "prompt": "How did the 8085's dedicated control strobes (RD, WR, and IO/M) replace the 8080's external 8228 system controller?",
+              "choices": [
+                "They compressed all memory commands into a single varying analog voltage level.",
+                "They placed all external working memory directly inside the microprocessor package.",
+                "They broadcast direct read, write, and memory-versus-I/O pulses on their own pins.",
+                "They stored every peripheral device driver permanently inside the quartz crystal."
+              ],
+              "correct_index": 2,
+              "explanation": "Dedicated control strobes directly told memory and peripherals when to read or write, eliminating the 8228 chip that had previously decoded status codes off the 8080's data bus."
+            }
+          ]
+        },
+        {
+          "id": "ch_009",
+          "title": "The Surprise of a Three-Chip Computer",
+          "content_markdown": "To see how dramatic this leap really was, consider what Intel called the **MCS-85** minimal system. Alongside the 8085 CPU, Intel released smart companion chips such as the **8155**—combining 256 *bytes* (eight-bit chunks of data) of temporary working memory (**RAM**), input/output ports, and a programmable timer—and the **8355** or erasable **8755**, combining 2,048 bytes of permanent read-only program memory (**ROM**) with additional input/output ports.\n\nWire just those three chips—8085, 8155, and 8355—to a single $$+5\\,\\text{V}$$ supply and a quartz crystal, and you held a complete, self-contained computer. No 8224, no 8228, no triple-voltage transformer, and almost zero glue logic. What had taken a dozen or more chips on a crowded 8080 board shrank onto a circuit card smaller than a postcard, transforming microprocessors into affordable brains inside everyday factory machines and instruments.",
+          "questions": [
+            {
+              "id": "q_017",
+              "prompt": "What components made up a complete, functioning three-chip MCS-85 minimal computer?",
+              "choices": [
+                "An 8085 CPU, an 8224 clock generator, and an 8228 system controller.",
+                "An 8085 CPU, an 8155 RAM-and-I/O chip, and an 8355 or 8755 ROM-and-I/O chip.",
+                "Three identical 8085 CPUs wired together to replace three voltage regulators.",
+                "An 8085 CPU, an external disk controller, and a dedicated video display chip."
+              ],
+              "correct_index": 1,
+              "explanation": "Because the 8085 already integrated clock and system-controller logic, pairing it with the 8155 (RAM/I/O/timer) and 8355/8755 (ROM/I/O) produced a full three-chip computer."
+            },
+            {
+              "id": "q_018",
+              "prompt": "Why did shrinking an 8080-class system down to three single-supply chips open up new markets for Intel?",
+              "choices": [
+                "It made compact, low-cost circuit boards practical inside everyday instruments and machines.",
+                "It allowed microprocessors to run software built originally for giant IBM mainframes.",
+                "It removed the need for engineers to write software for industrial control equipment.",
+                "It tripled the total amount of external memory an eight-bit CPU could reach."
+              ],
+              "correct_index": 0,
+              "explanation": "Drastically cutting chip count, board area, and power-supply cost let manufacturers embed 8085 computers inside compact industrial and commercial devices."
+            }
+          ]
+        },
+        {
+          "id": "ch_010",
+          "title": "One Problem Solved, a Pin Shortage Created",
+          "content_markdown": "Take a moment to appreciate what depletion-load NMOS and on-chip integration achieved. By replacing three power rails with one $$+5\\,\\text{V}$$ supply and folding the 8224 clock generator and 8228 system controller onto the silicon die, Intel transformed the 8080's sprawling board into a lean, clean architecture.\n\nYet engineering almost never grants a free lunch. Pulling all those new features inside the chip meant the 8085 needed new metal legs sticking out of its plastic package: pins for the quartz crystal, pins for `CLK OUT`, pins for `RD`, `WR`, and `IO/M`, plus extra pins Intel hoped to spend on answering urgent outside alerts and talking directly to keyboards or printers. Meanwhile, keeping packaging costs low meant sticking strictly to a 40-pin shell. Simple arithmetic soon revealed a painful pinch—and Intel's clever escape from that 40-pin squeeze is our next story.",
+          "questions": [
+            {
+              "id": "q_019",
+              "prompt": "Which pair of 8080 support chips did Intel absorb directly onto the 8085 silicon die?",
+              "choices": [
+                "The 8155 working memory chip and the 8355 permanent storage chip.",
+                "The Motorola 6800 processor and the MOS Technology 6502 processor.",
+                "The 8224 clock generator and the 8228 system controller.",
+                "The voltage power transformer and the external quartz crystal."
+              ],
+              "correct_index": 2,
+              "explanation": "Intel folded the functions of both the 8224 clock generator and the 8228 system controller directly onto the 8085 die."
+            },
+            {
+              "id": "q_020",
+              "prompt": "What new hardware constraint immediately appeared once Intel packed clock, control, and extra I/O features inside a 40-pin 8085 package?",
+              "choices": [
+                "The depletion-load silicon stopped switching whenever a quartz crystal was attached.",
+                "The five-volt power supply could no longer feed all forty metal pins evenly.",
+                "The plastic package grew too tall to fit inside standard office enclosures.",
+                "The processor ran out of external pins to give every signal its own dedicated leg."
+              ],
+              "correct_index": 3,
+              "explanation": "Adding crystal, clock-out, direct control strobes, and extra embedded features within a strict 40-pin package created an acute pin shortage."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_03",
+      "title": "3. The 40-Pin Squeeze: Multiplexing AD0–AD7 and the ALE Strobe",
+      "summary": "Keeping the 8085 inside the same economical 40-pin DIP package as the 8080 created a sharp pin-count dilemma once new clock, control, interrupt, and serial pins were added. Intel solved the squeeze by time-multiplexing the lower eight address lines with the eight data lines into a shared AD0–AD7 bus governed by an Address Latch Enable (ALE) strobe and a single transparent latch (or latches built into MCS-85 companion chips)—a clean one-tick address phase that avoided the Intel 8008's clumsy three-cycle multiplexing and directly previewed the 16-bit 8086's bus architecture.",
+      "introduced_terms": [
+        "AD0–AD7 multiplexed bus",
+        "Address Latch Enable (ALE)",
+        "transparent latch"
+      ],
+      "chunks": [
+        {
+          "id": "ch_011",
+          "title": "Doing the Forty-Pin Arithmetic",
+          "content_markdown": "In 1976, moving a microprocessor from a standard 40-pin DIP—a rectangular plastic or ceramic Dual In-line Package with twenty metal legs along each side—to a wider 48- or 64-pin housing was a financial nightmare. Bigger packages cost far more to mold, needed pricey custom sockets, and devoured precious circuit-board space. Intel knew the 8085 had to stay inside 40 pins.\n\nYet simple pin arithmetic looked grim. An 8080-compatible processor speaks to memory using a 16-bit address bus (sixteen wires selecting one of $$2^{16} = 65{,}536$$ memory locations) plus an 8-bit data bus (eight wires carrying one byte at a time). Those two highways alone ate 24 of the 40 legs! Once you added power, ground, crystal pins, reset lines, and direct control strobes, Intel wanted more extra signals than the remaining pins could hold. Something had to share.",
+          "questions": [
+            {
+              "id": "q_021",
+              "prompt": "Why was Intel strongly motivated to keep the 8085 inside a standard 40-pin DIP package rather than switching to a 64-pin package?",
+              "choices": [
+                "Processors with more than forty legs could not run on a single five-volt supply.",
+                "Larger chip packages could not protect depletion-load silicon from room heat.",
+                "Wider packages raised molding cost, socket expense, and circuit-board footprint sharply.",
+                "Forty pins was the physical limit of how many traces a copper board held."
+              ],
+              "correct_index": 2,
+              "explanation": "Moving beyond the industry-standard 40-pin DIP drove up packaging, socket, and circuit-board costs, defeating the 8085's goal of affordable embedded systems."
+            },
+            {
+              "id": "q_022",
+              "prompt": "How many pins did a non-shared 16-bit address bus and 8-bit data bus consume by themselves inside a 40-pin package?",
+              "choices": [
+                "Twenty-four pins, leaving only sixteen legs for all other processor functions.",
+                "Twelve pins, leaving twenty-eight legs free for power and control strobes.",
+                "Sixteen pins, because addresses and data already shared eight legs on the 8080.",
+                "Thirty-two pins, leaving only eight legs for clock, power, and reset wiring."
+              ],
+              "correct_index": 0,
+              "explanation": "Keeping 16 dedicated address lines and 8 dedicated data lines consumed 24 of the 40 pins, leaving too few legs for the 8085's new built-in features."
+            }
+          ]
+        },
+        {
+          "id": "ch_012",
+          "title": "Sharing the Road: The AD0–AD7 Multiplexed Bus",
+          "content_markdown": "Intel's answer was an elegant highway compromise called the **AD0–AD7 multiplexed bus**. Think of a reversible commuter bridge that carries westbound traffic during the first minute and eastbound traffic during the next. Because a microprocessor never sends a brand-new address and receives memory data at the exact same instant, those two tasks can take turns on the same copper pins.\n\nIntel kept the upper eight address wires (`A8` through `A15`) dedicated, since they stayed steady throughout a memory visit. Meanwhile, the lower eight address wires (`A0` through `A7`) merged with the eight data wires (`D0` through `D7`) onto eight shared pins labeled `AD0` through `AD7`. With one bold decision, Intel reclaimed eight precious pins—a full fifth of the entire 40-pin package! Still, a puzzle remained: how could an ordinary memory chip remember the lower address once those pins switched over to carrying data?",
+          "questions": [
+            {
+              "id": "q_023",
+              "prompt": "Which two groups of signals took turns sharing the 8085's AD0–AD7 multiplexed bus pins?",
+              "choices": [
+                "The upper eight address bits and the quartz crystal timing signals.",
+                "The five-volt power rail and the eight-bit data byte.",
+                "The upper eight address bits and the lower eight address bits.",
+                "The lower eight address bits and the eight-bit data byte."
+              ],
+              "correct_index": 3,
+              "explanation": "The 8085 kept A8–A15 dedicated and time-shared the lower eight address bits (A0–A7) with the eight data bits (D0–D7) on pins AD0–AD7."
+            },
+            {
+              "id": "q_024",
+              "prompt": "How many pins did time-multiplexing AD0–AD7 immediately reclaim inside the 8085's 40-pin package?",
+              "choices": [
+                "Four pins, saved by combining two power rails with two crystal pins.",
+                "Eight pins, freed by merging eight address lines with eight data lines.",
+                "Sixteen pins, freed by sending every address bit down one single wire.",
+                "Twelve pins, saved by dropping support for external working memory."
+              ],
+              "correct_index": 1,
+              "explanation": "Merging the eight lower address lines with the eight data lines onto shared pins AD0–AD7 instantly freed eight pins for other built-in capabilities."
+            }
+          ]
+        },
+        {
+          "id": "ch_013",
+          "title": "Freezing the Address: ALE and the Transparent Latch",
+          "content_markdown": "To keep addresses and data from colliding, Intel added a single timing pin called **Address Latch Enable (ALE)**—a short control strobe that signals exactly when `AD0`–`AD7` holds a valid address. Paired with `ALE` sits a tiny helper circuit called a **transparent latch** (such as an inexpensive 74LS373 chip, or an internal latch built directly inside MCS-85 chips like the 8155 and 8355). While `ALE` is high, the latch acts like an open window, letting the address pass straight through; the instant `ALE` drops low, the shutter snaps shut and freezes that address.\n\nWatch one memory read step by step. During clock tick `T1`, the 8085 places the high address byte on `A8`–`A15`, places the low address byte on `AD0`–`AD7`, and pulses `ALE` high then low—locking `A0`–`A7` inside the latch. During ticks `T2` and `T3`, the 8085 lets go of `AD0`–`AD7`, pulls `RD` low, and reads the returning data byte cleanly while the latch holds the full 16-bit address rock steady.",
+          "questions": [
+            {
+              "id": "q_025",
+              "prompt": "During a memory read on the 8085, what happens the moment the Address Latch Enable (ALE) pulse drops low at the end of tick T1?",
+              "choices": [
+                "The transparent latch freezes the lower eight address bits steady for ticks T2 and T3.",
+                "The processor pulls its RD strobe high to cancel the active memory transfer.",
+                "The quartz crystal pauses oscillating until the memory chip sends a reply.",
+                "The upper address pins A8–A15 switch roles to start carrying eight data bits."
+              ],
+              "correct_index": 0,
+              "explanation": "When ALE falls, the transparent latch captures and holds A0–A7 steady so memory keeps seeing the full address while AD0–AD7 switches to carrying data."
+            },
+            {
+              "id": "q_026",
+              "prompt": "Why could a three-chip MCS-85 board using the 8155 and 8355 companion chips omit an external 74LS373 latch chip?",
+              "choices": [
+                "Those companion chips ignored the lower eight address bits during every read cycle.",
+                "Those companion chips slowed the 8085 down so address and data never overlapped.",
+                "Those companion chips tapped the 8085's crystal pins directly to decode addresses.",
+                "Those companion chips already had an ALE-controlled address latch built inside them."
+              ],
+              "correct_index": 3,
+              "explanation": "Intel designed MCS-85 family chips like the 8155 and 8355 with internal address latches driven directly by the 8085's ALE strobe."
+            }
+          ]
+        },
+        {
+          "id": "ch_014",
+          "title": "Why This Was Not the Clumsy 8008 All Over Again",
+          "content_markdown": "Veteran engineers who remembered Intel's 1972 **8008** microprocessor initially winced upon hearing the words 'multiplexed bus.' Squeezed into a tiny 18-pin package, the 8008 had only eight shared pins for everything—a 14-bit address, two status bits identifying the operation, and an 8-bit data byte. Sending a single memory request on the 8008 required separate multi-step address phases (first the low address byte, then the high address plus status, and only later the data), burning extra clock cycles and demanding a rat's nest of external latches and decoding logic.\n\nThe 8085's multiplexing was an entirely different beast. Because `A8`–`A15` stayed dedicated, the entire 16-bit address moved out in a single `T1` clock tick—the exact same tick a non-multiplexed chip already spent setting up its address lines! Using standard off-the-shelf memory required just one cheap 8-bit latch, and zero extra bus cycles were wasted. Multiplexing had grown up.",
+          "questions": [
+            {
+              "id": "q_027",
+              "prompt": "How did the 8085's bus multiplexing improve dramatically over the 18-pin Intel 8008's multiplexed bus?",
+              "choices": [
+                "The 8085 eliminated address bits altogether and fetched memory strictly in sequential order.",
+                "The 8085 shrank its memory address space down to eight bits so no latch was needed.",
+                "The 8085 sent its entire 16-bit address in one clock tick without wasting extra bus cycles.",
+                "The 8085 ran three separate data buses simultaneously to offset slower address transfers."
+              ],
+              "correct_index": 2,
+              "explanation": "With A8–A15 dedicated and A0–A7 on AD0–AD7, the 8085 output all 16 address bits in a single T1 tick, unlike the 8008's multi-cycle address transfers."
+            },
+            {
+              "id": "q_028",
+              "prompt": "What extra hardware cost did a designer pay when wiring standard non-MCS-85 memory chips to an 8085?",
+              "choices": [
+                "A full twelve-volt clock generator and an external system-controller decoder chip.",
+                "A single inexpensive eight-bit transparent latch chip controlled by the ALE pin.",
+                "Three chained memory latches plus custom cycle-counting timers for every read.",
+                "A dedicated second microprocessor solely assigned to splitting address wires."
+              ],
+              "correct_index": 1,
+              "explanation": "Standard memory chips only needed one cheap 8-bit transparent latch (like a 74LS373) wired to ALE to demultiplex AD0–AD7 cleanly."
+            }
+          ]
+        },
+        {
+          "id": "ch_015",
+          "title": "A Blueprint for the 16-Bit Future—and Eight Pins to Spend",
+          "content_markdown": "Intel's `AD` plus `ALE` compromise proved so clean that it became the house blueprint for the next generation. Just two years later, in 1978, Intel faced an even tighter squeeze on the landmark 16-bit **8086**—the ancestor of modern PC processors. Somehow, the 8086 had to pack a 20-bit address bus (capable of reaching over one million bytes, or one megabyte, of memory) and a 16-bit data bus into the *exact same 40-pin DIP*. Intel reached straight back into its 8085 playbook, multiplexing `AD0`–`AD15` with an `ALE` strobe.\n\nBack in 1976, meanwhile, the 8085 team suddenly stood holding a windfall of eight freshly reclaimed pins (minus one spent on `ALE`). Rather than leave them idle, Intel invested them where embedded engineers felt the sharpest daily pain—starting with how a processor responds the instant an urgent outside event demands its attention.",
+          "questions": [
+            {
+              "id": "q_029",
+              "prompt": "How did the 8085's AD0–AD7 and ALE bus design directly preview Intel's landmark 1978 8086 microprocessor?",
+              "choices": [
+                "The 8086 abandoned 40-pin DIP packages immediately in favor of 128-pin grids.",
+                "The 8086 dropped external memory latches and returned to the 8008's three-cycle bus.",
+                "The 8086 kept an eight-bit data bus exclusively so it could reuse 8080 support chips.",
+                "The 8086 reused time-multiplexed AD pins and an ALE strobe inside a 40-pin package."
+              ],
+              "correct_index": 3,
+              "explanation": "To fit a 20-bit address bus and 16-bit data bus into the same economical 40-pin DIP, the 8086 adopted the 8085's AD-multiplexing and ALE strobe technique."
+            },
+            {
+              "id": "q_030",
+              "prompt": "Why did Intel accept the minor trade-off of multiplexing AD0–AD7 on the 8085 instead of keeping all 24 bus pins separate?",
+              "choices": [
+                "Reclaiming eight pins inside a 40-pin DIP unlocked built-in embedded control features.",
+                "Separate address and data lines were incompatible with depletion-load NMOS circuits.",
+                "Multiplexing doubled the 8085's maximum memory capacity from 64 KB to 128 KB.",
+                "Standard 1976 RAM chips refused to work unless data and addresses shared wires."
+              ],
+              "correct_index": 0,
+              "explanation": "Time-sharing AD0–AD7 freed eight pins within the affordable 40-pin package, giving Intel room to add high-value embedded features right on the CPU."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_04",
+      "title": "4. Spending the Freed Pins: TRAP and Prioritized Vectored Interrupts",
+      "summary": "Examining how Intel invested four of the eight pins reclaimed by bus multiplexing, this section contrasts the 8080's single INT pin—which required external glue logic to jam a restart opcode onto the data bus—with the 8085's four built-in prioritized hardware vectored interrupts. Learners trace the priority ladder from emergency, non-maskable TRAP down through edge-triggered RST 7.5 and level-triggered RST 6.5 and RST 5.5, and see how Intel cleverly tucked their jump vectors into the unused half-step addresses between the 8080's existing RST slots without breaking legacy interrupt tables.",
+      "introduced_terms": [
+        "non-maskable interrupt",
+        "vectored interrupt",
+        "interrupt masking"
+      ],
+      "chunks": [
+        {
+          "id": "ch_016",
+          "title": "The 8080's Interrupt Bottleneck",
+          "content_markdown": "Imagine managing a busy factory machine where a keyboard press, a sensor alarm, a timer tick, and an impending power outage can happen at any instant. Rather than wasting time constantly checking each device in a loop, processors rely on an **interrupt**—an urgent tap on the shoulder that pauses normal software so the CPU can handle an outside event and then seamlessly resume its work.\n\nOn the older 8080, however, there was only *one* interrupt pin (`INT`). When a device tugged that wire, the 8080 paused and asked, 'Who needs me?' Answering that question required external glue logic—often a whole extra chip like Intel's 8259 interrupt controller—to physically jam a special one-byte numeric instruction code (an **opcode** called `RST`, short for Restart) onto the data bus at just the right microsecond. For compact embedded controllers, adding extra interrupt hardware undermined the dream of a lean three-chip board.",
+          "questions": [
+            {
+              "id": "q_031",
+              "prompt": "Why did handling multiple outside events on an Intel 8080 often require extra external glue logic or an 8259 controller chip?",
+              "choices": [
+                "The 8080 could not pause running software without shutting down its twelve-volt rail.",
+                "The 8080 ignored all external sensors until an operator toggled a manual reset key.",
+                "The 8080 lacked any memory addresses where emergency handling routines could be kept.",
+                "The 8080 had only one interrupt pin and relied on external logic to supply an opcode."
+              ],
+              "correct_index": 3,
+              "explanation": "Because the 8080 offered only a single INT line, external circuitry had to decide which device won priority and jam a restart opcode onto the data bus."
+            },
+            {
+              "id": "q_032",
+              "prompt": "What everyday purpose does an interrupt serve inside a microprocessor-controlled machine?",
+              "choices": [
+                "It permanently deletes old software routines once a circuit board finishes starting up.",
+                "It pauses normal code on demand so the CPU can answer an urgent event and then resume.",
+                "It lowers the chip's clock frequency whenever external memory runs low on storage.",
+                "It disconnects all peripheral wires to shield the silicon from power-supply spikes."
+              ],
+              "correct_index": 1,
+              "explanation": "An interrupt lets external devices grab the CPU's immediate attention without forcing the program to check every sensor continuously."
+            }
+          ]
+        },
+        {
+          "id": "ch_017",
+          "title": "Built-In Vectored Interrupts and Selective Masking",
+          "content_markdown": "With freshly reclaimed pins in hand, Intel spent four of them to build an interrupt dispatcher straight into the 8085 silicon. Alongside the legacy 8080-style `INTR` pin (kept for backward compatibility), the 8085 added four dedicated **vectored interrupt** pins—meaning each pin automatically steers the processor straight to its own fixed memory address (a *vector*), saving the current place in a scratchpad memory region called the **stack** (acting like a bookmark) with zero external opcode-jamming circuitry.\n\nPicture an emergency room with four labeled doors instead of one unmarked entrance: the moment someone walks through Door A, staff know the exact station to run to. Better still, Intel added **interrupt masking**—the ability for software to selectively mute or unmute individual interrupt lines during delicate tasks, like putting a 'Do Not Disturb' sign on specific office phones while keeping the fire alarm live. One pin, however, refused every mute switch.",
+          "questions": [
+            {
+              "id": "q_033",
+              "prompt": "What makes a hardware interrupt pin a 'vectored interrupt' on the Intel 8085?",
+              "choices": [
+                "It automatically jumps the CPU to a fixed, pre-assigned memory address with no glue logic.",
+                "It adjusts the processor's clock frequency proportionally to the input voltage level.",
+                "It requires an external controller chip to place a three-byte jump opcode on the bus.",
+                "It restricts external devices to sending coordinates strictly in two-dimensional pairs."
+              ],
+              "correct_index": 0,
+              "explanation": "A vectored interrupt routes the processor directly to a dedicated built-in jump address, eliminating external opcode-jamming hardware."
+            },
+            {
+              "id": "q_034",
+              "prompt": "What capability does 'interrupt masking' give to an 8085 programmer?",
+              "choices": [
+                "Hiding confidential program instructions so competitors cannot inspect the ROM chip.",
+                "Boosting the electrical voltage on specific interrupt wires to overcome factory noise.",
+                "Selectively ignoring or enabling individual interrupt inputs while running sensitive code.",
+                "Combining all four hardware interrupt pins into one single unprioritized alert wire."
+              ],
+              "correct_index": 2,
+              "explanation": "Interrupt masking lets software selectively block or unblock specific interrupt lines so critical routines are not disturbed at bad moments."
+            }
+          ]
+        },
+        {
+          "id": "ch_018",
+          "title": "Climbing the Priority Ladder: TRAP Through RST 5.5",
+          "content_markdown": "If several interrupt pins ring at the exact same moment, the 8085 settles ties automatically using a strict built-in priority ladder. Standing alone at the top sits **`TRAP`**, the 8085's sole **non-maskable interrupt**—an unignorable emergency line that software *cannot* disable, even after running the Disable Interrupts (`DI`) command. Engineers wired `TRAP` to life-or-death events like a failing wall power supply, giving the CPU a few precious milliseconds to save vital data before the lights went dark.\n\nDirectly beneath `TRAP` stand three maskable hardware pins ranked in clean descending order: **`RST 7.5`** takes second place, **`RST 6.5`** takes third, and **`RST 5.5`** takes fourth, while the legacy 8080-style **`INTR`** sits at the bottom. Watch a concrete tie: if a timer triggers `RST 5.5` at the exact tick a sensor trips `RST 7.5`—while a power monitor fires `TRAP`—the 8085 jumps straight to `TRAP` first, leaving the maskable signals queued in priority order once the emergency clears.",
+          "questions": [
+            {
+              "id": "q_035",
+              "prompt": "What distinguishes the 8085's TRAP pin from RST 7.5, RST 6.5, and RST 5.5?",
+              "choices": [
+                "TRAP carries the lowest priority and runs only when the CPU is completely idle.",
+                "TRAP is a non-maskable interrupt that software cannot turn off even with DI.",
+                "TRAP requires an external 8259 controller chip to place a jump opcode on the bus.",
+                "TRAP works exclusively for keyboard entry rather than hardware emergency alerts."
+              ],
+              "correct_index": 1,
+              "explanation": "TRAP sits at the top of the 8085's interrupt priority ladder and is non-maskable, ensuring critical emergencies like impending power failure always break through."
+            },
+            {
+              "id": "q_036",
+              "prompt": "If RST 5.5, RST 7.5, and INTR all fire simultaneously while all maskable interrupts are enabled, which one does the 8085 service first?",
+              "choices": [
+                "INTR, because legacy 8080 compatibility always outranks newer 8085 inputs.",
+                "RST 5.5, because lower numerical labels always receive higher hardware priority.",
+                "None of them, because simultaneous triggers cancel each other out automatically.",
+                "RST 7.5, because it stands highest among the maskable interrupt inputs."
+              ],
+              "correct_index": 3,
+              "explanation": "The 8085's fixed hardware priority order from highest to lowest is TRAP, RST 7.5, RST 6.5, RST 5.5, and finally INTR."
+            }
+          ]
+        },
+        {
+          "id": "ch_019",
+          "title": "Pulses, Levels, and Half-Step Vector Geometry",
+          "content_markdown": "Two clever circuit details hide inside those four pins. First, notice *how* each pin listens. `RST 6.5` and `RST 5.5` are **level-triggered**, meaning the external device must hold the wire high until the CPU responds. `RST 7.5` is **rising-edge triggered**: a tiny one-bit memory switch (a *flip-flop*) inside the 8085 remembers even a fleeting upward pulse until software answers or clears it. Meanwhile, `TRAP` demands *both* a rising edge and a sustained high level so stray electrical sparks cannot trigger false power-failure alarms!\n\nSecond, decode the quirky '.5' names. On the 8080, software restart slots `RST 0` through `RST 7` sat every eight bytes in low memory (for example, `RST 5` sat at $$5 \\times 8 = 40$$, written `0028H` in hexadecimal, or base-16 notation). Intel tucked `TRAP` at $$4.5 \\times 8 = 36$$ (`0024H`), `RST 5.5` at $$5.5 \\times 8 = 44$$ (`002CH`), `RST 6.5` at $$6.5 \\times 8 = 52$$ (`0034H`), and `RST 7.5` at $$7.5 \\times 8 = 60$$ (`003CH`). Each midpoint provided four bytes—plenty for a three-byte `JMP` (Jump) command—without disturbing a single legacy 8080 slot!",
+          "questions": [
+            {
+              "id": "q_037",
+              "prompt": "Why did Intel require the non-maskable TRAP pin to detect both a rising edge and a sustained high voltage level?",
+              "choices": [
+                "To prevent brief electrical noise spikes from triggering accidental emergency routines.",
+                "To double the speed at which TRAP could read incoming bits from a tape drive.",
+                "To make TRAP compatible with twelve-volt clock pulses left over from 8080 boards.",
+                "To let software programmers mute TRAP temporarily during delicate math routines."
+              ],
+              "correct_index": 0,
+              "explanation": "Because TRAP cannot be masked by software, requiring both a rising edge and a steady high level guarded against false alarms from momentary electrical noise."
+            },
+            {
+              "id": "q_038",
+              "prompt": "Why do the 8085's maskable hardware interrupts carry unusual '.5' names like RST 5.5, RST 6.5, and RST 7.5?",
+              "choices": [
+                "They execute in half as many clock ticks as the original 8080's RST opcodes.",
+                "They operate at half the standard five-volt logic threshold used on other pins.",
+                "Their jump addresses sit halfway between the 8080's existing eight-byte RST slots.",
+                "They reserve only half a byte of stack space whenever the CPU pauses a routine."
+              ],
+              "correct_index": 2,
+              "explanation": "Placing the new vectors at 4.5, 5.5, 6.5, and 7.5 times 8 bytes fit a 3-byte JMP neatly in each 4-byte gap without disturbing legacy 8080 RST vectors."
+            }
+          ]
+        },
+        {
+          "id": "ch_020",
+          "title": "Cutting Glue Logic—and Still Having Two Pins Left Over",
+          "content_markdown": "With `TRAP`, `RST 7.5`, `RST 6.5`, and `RST 5.5` baked directly into the silicon, an embedded engineer designing a vending machine, elevator panel, or laboratory gauge could connect four urgent external sensors straight to the 8085—prioritized, vectored, and maskable—without adding a single extra interrupt-controller chip. That directly fulfilled Intel's mission of shrinking system chip count and glue logic.\n\nWait: how did a running program actually flip the individual mask switches for `RST 7.5`, `RST 6.5`, and `RST 5.5`, or check whether an edge-triggered pulse was waiting? And remember our pin count from Section 3—after spending one pin on `ALE` and four pins on interrupts, Intel *still* had two reclaimed pins burning a hole in its pocket! Remarkably, Intel tied interrupt masking and those final two pins together through just two brand-new instructions.",
+          "questions": [
+            {
+              "id": "q_039",
+              "prompt": "What major hardware benefit did built-in TRAP and RST 5.5–7.5 pins bring to small embedded 8085 products?",
+              "choices": [
+                "Designers could eliminate all external ROM and RAM chips from the circuit board.",
+                "Designers could run the 8085 without connecting any quartz crystal or clock input.",
+                "Designers could wire four prioritized interrupt lines directly with no extra controller.",
+                "Designers could triple the processor's 16-bit memory limit without extra address pins."
+              ],
+              "correct_index": 2,
+              "explanation": "Built-in vectored, prioritized interrupts eliminated the need for external interrupt-controller glue logic in compact embedded systems."
+            },
+            {
+              "id": "q_040",
+              "prompt": "Between RST 7.5 and RST 6.5, which interrupt can still be caught if an external device sends only a very brief upward pulse while the CPU is busy?",
+              "choices": [
+                "RST 7.5, because its internal edge-triggered latch remembers a brief rising pulse.",
+                "Neither pin, because the 8085 ignores every interrupt unless held high indefinitely.",
+                "RST 6.5, because level-triggered pins record short spikes automatically in RAM.",
+                "Both pins equally, because all three maskable RST pins use identical edge latches."
+              ],
+              "correct_index": 0,
+              "explanation": "RST 7.5 is rising-edge triggered with an internal flip-flop latch that remembers a fleeting pulse until serviced or reset, whereas RST 6.5 and 5.5 are level-triggered."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_05",
+      "title": "5. Two Pins, No UART: SID, SOD, RIM/SIM \u0026 Software Bit-Banging",
+      "summary": "Two more reclaimed pins became SID (Serial Input Data) and SOD (Serial Output Data), controlled by the only two official new instructions Intel added to the 8080 instruction set: RIM (Read Interrupt Mask) and SIM (Set Interrupt Mask). By demystifying software bit-banging—using cycle-counted delay loops to send and receive serial characters one timed bit at a time—learners see how the 8085 communicated with terminals, trainers, and cassette interfaces without paying for a dedicated UART chip, along with the timing and CPU-attention trade-offs that approach entailed.",
+      "introduced_terms": [
+        "UART",
+        "RIM and SIM instructions",
+        "bit-banging"
+      ],
+      "chunks": [
+        {
+          "id": "ch_021",
+          "title": "Talking One Bit at a Time Without Extra Silicon",
+          "content_markdown": "Suppose you have just assembled a lean three-chip 8085 controller and want to plug in a Teletype printer, a keyboard terminal, or a cassette tape recorder for saving data. Those devices communicate *serially*—sending binary ones and zeros single-file down one wire, rather than eight abreast down a wide bus.\n\nNormally, connecting a microprocessor to a serial line required buying a dedicated **UART** (Universal Asynchronous Receiver/Transmitter), such as Intel's 8251 chip. A UART acts like a shipping clerk: the CPU hands it a full eight-bit byte in one go, and the UART patiently drips those bits out the wire at an exact pace while reassembling incoming streams into clean bytes. Adding a whole UART chip, however, felt wasteful on cheap educational trainers or tiny diagnostic ports. Instead, Intel spent two of its reclaimed 8085 pins on the barest serial port imaginable: **`SID`** (Serial Input Data) and **`SOD`** (Serial Output Data).",
+          "questions": [
+            {
+              "id": "q_041",
+              "prompt": "What job does a dedicated UART chip perform in a computer system?",
+              "choices": [
+                "It generates twelve-volt clock pulses to drive older enhancement-mode transistors.",
+                "It stores permanent operating-system code inside erasable program memory chips.",
+                "It converts parallel bytes into timed single-wire serial bit streams and back again.",
+                "It settles priority ties among four simultaneous hardware interrupt input pins."
+              ],
+              "correct_index": 2,
+              "explanation": "A UART (Universal Asynchronous Receiver/Transmitter) offloads serial communication by shifting parallel bytes into timed single-file bit streams and reassembling received bits."
+            },
+            {
+              "id": "q_042",
+              "prompt": "Why did Intel add the raw SID and SOD pins to the 8085 instead of putting a full hardware UART onto the processor die?",
+              "choices": [
+                "Two simple pins saved die area while letting low-cost boards drop a UART chip.",
+                "Hardware UARTs were electrically incompatible with single five-volt NMOS silicon.",
+                "Serial terminals in 1976 refused to work with computers containing a UART chip.",
+                "The 8085 lacked enough memory capacity to hold drivers for hardware UART chips."
+              ],
+              "correct_index": 0,
+              "explanation": "Exposing one raw input pin (SID) and one raw output pin (SOD) cost minimal silicon while giving budget embedded boards simple serial communication without an extra UART chip."
+            }
+          ]
+        },
+        {
+          "id": "ch_022",
+          "title": "Meet RIM and SIM: Two Instructions Wearing Two Hats",
+          "content_markdown": "How did software actually read `SID`, toggle `SOD`, and manage the interrupt masks from Section 4? Rather than bloating the 8080 instruction set with a dozen new commands, Intel added just two official instructions to the 8085: the **RIM and SIM instructions**—short for *Read Interrupt Mask* and *Set Interrupt Mask*.\n\nBoth instructions pack two completely different jobs into the CPU's main eight-bit internal storage slot (a *register*) called the **accumulator** (`A`). Running `RIM` copies the live electrical state of `SID` straight into the top bit (bit 7) of `A`, while filling bits 0 through 6 with pending interrupt alerts, global interrupt status, and current mask bits. Running `SIM` works in reverse, sending bit 7 of `A` out to `SOD` and updating the masks for `RST 7.5`, `6.5`, and `5.5`.\n\nCleverly, `SIM` includes two separate safety-gate bits: Serial Data Enable (`SDE`, bit 6) and Mask Set Enable (`MSE`, bit 3). That way, toggling `SOD` never accidentally scrambles your interrupt masks—and changing masks never glitches your serial wire.",
+          "questions": [
+            {
+              "id": "q_043",
+              "prompt": "How many official new instructions did Intel add to the 8080 instruction set when releasing the 8085?",
+              "choices": [
+                "Sixteen, covering every combination of interrupts, timers, and cassette drives.",
+                "Eight, dedicating one separate instruction to each pin reclaimed by AD0–AD7.",
+                "Four, giving one private instruction to each hardware vectored interrupt line.",
+                "Two, combining interrupt-mask control and SID/SOD serial access in RIM and SIM."
+              ],
+              "correct_index": 3,
+              "explanation": "RIM (Read Interrupt Mask) and SIM (Set Interrupt Mask) were the only two official new instructions documented by Intel for the 8085."
+            },
+            {
+              "id": "q_044",
+              "prompt": "Why does the SIM instruction include two separate enable bits—Serial Data Enable (SDE) and Mask Set Enable (MSE)?",
+              "choices": [
+                "They boost the output voltage on SOD from five volts up to twelve volts.",
+                "They let software change serial output or interrupt masks independently without clobbering either.",
+                "They double the speed of serial data transmission by sending two bits together.",
+                "They disable the non-maskable TRAP pin temporarily while a serial character sends."
+              ],
+              "correct_index": 1,
+              "explanation": "Because SIM writes both SOD and interrupt masks from the same accumulator byte, SDE and MSE act as independent gates so each half can change safely on its own."
+            }
+          ]
+        },
+        {
+          "id": "ch_023",
+          "title": "Software Bit-Banging Step by Step",
+          "content_markdown": "Without a UART chip, how does a single output wire like `SOD` send a full typed letter—say, `'A'` (binary `01000001`)—to a terminal running at 300 bits per second? The answer is **bit-banging**: using carefully timed software loops to manually flip an output pin high and low, mimicking a hardware UART purely in code.\n\nImagine blinking a flashlight in Morse code while watching a stopwatch. At 300 bits per second, each bit lasts $$1 / 300 \\approx 3.33\\,\\text{ms}$$ (milliseconds)—roughly $$10{,}240$$ clock ticks on a $$3.072\\,\\text{MHz}$$ 8085. First, the routine sets `SOD` low (`0`) via `SIM` for one bit-time as a 'start bit' to wake the receiver. Next, it shifts each of the eight data bits into bit 7 of `A`, calls `SIM`, and burns a counted delay loop of $$10{,}240$$ ticks between bits, ending with a high (`1`) 'stop bit.' Receiving reverses the dance: repeatedly checking (*polling*) `SID` with `RIM` to catch the start edge, waiting $$1.5$$ bit-times to land cleanly in the center of bit 0, and sampling once per bit-time.",
+          "questions": [
+            {
+              "id": "q_045",
+              "prompt": "What is 'bit-banging' on an Intel 8085 system?",
+              "choices": [
+                "Driving or sampling raw pins like SID and SOD through timed software loops.",
+                "Tapping a quartz crystal to jump-start an unresponsive on-chip clock generator.",
+                "Sending all eight bits across AD0–AD7 at once without pulsing the ALE strobe.",
+                "Overwriting unused ROM cells repeatedly to clear out stale interrupt vectors."
+              ],
+              "correct_index": 0,
+              "explanation": "Bit-banging replaces dedicated serial hardware by having the CPU itself toggle and sample raw single-bit pins on a strict software-timed schedule."
+            },
+            {
+              "id": "q_046",
+              "prompt": "When receiving a bit-banged byte on the SID pin, why does the routine wait 1.5 bit-times after detecting the start bit's falling edge before reading the first data bit?",
+              "choices": [
+                "Because the 8085's RIM instruction requires one and a half milliseconds to wake up.",
+                "Because the first bit of every serial letter is always discarded by terminal keyboards.",
+                "To skip past the start bit and sample cleanly right in the middle of the first data bit.",
+                "To give the external transparent latch enough time to release the upper address wires."
+              ],
+              "correct_index": 2,
+              "explanation": "Waiting one full bit-time passes the start bit, and the extra half bit-time centers the sample squarely in the middle of data bit 0 where the signal is most stable."
+            }
+          ]
+        },
+        {
+          "id": "ch_024",
+          "title": "The Hidden Price of a Free Serial Port",
+          "content_markdown": "Bit-banging via `SID` and `SOD` felt like magic on educational kits like Intel's famous **SDK-85** single-board trainer, where a student could plug a Teletype straight into the processor with zero UART cost. Yet bit-banging came with a steep hidden catch that explains why real UART chips never disappeared.\n\nWhile the 8085 is busy counting out $$10{,}240$$ clock ticks for every single bit of a sentence, it can do *nothing else*. The processor is completely handcuffed to its stopwatch. Worse still, what happens if an unexpected interrupt fires midway through sending a character? The CPU jumps away to service that interrupt, stretches one bit far too long, and turns the outgoing letter into garbled nonsense! To keep bit timing rock-solid, programmers usually had to disable or mask interrupts during every byte—and if two serial streams arrived at once, software bit-banging quickly collapsed.",
+          "questions": [
+            {
+              "id": "q_047",
+              "prompt": "What major operational drawback occurs if a maskable interrupt fires midway through a bit-banged serial transfer on the 8085?",
+              "choices": [
+                "The interrupt permanently locks the SOD pin at five volts until the board restarts.",
+                "The detour stretches the software delay loop, distorting bit timing and garbling the byte.",
+                "The CPU automatically switches the serial line into a hardware UART mode instead.",
+                "The 8085 clears its transparent address latch and loses contact with program ROM."
+              ],
+              "correct_index": 1,
+              "explanation": "Because bit-banging depends on exact cycle-counted delay loops, pausing to handle an interrupt stretches the active bit and corrupts the serial frame."
+            },
+            {
+              "id": "q_048",
+              "prompt": "Why did high-traffic computers still buy dedicated UART chips even though the 8085 offered free SID and SOD pins?",
+              "choices": [
+                "Because SID and SOD could only transmit numeric digits rather than letters of text.",
+                "Because Intel prohibited commercial makers from running RIM and SIM in shipped gear.",
+                "Because bit-banging only worked when an external 8224 clock chip remained attached.",
+                "Because bit-banging tied up the CPU during transfers and failed with simultaneous streams."
+              ],
+              "correct_index": 3,
+              "explanation": "A hardware UART handles serial framing in the background so the CPU stays free for useful computation and interrupts without losing incoming characters."
+            }
+          ]
+        },
+        {
+          "id": "ch_025",
+          "title": "All Forty Pins Accounted For—Now Look Inside the Code",
+          "content_markdown": "Step back and admire the tidy jigsaw puzzle Intel just finished assembling. Starting from the 8080's cramped 40-pin shell, depletion-load NMOS eliminated two voltage rails, on-chip integration absorbed two whole support chips, `AD0`–`AD7` multiplexing reclaimed eight pins, and Intel reinvested those pins in `ALE`, four prioritized vectored interrupts, and `SID`/`SOD` serial I/O.\n\nNotice something equally remarkable on the *software* side: across all those sweeping hardware upgrades, Intel officially added only **two** instructions—`RIM` and `SIM`. Every other official command in the 8085 datasheet looked identical to the 8080. Why was Intel so fiercely protective of keeping the instruction set nearly untouched—and what subtle surprises lurked beneath that seemingly identical surface? That brings us directly to the 8085's software contract.",
+          "questions": [
+            {
+              "id": "q_049",
+              "prompt": "Which single instruction allows an 8085 program to check both the current voltage on SID and which hardware interrupts are currently masked?",
+              "choices": [
+                "ALE, which freezes both address bits and serial pins simultaneously.",
+                "TRAP, which reads all external interrupt and serial wires into memory.",
+                "RIM, which packs the SID bit and interrupt status into the accumulator.",
+                "SIM, which copies the accumulator's bits straight onto the serial pin."
+              ],
+              "correct_index": 2,
+              "explanation": "RIM (Read Interrupt Mask) loads the SID input level into bit 7 of the accumulator and places pending interrupts, global enable, and mask bits in bits 0–6."
+            },
+            {
+              "id": "q_050",
+              "prompt": "In which setting did the 8085's built-in SID and SOD serial pins shine brightest?",
+              "choices": [
+                "High-speed multi-user mainframe networks juggling dozens of simultaneous phone lines.",
+                "Low-cost trainers and simple embedded boards needing an inexpensive console or tape link.",
+                "Graphics workstations streaming uncompressed color video frames to television displays.",
+                "Industrial power stations requiring three separate voltage rails for heavy motor relays."
+              ],
+              "correct_index": 1,
+              "explanation": "Budget single-board trainers like Intel's SDK-85 and simple controllers benefited enormously from having a basic serial link without paying for a dedicated UART."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_06",
+      "title": "6. Seamless Upgrade: 100% 8080 Binary Compatibility \u0026 Subtle Refinements",
+      "summary": "Because a thriving ecosystem of CP/M operating systems, BASIC interpreters, PL/M compilers, and industrial firmware already existed in 8080 machine code by 1976, Intel engineered the 8085 for 100% binary compatibility across registers, flags, memory layout, and legal opcodes. Beneath that identical surface, learners uncover subtle internal refinements—faster clock speeds, trimmed cycle counts on common register moves and untaken conditional jumps, slight timing shifts that affected software delay loops, and the intriguing mystery of ten still-blank holes left inside the 256-slot opcode map after RIM and SIM claimed two of the 8080's twelve unused slots.",
+      "introduced_terms": [
+        "binary compatibility",
+        "opcode map"
+      ],
+      "chunks": [
+        {
+          "id": "ch_026",
+          "title": "Protecting an Ecosystem Worth Millions",
+          "content_markdown": "By the spring of 1976, the Intel 8080 was no longer just a silicon chip—it was the foundation of an entire software world. Small businesses and hobbyists were running Digital Research's CP/M disk operating system, Microsoft's Altair BASIC interpreter, Intel's own PL/M programming tools, and thousands of custom factory programs—known as *firmware*—burned permanently into memory chips.\n\nIf Intel had changed the numeric opcodes for basic instructions when designing the 8085, every one of those customers would have faced a painful choice: rewrite and retest working programs, or jump ship to a rival chipmaker. Instead, Intel made **binary compatibility** an iron law. Binary compatibility means a newer processor can execute the exact, unmodified stream of raw ones and zeros already translated (*compiled*) into machine code for an older processor—no recompiling, no hand-editing, not even a single altered byte.",
+          "questions": [
+            {
+              "id": "q_051",
+              "prompt": "What does 'binary compatibility' mean when upgrading from an older microprocessor to a newer one?",
+              "choices": [
+                "Both processors must use the exact same triple-voltage power supply and board layout.",
+                "The newer processor can run unmodified compiled machine code built for the older one.",
+                "Programs written for the older chip must be manually rewritten line by line before running.",
+                "Both processors communicate with each other strictly over single-wire serial cables."
+              ],
+              "correct_index": 1,
+              "explanation": "Binary compatibility guarantees that compiled machine-code binaries for an earlier CPU execute directly on the newer CPU without recompilation or modification."
+            },
+            {
+              "id": "q_052",
+              "prompt": "Why was preserving 100% 8080 binary compatibility so strategically critical for Intel in 1976?",
+              "choices": [
+                "No new software tools could legally be written for any processor released after 1975.",
+                "Depletion-load NMOS silicon was physically unable to encode brand-new opcode formats.",
+                "Customers wanted all 8085 chips to plug straight into old triple-voltage 8080 sockets.",
+                "A vast ecosystem of CP/M, BASIC, PL/M, and industrial firmware already ran on 8080 code."
+              ],
+              "correct_index": 3,
+              "explanation": "Protecting customers' huge existing investment in 8080 operating systems, languages, and industrial firmware made upgrading to the 8085 effortless."
+            }
+          ]
+        },
+        {
+          "id": "ch_027",
+          "title": "Identical Cockpit, Stronger Engine",
+          "content_markdown": "Think of stepping from a 1974 sedan into its 1976 redesign: the steering wheel, pedals, gauges, and gearshift sit in the exact same spots, even though a cleaner, peppier engine hums under the hood. That was the programmer's experience moving from the 8080 to the 8085.\n\nEvery official internal register matched the 8080 identically: the accumulator `A`, six general-purpose eight-bit registers (`B`, `C`, `D`, `E`, `H`, `L`, which teamed up into 16-bit pairs `BC`, `DE`, and `HL`), the 16-bit Stack Pointer (`SP`, tracking the top of the bookmark stack), and the 16-bit Program Counter (`PC`, holding the address of the next instruction to run). The five documented **status flags**—tiny one-bit indicator lights tracking math results such as Zero, Sign, Auxiliary Carry, Parity, and Carry—behaved identically, 16-bit numbers stayed *little-endian* (storing the low byte at the lower address), and all 244 official 8080 opcodes kept their exact meaning.",
+          "questions": [
+            {
+              "id": "q_053",
+              "prompt": "Which statement accurately describes the 8085's official programmer's model compared to the Intel 8080?",
+              "choices": [
+                "It kept the exact same official registers, five flags, memory byte order, and 244 opcodes.",
+                "It doubled the size of registers B, C, D, and E from eight bits to sixteen bits each.",
+                "It reversed memory storage from little-endian to big-endian to simplify bus multiplexing.",
+                "It removed the Auxiliary Carry and Parity flags to free up silicon for the clock generator."
+              ],
+              "correct_index": 0,
+              "explanation": "To preserve seamless 100% binary compatibility, the 8085 mirrored the 8080's official registers, status flags, little-endian byte order, and instruction encodings."
+            },
+            {
+              "id": "q_054",
+              "prompt": "In the 8080 and 8085's little-endian memory layout, how is a 16-bit number stored across two consecutive memory addresses?",
+              "choices": [
+                "Both bytes are compressed together into a single eight-bit memory slot.",
+                "The high byte is stored at the lower address and the low byte at the next address.",
+                "The low byte is stored at the lower address and the high byte at the next address.",
+                "The processor flips byte order whenever the ALE strobe switches high or low."
+              ],
+              "correct_index": 2,
+              "explanation": "Little-endian storage places the least-significant (low) byte at the lower memory address and the most-significant (high) byte at the following address."
+            }
+          ]
+        },
+        {
+          "id": "ch_028",
+          "title": "Faster Clocks and Trimmed Cycles Under the Hood",
+          "content_markdown": "Even without changing a single byte of an 8080 program, running it on an 8085 felt noticeably snappier. First came raw heartbeat speed: while the original 8080 ticked at $$2\\,\\text{MHz}$$, the standard 8085A cruised at $$3\\,\\text{MHz}$$—and faster factory-tested versions like the 8085A-2 and 8085AH-1 climbed to $$5\\,\\text{MHz}$$ and $$6\\,\\text{MHz}$$.\n\nSecond, Intel quietly polished the internal machinery to shave precious clock ticks (called *T-states*) off frequent operations. Moving a byte from one internal register to another (`MOV r,r`) dropped from 5 clock ticks on the 8080 down to just 4 on the 8085—a 20% cycle savings on one of human-readable assembly programming's most common instructions! Conditional jumps (such as 'jump if not zero') received an even smarter upgrade: on the 8080 they always burned 10 clock ticks whether the branch happened or not, whereas on the 8085 an *untaken* jump finished in just 7 ticks.",
+          "questions": [
+            {
+              "id": "q_055",
+              "prompt": "How did the 8085 speed up conditional jump instructions compared to the Intel 8080?",
+              "choices": [
+                "It executed both paths simultaneously using two separate internal arithmetic units.",
+                "It skipped fetching the destination address bytes whenever a branch was taken.",
+                "It turned all conditional jumps into unconditional branches during memory reads.",
+                "It finished untaken conditional jumps in 7 clock ticks instead of always taking 10."
+              ],
+              "correct_index": 3,
+              "explanation": "While a taken conditional jump still took 10 clock ticks, the 8085 trimmed untaken conditional jumps down to 7 ticks, speeding up everyday code."
+            },
+            {
+              "id": "q_056",
+              "prompt": "Besides a faster standard clock rate (3 MHz versus 2 MHz), what internal tweak accelerated simple register-to-register copies (`MOV r,r`) on the 8085?",
+              "choices": [
+                "Intel added a second full eight-bit data bus strictly for copying registers.",
+                "Intel trimmed `MOV r,r` from 5 clock ticks down to 4 clock ticks.",
+                "Intel allowed `MOV r,r` to copy four registers simultaneously in one byte.",
+                "Intel moved all six general registers outside the CPU into the 8155 chip."
+              ],
+              "correct_index": 1,
+              "explanation": "Cutting `MOV r,r` from 5 T-states on the 8080 to 4 T-states on the 8085 gave existing 8080 binaries an immediate efficiency boost."
+            }
+          ]
+        },
+        {
+          "id": "ch_029",
+          "title": "The Timing Twist: When '100% Compatible' Runs Differently",
+          "content_markdown": "Here is a subtle engineering lesson that caught more than one 1976 programmer off guard: *100% logical binary compatibility does not guarantee identical real-world timing*. Any old 8080 program that flashed an indicator light, played a buzzer note, or ran a serial bit-banging loop by counting clock cycles suddenly sprinted 50% faster on a $$3\\,\\text{MHz}$$ 8085—turning calm blinks into frantic strobes and breaking serial speeds (*baud rates*)!\n\nEven more surprising, not every instruction got faster in cycle count. Because Intel redesigned the 8085's internal 16-bit increment and decrement pathway, a few instructions actually grew by *one* clock tick compared to the 8080: `INX` and `DCX` (adding or subtracting one on a 16-bit register pair) edged from 5 ticks to 6, `PUSH` (saving data onto the stack) rose from 11 to 12, and `CALL` (jumping into a reusable subroutine) rose from 17 to 18. For normal programs, faster clocks easily won out—but cycle-counting hardware drivers still needed retuning.",
+          "questions": [
+            {
+              "id": "q_057",
+              "prompt": "Why could a completely legal, unmodified 8080 program still misbehave when moved onto an 8085 circuit board?",
+              "choices": [
+                "Software delay loops counted on 8080 clock speeds and cycle counts, so timing shifted.",
+                "The 8085 refused to run any 8080 program that used the Stack Pointer register.",
+                "The 8085 inverted the Zero flag whenever an addition instruction produced zero.",
+                "All 8080 arithmetic instructions required manual conversion to 16-bit format first."
+              ],
+              "correct_index": 0,
+              "explanation": "Although logic matched 100%, the 8085's higher clock speed and slightly altered T-state counts threw off hand-tuned software timing loops."
+            },
+            {
+              "id": "q_058",
+              "prompt": "Which statement reveals a surprising nuance about the 8085's instruction cycle counts compared to the 8080?",
+              "choices": [
+                "Every single 8080 instruction ran in exactly half as many clock ticks on the 8085.",
+                "Only memory-read instructions sped up, while every register instruction slowed down.",
+                "A few instructions such as INX, DCX, PUSH, and CALL actually took one extra clock tick.",
+                "The 8085 abandoned fixed clock ticks and executed every instruction at random speeds."
+              ],
+              "correct_index": 2,
+              "explanation": "While MOV and untaken jumps got shorter, internal timing adjustments added one T-state to INX/DCX (6 vs. 5), PUSH (12 vs. 11), and CALL (18 vs. 17)."
+            }
+          ]
+        },
+        {
+          "id": "ch_030",
+          "title": "Ten Blank Holes in the Opcode Map",
+          "content_markdown": "To appreciate the final clue hidden in the 8085's compatibility story, picture an **opcode map**—a 16-by-16 grid showing every possible eight-bit binary instruction code from `00H` to `FFH`, yielding $$2^8 = 256$$ total slots. Every byte the processor fetches as an instruction lands in exactly one square of that grid.\n\nOn the original Intel 8080, 244 squares held official instructions, leaving exactly **12 blank holes** (which behaved harmlessly as undocumented 'do-nothing' `NOP` or duplicate aliases). When Intel added `RIM` (`20H`) and `SIM` (`30H`) to the 8085, those two commands moved neatly into two of the 8080's twelve blank squares without disturbing a single legal 8080 opcode.\n\nThat left **10 mysteriously empty squares** staring back from the official 8085 manual (`08H`, `10H`, `18H`, `28H`, `38H`, `CBH`, `D9H`, `DDH`, `EDH`, and `FDH`). Were those ten squares really empty silicon? Curious engineers were about to find out.",
+          "questions": [
+            {
+              "id": "q_059",
+              "prompt": "Where did Intel place the numeric opcodes for RIM (`20H`) and SIM (`30H`) so they would not break 8080 binary compatibility?",
+              "choices": [
+                "Inside two of the twelve blank holes in the 8080's 256-slot opcode map.",
+                "On top of two rarely used 8080 subtraction opcodes that Intel retired.",
+                "Inside a brand-new nine-bit instruction table controlled by the ALE pin.",
+                "Inside the 8155 memory companion chip rather than the 8085 CPU die."
+              ],
+              "correct_index": 0,
+              "explanation": "Putting RIM and SIM into two of the 8080's twelve vacant opcode slots preserved all 244 official 8080 instructions completely intact."
+            },
+            {
+              "id": "q_060",
+              "prompt": "After Intel filled two of the 8080's twelve vacant opcode slots with RIM and SIM, how many officially blank slots remained in the 8085's 256-entry opcode map?",
+              "choices": [
+                "Two blank slots, reserved solely for future serial input and output pins.",
+                "Twelve blank slots, because RIM and SIM reused existing 8080 restart codes.",
+                "Sixteen blank slots, because Intel removed four obsolete 8080 jump codes.",
+                "Ten blank slots, listed as empty in Intel's published 8085 documentation."
+              ],
+              "correct_index": 3,
+              "explanation": "Out of 256 total one-byte opcodes, 244 came from the 8080 and 2 went to RIM and SIM, leaving exactly 10 officially undocumented holes."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_07",
+      "title": "7. Silicon Detective Work: The 10 Undocumented Opcodes \u0026 Hidden Flags",
+      "summary": "Following engineers Wolfgang Dehnhardt and Villy Sorensen's 1979 detective breakthrough in probing the 8085's ten blank opcode slots, this section uncovers a deliberately designed suite of hidden instructions aimed at speeding up 16-bit pointer arithmetic and high-level language compilers. Learners unpack all ten undocumented opcodes—16-bit math helpers DSUB, ARHL, and RDEL; stack-frame and pointer tools LDHI, LDSI, LHLX, and SHLX; and conditional helpers RSTV, JNX5, and JX5—alongside the two hidden status flags (the signed overflow flag V and the 16-bit wraparound indicator X5) that powered them.",
+      "introduced_terms": [
+        "undocumented opcode",
+        "stack frame",
+        "signed overflow flag"
+      ],
+      "chunks": [
+        {
+          "id": "ch_031",
+          "title": "Poking the Ten Blank Squares",
+          "content_markdown": "Most engineers glancing at the ten empty white squares in Intel's published 8085 opcode map shrugged and moved on, assuming those codes were harmless do-nothing holes just like on the 8080. Two curious engineers, **Wolfgang Dehnhardt** and **Villy Sorensen**, decided to test that assumption on real hardware—and stunned the microprocessor world when they published their findings in *Electronics* magazine in January 1979.\n\nMethodically feeding each unlisted hexadecimal byte (`08H`, `10H`, `18H`, `28H`, `38H`, `CBH`, `D9H`, `DDH`, `EDH`, and `FDH`) into an actual 8085 chip, they inspected every register, memory byte, and status bit before and after execution. Not a single one of those ten slots was blank! Every single square triggered a clean, deliberate, fully wired **undocumented opcode**—a working machine instruction built into the silicon yet completely omitted from the manufacturer's official manuals.",
+          "questions": [
+            {
+              "id": "q_061",
+              "prompt": "How did engineers Wolfgang Dehnhardt and Villy Sorensen uncover the Intel 8085's ten hidden instructions in 1978–1979?",
+              "choices": [
+                "They found an accidentally shipped internal Intel memo tucked inside an SDK-85 box.",
+                "They reverse-engineered an IBM mainframe emulator running 8080 payroll software.",
+                "They purchased leaked silicon fabrication blueprints from a rival chip foundry.",
+                "They systematically ran the ten unlisted hex codes on real 8085 silicon and logged effects."
+              ],
+              "correct_index": 3,
+              "explanation": "Dehnhardt and Sorensen probed each of the ten officially blank opcode slots directly on an 8085, observing consistent changes to registers, memory, and flags."
+            },
+            {
+              "id": "q_062",
+              "prompt": "What is an 'undocumented opcode' in microprocessor engineering?",
+              "choices": [
+                "A real instruction wired into CPU silicon that the maker omits from manuals.",
+                "A software error caused by static electricity scrambling bytes stored in RAM.",
+                "A human-readable comment stripped out before creating binary machine code.",
+                "A hidden test instruction that runs only when twelve volts hit the reset pin."
+              ],
+              "correct_index": 0,
+              "explanation": "An undocumented opcode is a real, executable circuit behavior built into the processor die that the manufacturer chooses not to list or support in public manuals."
+            }
+          ]
+        },
+        {
+          "id": "ch_032",
+          "title": "Compiler Power Tools: The 16-Bit Math Trio",
+          "content_markdown": "When Dehnhardt and Sorensen laid all ten hidden commands side by side, a clear design mission jumped off the page: Intel's silicon architects had crafted a coordinated toolkit to accelerate **16-bit pointer math** (arithmetic on 16-bit memory addresses pointing to data) and **high-level language compilers** (tools translating languages like PL/M, Pascal, or C into raw machine code).\n\nLook first at the **16-bit arithmetic trio**, using the names Dehnhardt and Sorensen coined. On the 8080, `DAD B` added register pair `BC` to `HL` (`HL = HL + BC`), yet subtracting `BC` from `HL` took several clunky steps. Secret opcode **`DSUB`** (`08H`) performed 16-bit subtraction (`HL = HL - BC`) in a single blow! Alongside it, **`ARHL`** (`10H`) shifted `HL` right by one bit while preserving its positive/negative sign bit for fast signed division by two, and **`RDEL`** (`18H`) rotated `DE` left through the Carry flag to accelerate 16-bit multiplication and division loops.",
+          "questions": [
+            {
+              "id": "q_063",
+              "prompt": "What unified architectural goal linked the 8085's ten undocumented opcodes together?",
+              "choices": [
+                "Adding color video graphics and musical sound synthesis for home arcade machines.",
+                "Replacing the RIM and SIM instructions so serial bit-banging ran automatically.",
+                "Accelerating 16-bit arithmetic, pointer math, and compiler-generated code.",
+                "Allowing the 8085 to execute Motorola 6800 binary programs without translation."
+              ],
+              "correct_index": 2,
+              "explanation": "Rather than accidental glitches, the ten opcodes formed a cohesive toolkit specifically targeting 16-bit arithmetic, pointers, loops, and compiled software."
+            },
+            {
+              "id": "q_064",
+              "prompt": "What long-missing 16-bit arithmetic operation did the undocumented opcode DSUB (`08H`) finally provide?",
+              "choices": [
+                "Multiplying two 16-bit memory pointers directly inside the accumulator.",
+                "Subtracting register pair BC from register pair HL in a single instruction.",
+                "Dividing a 16-bit unsigned address by ten for decimal screen display.",
+                "Adding an eight-bit immediate offset directly onto the Program Counter."
+              ],
+              "correct_index": 1,
+              "explanation": "The 8080 offered 16-bit addition via DAD (HL = HL + BC) but no 16-bit subtraction; DSUB provided HL = HL - BC directly in silicon."
+            }
+          ]
+        },
+        {
+          "id": "ch_033",
+          "title": "Stack-Frame Magic: Four Pointer Opcodes in Action",
+          "content_markdown": "Even bigger time-savers awaited compiled subroutines. Whenever a high-level function starts, it reserves a temporary workspace on the stack called a **stack frame**—like a tidy clipboard holding that function's local variables and parameters at fixed byte offsets above the Stack Pointer (`SP`). On the 8080, fetching a single 16-bit local variable out of a stack frame required a sluggish chain of six separate instructions.\n\nIntel's silicon team fixed that bottleneck with four tightly paired secret opcodes. **`LDHI d8`** (`28H`) computed `DE = HL + d8` (adding an 8-bit offset to base pointer `HL` without modifying `HL`), while **`LDSI d8`** (`38H`) computed `DE = SP + d8` (pinpointing a variable inside the stack frame). Then **`LHLX`** (`EDH`) loaded the 16-bit `HL` pair straight from the memory address held in `DE`, and **`SHLX`** (`D9H`) stored `HL` back through `DE`. Fetching a 16-bit local variable 4 bytes above `SP` collapsed from six clunky 8080 steps down to just two: `LDSI 4` followed immediately by `LHLX`!",
+          "questions": [
+            {
+              "id": "q_065",
+              "prompt": "What purpose does a 'stack frame' serve when a compiled high-level program calls a function?",
+              "choices": [
+                "It reserves a temporary slice of stack memory for one function's local variables and parameters.",
+                "It holds the physical metal prongs connecting a 40-pin DIP chip to a printed circuit board.",
+                "It stores the fixed jump vectors for hardware interrupts TRAP through RST 5.5.",
+                "It converts serial bits arriving on SID into parallel bytes before saving them to RAM."
+              ],
+              "correct_index": 0,
+              "explanation": "A stack frame gives each active function call its own temporary area on the stack, where local variables sit at predictable offsets from the Stack Pointer."
+            },
+            {
+              "id": "q_066",
+              "prompt": "Which two undocumented 8085 instructions worked together to fetch a 16-bit local variable located at a fixed offset inside the current stack frame?",
+              "choices": [
+                "DSUB to clear the Stack Pointer, followed by ARHL to divide the variable by two.",
+                "LDHI to overwrite the Program Counter, followed by RDEL to shift the byte onto SOD.",
+                "SHLX to store the accumulator on the stack, followed by DSUB to check its parity.",
+                "LDSI to compute SP plus the offset into DE, followed by LHLX to load HL via DE."
+              ],
+              "correct_index": 3,
+              "explanation": "LDSI calculates DE = SP + offset without clobbering SP, and LHLX immediately loads the 16-bit value at (DE) into HL—replacing a six-instruction 8080 sequence."
+            }
+          ]
+        },
+        {
+          "id": "ch_034",
+          "title": "Two Hidden Flags: V, X5, and Three Secret Branches",
+          "content_markdown": "The final three secret opcodes unveiled an even bigger plot twist hiding inside the 8085's eight-bit Flag register. Officially, the 8085 used only five status bits (matching the 8080), leaving three bits supposedly unused. In reality, two of those 'blank' bits were secretly alive!\n\nBit 1 served as a hidden **signed overflow flag (`V`)**—a status indicator that flips to `1` whenever signed arithmetic crosses between positive and negative territory (for instance, adding two positive numbers so large that the result wraps around into a negative bit pattern). The secret opcode **`RSTV`** (`CBH`, Restart on Overflow) automatically trapped straight to memory vector `0040H` whenever `V = 1`, offering effortless signed-math error checking.\n\nMeanwhile, bit 5 held the mysterious **`X5`** flag (also nicknamed `K`), which lit up whenever a 16-bit `INX` wrapped past `FFFFH` to `0000H` or `DCX` wrapped under `0000H` to `FFFFH`! Paired with **`JX5`** (`FDH`, Jump if `X5 = 1`) and **`JNX5`** (`DDH`, Jump if `X5 = 0`), a 16-bit loop counter could branch cleanly in one step instead of manually checking both register halves.",
+          "questions": [
+            {
+              "id": "q_067",
+              "prompt": "What condition triggers the 8085's hidden signed overflow flag (`V`) and causes the secret `RSTV` instruction to jump to address `0040H`?",
+              "choices": [
+                "A serial byte arriving on the SID pin before software executes RIM.",
+                "Signed arithmetic wrapping past its valid range into the wrong positive or negative sign.",
+                "A memory address exceeding the 8085's 16-bit limit of 65,536 bytes.",
+                "A maskable interrupt occurring while the non-maskable TRAP pin is active."
+              ],
+              "correct_index": 1,
+              "explanation": "The hidden V flag detects signed arithmetic overflow, allowing RSTV to trigger an automatic overflow trap straight to memory vector 0040H."
+            },
+            {
+              "id": "q_068",
+              "prompt": "What made the hidden X5 flag together with the secret `JX5` and `JNX5` jump instructions so handy for 16-bit counting loops?",
+              "choices": [
+                "X5 automatically paused the quartz crystal whenever a loop finished running.",
+                "X5 counted how many times the transparent latch froze addresses during a loop.",
+                "X5 signaled when 16-bit INX or DCX wrapped around, letting loops branch directly.",
+                "X5 stored the upper eight bits of a 24-bit loop counter outside normal registers."
+              ],
+              "correct_index": 2,
+              "explanation": "Because official 8080/8085 INX and DCX did not update the Zero flag, X5's wraparound detection let JX5 and JNX5 terminate 16-bit loops cleanly."
+            }
+          ]
+        },
+        {
+          "id": "ch_035",
+          "title": "A Complete Hidden Toolkit—and a Puzzling Silence",
+          "content_markdown": "Pause and review the full detective roster we just uncovered inside every Intel 8085: **ten** deliberately engineered undocumented opcodes (`DSUB`, `ARHL`, `RDEL`, `LDHI`, `LDSI`, `LHLX`, `SHLX`, `RSTV`, `JNX5`, and `JX5`) backed by **two** hidden flags (`V` and `X5`). Together, they fixed nearly every awkward shortcoming programmers had grumbled about on the 8080—16-bit subtraction, signed shifts, fast stack-frame pointers, overflow traps, and zero-fuss 16-bit loop endings.\n\nNotice the staggering paradox here. Designing, laying out, and debugging those ten instructions cost real engineering hours and real silicon area on the 8085 die. They were clearly meant to shine—especially against hungry rivals like Zilog! So why on earth did Intel scrub every single trace of them from its official manuals and pretend they did not exist? The answer reveals how corporate roadmaps can trump raw silicon cleverness.",
+          "questions": [
+            {
+              "id": "q_069",
+              "prompt": "Which pair of hidden instructions on the 8085 handled shifting and rotating 16-bit register pairs (`HL` and `DE`) for multiplication and division routines?",
+              "choices": [
+                "LHLX and SHLX, which loaded and stored 16-bit values via memory pointers.",
+                "ARHL and RDEL, which performed a signed right shift on HL and a left rotate on DE.",
+                "JX5 and JNX5, which jumped conditionally on 16-bit counter wraparound.",
+                "LDHI and LDSI, which added eight-bit offsets to HL and the Stack Pointer."
+              ],
+              "correct_index": 1,
+              "explanation": "ARHL (arithmetic shift right HL) and RDEL (rotate DE left through Carry) accelerated 16-bit signed division and shift-and-add multiplication loops."
+            },
+            {
+              "id": "q_070",
+              "prompt": "Why were Dehnhardt and Sorensen certain that the 8085's ten hidden opcodes were intentional designs rather than accidental circuit glitches?",
+              "choices": [
+                "Intel printed all ten names secretly in microscopic letters on top of the plastic case.",
+                "The ten instructions executed only after entering a secret password through the SID pin.",
+                "Each hidden code simply repeated the exact behavior of the official RIM and SIM opcodes.",
+                "Together they formed a coherent, well-behaved suite tailored to 16-bit math and compilers."
+              ],
+              "correct_index": 3,
+              "explanation": "Accidental decoder glitches produce chaotic behavior, whereas these ten opcodes and two hidden flags worked together seamlessly for 16-bit pointers, math, and stack frames."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_08",
+      "title": "8. Instruction-Set Politics: Why Intel Erased Its Own Best Tricks",
+      "summary": "Why would Intel design, lay out in silicon, and ship ten genuinely useful compiler-friendly instructions only to scrub them from every official manual? Tracing the strategic collision between the 8085 and Intel's urgent 16-bit 8086 project, this section explains how Intel relied on automated source-level translation (CONV86) to migrate 8080/8085 customers cleanly to the 8086—and why quirky 8085-only features like the X5 flag and RSTV threatened both automated translation and second-source silicon consistency, offering a vivid case study in instruction-set governance.",
+      "introduced_terms": [
+        "source-level translation",
+        "second-source silicon",
+        "instruction-set governance"
+      ],
+      "chunks": [
+        {
+          "id": "ch_036",
+          "title": "The Case of the Vanishing Datasheet Pages",
+          "content_markdown": "Imagine a carmaker spending months engineering a smooth cruise-control lever, wiring it into every dashboard leaving the factory, testing it on the track—and then ripping every single mention of it out of the owner's manual before printing day. Stranger still, imagine a car magazine discovering the lever two years later, and the company issuing a stern press release warning drivers never to touch it!\n\nThat is almost exactly what happened at Intel. When *Electronics* magazine published the 8085's ten hidden opcodes in January 1979, programmers expected Intel to shrug and publish an official addendum. Instead, Intel disavowed its own silicon, declaring those ten opcodes unsupported and warning customers not to rely on them. To solve why a company would hide some of its sharpest engineering work, we have to look down the hall at Intel's next big bet.",
+          "questions": [
+            {
+              "id": "q_071",
+              "prompt": "How did Intel officially respond after engineers publicly revealed the 8085's ten undocumented opcodes in 1979?",
+              "choices": [
+                "Intel immediately promoted them in new ads as an exclusive bonus feature over rivals.",
+                "Intel disavowed them as unsupported and warned customers not to depend on them.",
+                "Intel recalled every shipped 8085 chip worldwide to replace its internal silicon die.",
+                "Intel sued Electronics magazine for publishing classified military satellite software."
+              ],
+              "correct_index": 1,
+              "explanation": "Even after the hidden instructions became public knowledge, Intel refused to endorse them and cautioned programmers against relying on unsupported opcodes."
+            },
+            {
+              "id": "q_072",
+              "prompt": "What made Intel's decision to hide the ten 8085 opcodes especially surprising from a pure hardware standpoint?",
+              "choices": [
+                "The ten instructions had failed basic factory tests and crashed the processor randomly.",
+                "The ten instructions could only run if an external 8228 system controller was attached.",
+                "Intel's own engineers had already designed, verified, and built them into working silicon.",
+                "Customers had already petitioned Intel to remove 16-bit pointer features from the chip."
+              ],
+              "correct_index": 2,
+              "explanation": "The hidden instructions were working, deliberately engineered circuits already baked into the 8085 die—making their erasure from manuals a strategic rather than technical mystery."
+            }
+          ]
+        },
+        {
+          "id": "ch_037",
+          "title": "Instruction-Set Governance and the Urgent 16-Bit Bridge",
+          "content_markdown": "The mystery unlocks once you understand **instruction-set governance**—the strategic discipline of deciding which hardware features become permanent, officially promised architectural contracts versus which stay off the books to protect future generations of chips. Once a chipmaker documents an instruction, customers expect every future upgrade path to honor it.\n\nIn 1976, while the 8085 was nearing release, Intel faced an urgent internal crisis. Its ambitious, clean-slate 32-bit processor (the iAPX 432) was slipping badly behind schedule. To keep customers from fleeing to emerging 16-bit competitors, Intel launched a fast-track 16-bit bridge processor: the **Intel 8086** (released in 1978). Because the 8086 redesigned instruction encodings for a 16-bit world, it could *not* run raw 8080/8085 binary files directly. Intel desperately needed a smooth, low-pain way to carry loyal 8080 and 8085 customers up to the 8086.",
+          "questions": [
+            {
+              "id": "q_073",
+              "prompt": "What is 'instruction-set governance' for a microprocessor company?",
+              "choices": [
+                "Strategically choosing which hardware features become official contracts to protect future compatibility.",
+                "Allowing individual silicon layout engineers to add any private instructions into public manuals.",
+                "Submitting every new assembly command to federal aviation agencies for safety licensing.",
+                "Replacing older instruction sets every two years so customers must repurchase software tools."
+              ],
+              "correct_index": 0,
+              "explanation": "Instruction-set governance balances short-term silicon cleverness against the long-term promises a chipmaker must maintain across future product families."
+            },
+            {
+              "id": "q_074",
+              "prompt": "Why couldn't existing 8080 and 8085 customers simply drop their unmodified binary programs straight onto Intel's 1978 16-bit 8086?",
+              "choices": [
+                "The 8086 operated strictly on triple-voltage power rails that corrupted 8085 ROM chips.",
+                "The 8086 lacked any general-purpose registers or stack pointer for running software.",
+                "The 8086 ran slower than the 8080 and could not meet basic industrial timing limits.",
+                "The 8086 used a brand-new 16-bit instruction encoding rather than 8080 binary compatibility."
+              ],
+              "correct_index": 3,
+              "explanation": "Unlike the 8085, the 16-bit 8086 changed its binary opcode encodings, so raw 8080/8085 machine code could not execute directly without translation."
+            }
+          ]
+        },
+        {
+          "id": "ch_038",
+          "title": "When Secret Opcodes Collided with CONV86",
+          "content_markdown": "Intel's solution for migrating customers up to the 8086 was **source-level translation**—using an automated software tool to convert human-readable text commands (assembly source code) written for an older CPU mechanically into equivalent assembly code for a newer CPU. Intel built a translator called **`CONV86`** and designed the 8086's register layout and flags specifically so every official 8080 instruction mapped cleanly onto one or a few 8086 instructions.\n\nNow watch what happened when Intel's 8086 architects looked at the 8085's ten hidden opcodes! Standard 8080 commands like `MOV`, `ADD`, `DAD`, and `JMP` flowed cleanly through `CONV86`. Yet the 8086 had *no* equivalent to the 8085's quirky `X5` wraparound flag, nor straightforward counterparts for `JX5`, `JNX5`, `RSTV`, or `RDEL`'s exact flag quirks. If thousands of engineers began relying on those ten 8085-only instructions, automated `CONV86` translation would choke—shattering Intel's promise of a clean stepping-stone from 8080 to 8085 to 8086.",
+          "questions": [
+            {
+              "id": "q_075",
+              "prompt": "What role did Intel's CONV86 tool play in the migration from 8-bit 8080/8085 systems to the 16-bit 8086?",
+              "choices": [
+                "It converted three-voltage 8080 power supplies into single five-volt circuit boards.",
+                "It plugged into an 8086 socket so the chip could execute raw 8080 binary files directly.",
+                "It performed automated source-level translation from 8080/8085 assembly into 8086 assembly.",
+                "It compressed 16-bit 8086 programs so they could fit inside an 8085's 8355 ROM chip."
+              ],
+              "correct_index": 2,
+              "explanation": "CONV86 mechanically translated 8080/8085 assembly source code into 8086 assembly, sparing customers from rewriting large codebases by hand."
+            },
+            {
+              "id": "q_076",
+              "prompt": "Why did the 8085's hidden opcodes like JX5, JNX5, and RSTV threaten Intel's 8086 migration plan?",
+              "choices": [
+                "The 8086 lacked direct counterparts for quirky features like the X5 flag, breaking clean translation.",
+                "Those opcodes secretly required a dedicated UART chip that Intel refused to sell for the 8086.",
+                "Executing those opcodes on an 8085 permanently erased the assembly source files on floppy disks.",
+                "The 8086 had too few pins to support 16-bit subtraction or stack-frame pointer offsets."
+              ],
+              "correct_index": 0,
+              "explanation": "Because the 8086 did not replicate the 8085's quirky hidden X5 flag and certain secret opcode behaviors, letting programmers adopt them would have broken clean CONV86 migration."
+            }
+          ]
+        },
+        {
+          "id": "ch_039",
+          "title": "Why Leave the Circuits In? Masks and Second-Source Silicon",
+          "content_markdown": "That still leaves two fascinating twists. First: if Intel decided not to support those ten instructions, why didn't it rip their transistors out of the 8085 before shipping? Simple economics. By the time leadership locked in the 8086 compatibility strategy, the 8085's fabrication *masks*—the precision glass stencils used to print circuits onto silicon wafers—were already finished and working. Editing and re-testing the masks just to delete silent, harmless gates would have delayed launch and wasted money. Deleting pages from the datasheet was nearly free!\n\nSecond came **second-source silicon**—pin-compatible versions of a chip built under license or reverse-engineered by outside foundries (such as AMD, NEC, Siemens, Toshiba, and Oki) so big buyers like telecoms and military contractors never depended on a single factory. Because Intel omitted those ten opcodes from the official specification, second-source makers were not contractually required to reproduce them. Ironically, many copied them anyway—yet enough variants differed that prudent industrial programmers steered clear.",
+          "questions": [
+            {
+              "id": "q_077",
+              "prompt": "Why did Intel leave the ten hidden instructions physically wired inside shipping 8085 chips instead of removing them from the silicon?",
+              "choices": [
+                "Removing them would have disabled the on-chip clock generator and ALE address strobe.",
+                "Military buyers privately forced Intel to preserve all ten instructions inside every chip.",
+                "The hidden instructions were physically needed to execute the official RIM and SIM codes.",
+                "The silicon masks were already built and verified, so editing the manual was far cheaper."
+              ],
+              "correct_index": 3,
+              "explanation": "Revising and re-qualifying finished silicon masks just to erase silent instructions was expensive and slow, whereas omitting them from manuals cost almost nothing."
+            },
+            {
+              "id": "q_078",
+              "prompt": "How did the industry practice of 'second-source silicon' reinforce Intel's warning against using the 8085's undocumented opcodes?",
+              "choices": [
+                "Second-source manufacturers ran chips at twelve volts where secret opcodes melted silicon.",
+                "Other foundries building compatible 8085 chips were not obligated to copy undocumented behavior.",
+                "Second-source licenses prohibited customers from running compiled high-level languages.",
+                "Partner foundries were legally banned from selling any chip containing more than 244 opcodes."
+              ],
+              "correct_index": 1,
+              "explanation": "Because undocumented opcodes were outside the official specification, software relying on them risked failing if a product switched to a second-source 8085 variant."
+            }
+          ]
+        },
+        {
+          "id": "ch_040",
+          "title": "Politics Written in Silicon—and Onward to the Real World",
+          "content_markdown": "The saga of the 8085's erased opcodes teaches a lesson rarely printed in hardware textbooks: an instruction set is not just a list of clever circuits, but a long-term business treaty between a chipmaker, its compilers, its second-source partners, and its customers. By exercising strict **instruction-set governance**, Intel sacrificed a modest speed edge in 1976 to keep the stepping-stone bridge from the 8080 through the 8085 into the 16-bit 8086—and ultimately the vast modern `x86` family powering decades of personal computers—clean and unbroken.\n\nYet stripping away ten secret shortcuts hardly crippled the 8085. Armed with its single $$+5\\,\\text{V}$$ rail, lean three-chip footprint, prioritized interrupts, and rock-solid 8080 compatibility, the 8085 marched out of Santa Clara into offices, factory floors, and one of the most beloved portable computers of the 1980s. Let's follow where this disciplined workhorse actually triumphed.",
+          "questions": [
+            {
+              "id": "q_079",
+              "prompt": "What broader historical lesson does Intel's erasure of the 8085's ten hidden opcodes illustrate about microprocessor design?",
+              "choices": [
+                "Long-term compatibility roadmaps and ecosystems can outweigh short-term silicon cleverness.",
+                "Adding undocumented opcodes always causes processors to consume triple the normal wattage.",
+                "Automated assembly translators cannot convert standard eight-bit instructions like MOV or ADD.",
+                "Chipmakers always discard working silicon masks whenever marketing changes a single manual."
+              ],
+              "correct_index": 0,
+              "explanation": "Intel's restraint shows that maintaining a clean, predictable architectural contract across product generations can matter more than squeezing out local 8-bit tricks."
+            },
+            {
+              "id": "q_080",
+              "prompt": "Which upcoming Intel processor's automated migration story most directly drove Intel to scrub the 8085's ten hidden instructions from its manuals?",
+              "choices": [
+                "The four-bit Intel 4004 calculator processor.",
+                "The 18-pin Intel 8008 terminal processor.",
+                "The 16-bit Intel 8086 bridge processor.",
+                "The Motorola 6800 five-volt processor."
+              ],
+              "correct_index": 2,
+              "explanation": "Intel kept the official 8085 instruction set tightly aligned with the 8080 so CONV86 could translate customer assembly cleanly onto the 1978 16-bit 8086."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_09",
+      "title": "9. Embedded Workhorse \u0026 Pocket Pioneer: Datamaster, CMOS 80C85 \u0026 the Model 100",
+      "summary": "While rival chips grabbed headlines in desktop personal computers, the 8085 became an embedded and portable powerhouse—from IBM's 1981 System/23 Datamaster, whose Boca Raton peripheral ecosystem directly informed the IBM PC, to ultra-low-power static CMOS 80C85 variants. Learners explore how the 80C85 enabled the iconic 1983 Kyocera / RadioShack TRS-80 Model 100 notebook—combining instant-on battery-backed RAM, roughly 20 hours of life on four AA batteries, and a compact 32 KB ROM-resident software suite that marked Bill Gates's last hands-on commercial programming project.",
+      "introduced_terms": [
+        "static CMOS",
+        "battery-backed RAM",
+        "ROM-resident software"
+      ],
+      "chunks": [
+        {
+          "id": "ch_041",
+          "title": "The Quiet Giant and IBM's Boca Raton Dress Rehearsal",
+          "content_markdown": "If you only read late-1970s hobbyist computer magazines, you might think the Intel 8085 lost the 8-bit race to flashier desktop rivals. Out in the wider industrial and business world, however, the 8085 became a colossal workhorse—shipping hundreds of millions of chips inside traffic controllers, factory robots, telephone switches, cash registers, and lab instruments.\n\nIts single most influential desktop role arrived in July 1981 inside the **IBM System/23 Datamaster**, a compact small-business computer built at IBM's lab in Boca Raton, Florida. Powered by an Intel 8085A, the Datamaster taught IBM's engineers how to build sleek systems around Intel's multiplexed bus, Intel peripheral chips (for timers, interrupts, and keyboard control), and a clean desktop keyboard layout. When IBM built the landmark IBM 5150 Personal Computer down the very same hallway, engineers carried over those Intel-family habits—even as the Datamaster's 64-kilobyte memory ceiling (forcing awkward memory-swapping workarounds) convinced them to step up to Intel's newer **8088**—a budget 8-bit-bus cousin of the 16-bit 8086—for the PC.",
+          "questions": [
+            {
+              "id": "q_081",
+              "prompt": "How did IBM's 8085-powered System/23 Datamaster directly influence the creation of the landmark IBM 5150 Personal Computer?",
+              "choices": [
+                "IBM reused the Datamaster's exact 8085A processor inside every first-generation IBM PC.",
+                "IBM copied the Datamaster's triple-voltage power supply into the 5150 motherboard.",
+                "The Boca Raton team carried its Intel bus, peripheral-chip, and keyboard lessons to the PC.",
+                "The Datamaster's huge commercial flop forced IBM to abandon Intel processors completely."
+              ],
+              "correct_index": 2,
+              "explanation": "Building the 8085-based Datamaster gave IBM's Boca Raton engineers deep fluency with Intel's multiplexed bus, peripheral chips, and keyboard architecture, which carried over to the IBM PC."
+            },
+            {
+              "id": "q_082",
+              "prompt": "Which limitation experienced on the 8085-based IBM System/23 Datamaster nudged IBM to choose Intel's newer 8088 for the IBM PC?",
+              "choices": [
+                "The 8085's 64-kilobyte address ceiling felt cramped for expanding business software.",
+                "The 8085 lacked any support for hardware vectored interrupts or keyboard scanning.",
+                "The 8085 could only operate inside three-chip educational kits rather than office desks.",
+                "The 8085 refused to work with standard quartz crystals above one megahertz."
+              ],
+              "correct_index": 0,
+              "explanation": "Because the 8085's 16-bit address bus topped out at 64 KB—forcing awkward workarounds to reach more memory—IBM stepped up to the 8088 for its 1981 PC."
+            }
+          ]
+        },
+        {
+          "id": "ch_042",
+          "title": "Static CMOS: Teaching the 8085 to Sip Milliwatts",
+          "content_markdown": "Great as depletion-load NMOS was for plugged-in office machines like the Datamaster, it had one glaring flaw for portable gadgets: even while idling, NMOS transistors leak steady electrical current, drawing hundreds of milliwatts (thousandths of a watt) and draining ordinary flashlight batteries in minutes.\n\nThe cure came from rebuilding the 8085 in **static CMOS**—creating the ultra-frugal **80C85** (fabricated by partners such as Oki and Harris). In CMOS (*complementary metal-oxide-semiconductor*) silicon, every logic switch pairs two opposite transistors like an airlock: when one opens, the other shuts, so almost *zero* current flows except during the tiny split-second a bit actually changes state. Adding the word *static* meant internal registers held their data safely even if the clock slowed to a crawl or paused completely. Power draw plunged from hundreds of milliwatts to just a handful—unlocking a brand-new kind of computer you could slip into a briefcase.",
+          "questions": [
+            {
+              "id": "q_083",
+              "prompt": "Why does a static CMOS 80C85 consume drastically less electrical power than an original NMOS 8085?",
+              "choices": [
+                "It cuts the data bus in half so only four bits switch during each arithmetic step.",
+                "Its paired opposite transistors draw almost no steady current when not actively switching.",
+                "It disables the internal register bank whenever the processor waits for keyboard input.",
+                "It draws energy directly from ambient office light through a clear glass chip window."
+              ],
+              "correct_index": 1,
+              "explanation": "CMOS logic pairs complementary switches so virtually zero static current flows between transitions, cutting power draw from hundreds of milliwatts down to a few milliwatts."
+            },
+            {
+              "id": "q_084",
+              "prompt": "What extra power-saving advantage does the word 'static' signal in a static CMOS processor like the 80C85?",
+              "choices": [
+                "The chip is permanently welded to its circuit board and cannot be unplugged.",
+                "The chip runs exclusively at one unchangeable factory clock frequency forever.",
+                "The chip generates static electricity to recharge attached alkaline batteries.",
+                "The chip preserves all internal register state even if its clock slows down or stops."
+              ],
+              "correct_index": 3,
+              "explanation": "Unlike chips that lose stored state if their clock runs too slowly, static CMOS retains all register contents down to a complete clock halt."
+            }
+          ]
+        },
+        {
+          "id": "ch_043",
+          "title": "The TRS-80 Model 100: Instant-On Journalism on Four AAs",
+          "content_markdown": "In 1983, Japanese electronics maker Kyocera put the static CMOS 80C85 (running at $$2.4\\,\\text{MHz}$$) at the heart of a sleek four-pound notebook called the Kyotronic 85—better known across North America as the **RadioShack TRS-80 Model 100** (with close cousins from NEC and Olivetti). It packed a full-sized typewriter keyboard, a crisp 8-line by 40-column liquid-crystal screen, and a built-in 300-bit-per-second telephone modem.\n\nTwo architectural choices made the Model 100 feel downright magical compared to sluggish floppy-disk computers. First, it used **battery-backed RAM**—working memory kept continuously powered by a whisper-tiny battery trickle even when the machine was turned 'off,' so your unfinished article never vanished. Second, it relied on **ROM-resident software**—an operating system and built-in tools permanently stored on a 32-kilobyte read-only chip. Flip the switch on an airplane tray table, and your cursor blinked back to life in under a second—running for roughly **20 hours on four ordinary AA batteries**!",
+          "questions": [
+            {
+              "id": "q_085",
+              "prompt": "How did 'battery-backed RAM' and 'ROM-resident software' combine to make the 1983 TRS-80 Model 100 feel instant-on?",
+              "choices": [
+                "Built-in apps lived permanently in ROM while user files stayed alive in continuously powered RAM.",
+                "A miniature motorized floppy drive spun at double speed inside the aluminum keyboard base.",
+                "The built-in 300-baud modem downloaded the operating system from RadioShack on every boot.",
+                "The 80C85 burned every typed paragraph directly into permanent read-only memory chips."
+              ],
+              "correct_index": 0,
+              "explanation": "Keeping the operating system and applications permanently in ROM while preserving working documents in trickle-powered RAM eliminated disk boot delays completely."
+            },
+            {
+              "id": "q_086",
+              "prompt": "What everyday power achievement helped turn the 80C85-powered TRS-80 Model 100 into a favorite companion of traveling journalists?",
+              "choices": [
+                "It plugged straight into twelve-volt airplane overhead reading lights without an adapter.",
+                "It ran for nearly twenty minutes on a heavy rechargeable lead-acid briefcase battery.",
+                "It ran for roughly twenty hours on four ordinary, widely available AA batteries.",
+                "It operated indefinitely using a hand-cranked generator mounted beside the screen."
+              ],
+              "correct_index": 2,
+              "explanation": "Thanks to the frugal 80C85 CMOS chip and simple LCD, the Model 100 delivered roughly 20 hours of real writing time on four standard AA batteries."
+            }
+          ]
+        },
+        {
+          "id": "ch_044",
+          "title": "Bill Gates's Final Hands-On ROM Masterpiece",
+          "content_markdown": "There is a delightful twist tucked inside the Model 100's tiny 32-kilobyte ROM chip. Japanese tech entrepreneur Kazuhiko Nishi (co-founder of ASCII Corporation) helped Kyocera conceive the notebook and brought **Microsoft** in to write its entire ROM-resident software suite. Somehow, Microsoft had to squeeze a full BASIC interpreter, the `TEXT` word processor, the `TELCOM` modem terminal, an address book (`ADDRSS`), and a scheduler (`SCHEDL`) into just 32,768 bytes—less memory than a single small smartphone icon uses today!\n\nBecause every byte mattered, **Bill Gates** himself dove directly into the project alongside Microsoft engineer Jey Suzuki, writing substantial stretches of tight 8085 assembly code by hand. Gates later recalled the TRS-80 Model 100 with deep affection—it stands in computing history as the *last commercial product for which Bill Gates personally wrote production code*. Newspaper reporters loved that lean ROM software so much that many kept filing stories from hotel payphones on Model 100s well into the 1990s!",
+          "questions": [
+            {
+              "id": "q_087",
+              "prompt": "What unique milestone in software history sits inside the 32-kilobyte ROM chip of the RadioShack TRS-80 Model 100?",
+              "choices": [
+                "It held the first commercial operating system compiled automatically by Intel's CONV86.",
+                "It was the first consumer computer program written completely in the Python language.",
+                "It proved that undocumented 8085 opcodes were required to run basic text editors.",
+                "It marked the last commercial software product for which Bill Gates personally wrote code."
+              ],
+              "correct_index": 3,
+              "explanation": "Working alongside Microsoft engineer Jey Suzuki to fit BASIC and four productivity tools into 32 KB of ROM, Bill Gates wrote his last commercial hands-on production code."
+            },
+            {
+              "id": "q_088",
+              "prompt": "Why did packing BASIC, a word processor, a terminal program, an address book, and a scheduler into the Model 100 demand such disciplined 8085 assembly coding?",
+              "choices": [
+                "The 80C85 refused to run any program longer than one hundred individual instructions.",
+                "All five applications and the operating system had to fit inside a tight 32-kilobyte ROM.",
+                "Kyocera prohibited Microsoft from using standard 8080 instructions like MOV or JMP.",
+                "The four AA batteries could only power one kilobyte of memory during each hour of use."
+              ],
+              "correct_index": 1,
+              "explanation": "Fitting a complete operating system, BASIC interpreter, and four user tools into just 32 KB of ROM required extraordinarily compact, hand-tuned 8085 assembly."
+            }
+          ]
+        },
+        {
+          "id": "ch_045",
+          "title": "From Office Desks and Airplanes to Another World",
+          "content_markdown": "Pause and trace how far Intel's single-voltage 1976 workhorse had traveled across Earth. In Boca Raton, the NMOS 8085A inside the **IBM System/23 Datamaster** schooled the very engineers who went on to shape the IBM PC. Reborn in ultra-frugal **static CMOS** as the **80C85**, that same 8-bit architecture powered the **TRS-80 Model 100**—pioneering instant-on battery-backed RAM, 20-hour AA battery freedom, and ROM-resident software decades before modern tablets popularized the same feel.\n\nBy the mid-1990s, desktop computers had raced ahead to blazing 32-bit processors running hundreds of times faster. Surely a modest 1976 8-bit chip belonged safely under glass in a technology museum? Hardly. In July 1997, the 80C85's low power draw, battle-tested simplicity, and remarkable ruggedness earned it the ultimate encore—a one-way ride to the surface of Mars.",
+          "questions": [
+            {
+              "id": "q_089",
+              "prompt": "Which pairing accurately matches two landmark 8085-family machines with the silicon technology that powered each?",
+              "choices": [
+                "IBM System/23 Datamaster used static CMOS 80C85; TRS-80 Model 100 used triple-voltage 8080.",
+                "IBM System/23 Datamaster used NMOS 8085A; TRS-80 Model 100 used static CMOS 80C85.",
+                "Both the Datamaster and the Model 100 relied on Intel's 18-pin multiplexed 8008 processor.",
+                "Both the Datamaster and the Model 100 ran on sixteen-bit Intel 8086 processors instead."
+              ],
+              "correct_index": 1,
+              "explanation": "The plugged-in 1981 IBM Datamaster ran an NMOS 8085A, while the AA-battery 1983 TRS-80 Model 100 relied on the ultra-low-power static CMOS 80C85."
+            },
+            {
+              "id": "q_090",
+              "prompt": "What does the phrase 'ROM-resident software' describe in early portable computers like the TRS-80 Model 100?",
+              "choices": [
+                "Operating systems and built-in tools stored permanently in read-only memory for instant startup.",
+                "Temporary text files stored in battery-backed working memory while editing a document.",
+                "Programs streamed over a telephone line via acoustic couplers whenever a user logs in.",
+                "Backup archives written onto removable magnetic audio cassettes through the SOD pin."
+              ],
+              "correct_index": 0,
+              "explanation": "ROM-resident software lives permanently inside non-volatile read-only memory chips, making applications available instantaneously upon power-on."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_10",
+      "title": "10. Twenty-One Years Later on Mars: The 80C85RH, Sojourner \u0026 the Road to Zilog",
+      "summary": "Jumping forward to July 1997, this concluding section reveals why NASA chose a radiation-hardened 80C85RH—an architecture born twenty-one years earlier—to pilot the Mars Pathfinder Sojourner rover through cosmic rays, single-event upsets, tight solar budgets, and 83 Martian sols of autonomous navigation. Synthesizing the 8085's disciplined philosophy of hardware integration and restraint, the module rewinds to 1976 to bridge directly into Part IV, where Federico Faggin and Masatoshi Shima at Zilog took the exact same 8080 starting line in a boldly expanded direction with the Z80.",
+      "introduced_terms": [
+        "radiation hardening",
+        "single-event upset (SEU)",
+        "deterministic real-time execution"
+      ],
+      "chunks": [
+        {
+          "id": "ch_046",
+          "title": "A 1976 Brain Rolling Across Mars in 1997",
+          "content_markdown": "On July 4, 1997, NASA's **Mars Pathfinder** spacecraft slammed into the Martian atmosphere and bounced across the rocky valley of Ares Vallis wrapped inside giant protective airbags. As the lander's metal petals unfolded, the world watched a microwave-oven-sized, six-wheeled robot named **Sojourner** roll down a ramp to become the first wheeled rover ever to drive on another planet.\n\nHere was the delightful engineering shock: while the stationary Pathfinder lander used a 32-bit space-rated IBM RAD6000 computer, the rover actually navigating the Martian surface was piloted by a 1976-vintage 8-bit architecture—the **Intel/Harris 80C85RH**! Back on Earth in 1997, teenagers were playing 3D video games on 200-megahertz Pentium chips. Why on earth would NASA's Jet Propulsion Laboratory trust a twenty-one-year-old 8-bit processor running at roughly $$2\\,\\text{MHz}$$ to explore Mars?",
+          "questions": [
+            {
+              "id": "q_091",
+              "prompt": "Which microprocessor actually piloted NASA's six-wheeled Sojourner rover across the surface of Mars in July 1997?",
+              "choices": [
+                "A 200-megahertz desktop Pentium processor pulled directly from an office PC.",
+                "An original triple-voltage 1974 Intel 8080 paired with 8224 and 8228 chips.",
+                "The stationary Pathfinder lander's 32-bit IBM RAD6000 computer over a tether cable.",
+                "A radiation-hardened 80C85RH based on Intel's twenty-one-year-old 8-bit 8085."
+              ],
+              "correct_index": 3,
+              "explanation": "While the Pathfinder lander ran a 32-bit RAD6000, the free-roaming Sojourner rover itself was driven by a radiation-hardened 8-bit 80C85RH."
+            },
+            {
+              "id": "q_092",
+              "prompt": "How many years separated the Intel 8085's original 1976 debut from the 80C85RH's landing on Mars aboard Sojourner?",
+              "choices": [
+                "Seven years, reflecting a rapid single-decade turnaround from factory chips to Mars.",
+                "Twenty-one years, demonstrating extraordinary architectural longevity in harsh spaceflight.",
+                "Forty years, placing the 8085's debut right alongside the first 1957 orbital satellites.",
+                "Three years, because Intel designed the 8085 specifically for the Mars Pathfinder mission."
+              ],
+              "correct_index": 1,
+              "explanation": "Introduced in 1976 and landing on Mars in 1997, the 8085 architecture spanned 21 years from its initial launch to driving a planetary rover."
+            }
+          ]
+        },
+        {
+          "id": "ch_047",
+          "title": "Surviving Cosmic Bullets: SEUs and Radiation Hardening",
+          "content_markdown": "To understand NASA's choice, picture what outer space does to ordinary computer silicon. Earth's thick atmosphere and magnetic field shelter your laptop from high-energy cosmic rays and solar energetic particles. On the trip to Mars and across its thin-aired surface, those microscopic subatomic bullets rip straight through spacecraft hulls.\n\nWhen a single energetic particle strikes a tiny modern transistor, it knocks loose a burst of electric charge that can flip a stored `0` into a `1`—a sudden glitch known as a **single-event upset (SEU)**—or spark a destructive short circuit and slowly wear out insulating silicon layers. To defeat space radiation, aerospace foundries use **radiation hardening**: rebuilding a proven processor on specialized insulating silicon wafers with larger, sturdier transistor charge wells that take far more energy to disturb. Cutting-edge 1997 desktop chips had microscopic, fragile transistors and huge power appetites; the simple, spacious static CMOS 80C85—re-engineered as the **80C85RH**—was vastly tougher, cooler, and flight-proven.",
+          "questions": [
+            {
+              "id": "q_093",
+              "prompt": "What is a 'single-event upset (SEU)' inside a spacecraft microprocessor?",
+              "choices": [
+                "A sudden bit flip in memory or a register caused by one high-energy cosmic or solar particle.",
+                "A software syntax mistake that crashes a rover during its very first boot on Mars.",
+                "A dust storm temporarily blocking sunlight from reaching a rover's flat solar panels.",
+                "A deliberate radio command from Earth that resets the rover's quartz clock crystal."
+              ],
+              "correct_index": 0,
+              "explanation": "An SEU happens when a single energetic particle hits silicon and deposits enough charge to flip a stored binary bit from 0 to 1 or 1 to 0."
+            },
+            {
+              "id": "q_094",
+              "prompt": "Why was an older, simpler static CMOS 80C85 far easier and safer to adapt via 'radiation hardening' than a cutting-edge 1997 desktop CPU?",
+              "choices": [
+                "Older chips ran on twelve-volt rails that magnetically repelled incoming cosmic rays.",
+                "Desktop 1997 CPUs lacked any ability to read input signals from optical laser sensors.",
+                "Sturdier transistor structures and tiny power draw resisted bit flips on solar budgets.",
+                "NASA's flight rules banned any processor containing more than 256 bytes of RAM."
+              ],
+              "correct_index": 2,
+              "explanation": "Radiation hardening benefits from larger, harder-to-flip transistor charge nodes, simpler verified logic, and ultra-low power consumption—all natural strengths of the 80C85RH."
+            }
+          ]
+        },
+        {
+          "id": "ch_048",
+          "title": "Driving on Mars with Deterministic Real-Time Precision",
+          "content_markdown": "Watch Sojourner's 80C85RH in action on a solar-powered budget of just a few watts. Ticking at roughly $$2\\,\\text{MHz}$$—delivering around 100,000 instructions per second—it worked alongside 512 kilobytes of RAM (accessed in swappable 64-kilobyte banks), 16 kilobytes of radiation-hardened permanent read-only memory (`PROM`), and 176 kilobytes of rewritable flash memory.\n\nCrucially, the 80C85RH delivered **deterministic real-time execution**: every instruction finished in an exact, repeatable number of clock ticks, with no unpredictable fast-buffer memory caches or guesswork shortcuts to introduce surprise delays into safety-critical flight code. Because radio signals between Earth and Mars took over ten minutes one way, NASA could not joystick Sojourner live! Instead, the 80C85RH autonomously fired five laser stripes onto the terrain ahead, analyzed camera snapshots to spot hazards, steered its six hinged wheels around boulders, and pressed its Alpha Proton X-Ray Spectrometer (a rock-chemistry sensor) against Martian rocks nicknamed Barnacle Bill and Yogi.",
+          "questions": [
+            {
+              "id": "q_095",
+              "prompt": "Why do aerospace engineers value 'deterministic real-time execution' in a planetary rover processor like the 80C85RH?",
+              "choices": [
+                "It lets the processor guess future Earth radio commands before they arrive across space.",
+                "Predictable, exact instruction timing guarantees safety-critical tasks meet strict deadlines.",
+                "It allows the processor to skip reading memory whenever solar power dips at sunset.",
+                "It automatically translates 8085 assembly code into 32-bit instructions during flight."
+              ],
+              "correct_index": 1,
+              "explanation": "Deterministic timing—free of unpredictable memory caches or guesswork shortcuts—lets flight engineers prove that hazard-avoidance and motor-control routines finish on time."
+            },
+            {
+              "id": "q_096",
+              "prompt": "Why did Sojourner's 80C85RH have to run local laser-stripe obstacle avoidance instead of letting NASA engineers steer the rover live by joystick?",
+              "choices": [
+                "Mars Pathfinder carried no radio antenna capable of receiving commands from Earth.",
+                "The 80C85RH's SID and SOD pins were incompatible with radio telemetry formats.",
+                "Martian boulders reflected Earth radio waves back into deep space before arrival.",
+                "One-way radio signals between Earth and Mars took over ten minutes to cross space."
+              ],
+              "correct_index": 3,
+              "explanation": "With more than ten minutes of one-way light-speed delay, live remote driving was impossible; the 80C85RH had to sense obstacles and steer locally."
+            }
+          ]
+        },
+        {
+          "id": "ch_049",
+          "title": "Outliving Its Mission Nearly Twelvefold",
+          "content_markdown": "Before landing, cautious mission planners set Sojourner's official primary lifespan at just **7 Martian sols** (a *sol* is one Martian day, lasting 24 hours and 39 minutes), with an optimistic stretch goal of 30 sols. After all, the tiny 10.6-kilogram rover had to endure brutal Martian nights where surface temperatures plunged near $$-100\\,^\\circ\\text{C}$$, protected only by an insulated warm electronics box and tiny radioactive pellet heaters.\n\nInstead of faltering after a week, Sojourner's 80C85RH kept humming through **83 Martian sols**—nearly twelve times its planned primary mission! Over those nearly three Earth months, the humble 1976 architecture drove more than 100 meters across alien ground, transmitted over 550 photographs, and completed more than a dozen chemical analyses of Martian rocks and soil. Sojourner did not even suffer a processor failure: contact only ended in late September 1997 when the stationary Pathfinder lander's battery finally wore out.",
+          "questions": [
+            {
+              "id": "q_097",
+              "prompt": "How did Sojourner's actual operating lifespan on Mars compare to its original 7-sol primary mission plan?",
+              "choices": [
+                "It lasted 3 sols before a single-event upset permanently locked its 80C85RH registers.",
+                "It stopped right at sol 7 when its ROM-resident software ran out of scheduled tasks.",
+                "It operated for 83 Martian sols—nearly twelve times its planned primary lifespan.",
+                "It drove nonstop for five full Earth years until a dust storm buried its solar array."
+              ],
+              "correct_index": 2,
+              "explanation": "Designed for a 7-sol primary mission, Sojourner's 80C85RH survived freezing Martian nights and operated reliably for 83 sols."
+            },
+            {
+              "id": "q_098",
+              "prompt": "What ultimately brought NASA's communications with the 80C85RH-powered Sojourner rover to an end in September 1997?",
+              "choices": [
+                "The stationary Pathfinder lander's battery wore out, cutting the rover's link back to Earth.",
+                "Sojourner's 80C85RH overheated because depletion-load NMOS drew too much power.",
+                "NASA commanded the 80C85RH to run an undocumented opcode that erased its PROM.",
+                "Sojourner ran out of its four internal AA batteries after twenty hours of driving."
+              ],
+              "correct_index": 0,
+              "explanation": "Sojourner's 80C85RH itself never failed; mission contact ended when the Pathfinder lander's battery depleted and stopped relaying data to Earth."
+            }
+          ]
+        },
+        {
+          "id": "ch_050",
+          "title": "Restraint Rewarded—and Zilog's Bold 1976 Countermove",
+          "content_markdown": "Look back across the Intel 8085's astonishing twenty-one-year arc. Starting from the 8080's triple-voltage, three-chip headache, Intel used depletion-load NMOS, on-chip clock and control logic, a smart `AD0`–`AD7` multiplexed bus with `ALE`, built-in prioritized interrupts, and bit-banged `SID`/`SOD` serial pins to build a remarkably clean system chip. Then, exercising strict instruction-set governance, Intel held its official software strictly to 8080 compatibility plus `RIM` and `SIM`—even hiding ten clever opcodes to keep the bridge to the 16-bit 8086 spotless. That disciplined philosophy carried the 8085 from factory boards and IBM's Datamaster to the TRS-80 Model 100 laptop and the dusty plains of Mars.\n\nNow rewind the clock straight back to **1976**. Just down the road at startup **Zilog**, former Intel pioneers Federico Faggin and Masatoshi Shima started from the *exact same 8080 blueprint*—and made the polar opposite bet: keeping 8080 compatibility and a single $$+5\\,\\text{V}$$ supply while unleashing dozens of brand-new instructions, extra internal registers, and built-in support for cheaper high-density dynamic RAM. That dramatic fork—the **Zilog Z80**—awaits in Part IV.",
+          "questions": [
+            {
+              "id": "q_099",
+              "prompt": "Which overarching engineering philosophy best summarizes Intel's design of the 8085 from 1976 through its later legacy?",
+              "choices": [
+                "Abandoning 8080 software completely to chase maximum 32-bit desktop speed.",
+                "Adding dozens of official new registers and complex instructions at any pin-count cost.",
+                "Replacing silicon transistors with external relay boards to simplify spaceflight repair.",
+                "Focusing on single-supply hardware integration and strict instruction-set restraint."
+              ],
+              "correct_index": 3,
+              "explanation": "Intel prioritized board-level simplification (+5 V silicon, on-chip clock/controller, vectored interrupts) while restraining official instruction-set changes to protect 8080 and 8086 compatibility."
+            },
+            {
+              "id": "q_100",
+              "prompt": "How did Zilog's 1976 response to the Intel 8080 diverge sharply from Intel's restrained 8085 strategy?",
+              "choices": [
+                "Zilog kept the 8080's triple-voltage rails and removed all hardware interrupt pins.",
+                "Zilog dropped 8080 software compatibility entirely to build a 4-bit calculator chip.",
+                "Zilog paired single-supply 8080 compatibility with many new instructions and extra registers.",
+                "Zilog licensed Intel's exact 8085 silicon masks without altering a single transistor."
+              ],
+              "correct_index": 2,
+              "explanation": "Unlike Intel's restrained 8085, Zilog's Z80 combined a single +5 V supply and 8080 binary compatibility with a dramatically expanded instruction set and extra internal registers."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

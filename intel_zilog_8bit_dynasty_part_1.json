@@ -1,0 +1,1687 @@
+{
+  "id": "intel_zilog_8bit_dynasty_part_1",
+  "title": "The Intel-Zilog 8-Bit Dynasty I: The Intel 8008, Datapoint 2200 \u0026 Early 8-Bit Microcomputers (1972–1974)",
+  "summary": "Part 1 of the Intel-Zilog 8-Bit Dynasty Quest Arc: a relaxed, generalist-friendly yet architecturally concrete 100-question journey through the Intel 8008 (1972–1974), the world's first commercial 8-bit microprocessor. Building smoothly on 4-bit and early-microcontroller foundations without assuming specialized jargon, learners trace Computer Terminal Corporation's Datapoint 2200 origin story, Texas Instruments' shelved TMX 1795, Intel's silicon-gate PMOS rescue, the 18-pin multiplexed bus and TTL glue-chip tax, the 16 KB ceiling and 7-level call stack, the A–L and virtual M register model, pioneering 8008 microcomputers, and Gary Kildall's PL/M compiler—setting the stage for the Intel 8080.",
+  "topic_prompt": "Design a relaxed, generalist-friendly yet architecturally substantive 10-section (50-chunk) module on the Intel 8008 (1972–1974), Part I of the Intel-Zilog 8-Bit Dynasty Quest Arc. Build smoothly from the 4-bit and early-microcontroller foundations without assuming specialized jargon, introducing hardware mechanics with clear first-principles analogies before naming technical terms. Cover ~13–14 focused concepts: (1) the Datapoint 2200 terminal origin story at Computer Terminal Corporation and why CTC contracted both Intel and Texas Instruments to shrink its TTL processor board onto one chip; (2) Texas Instruments' working-yet-shelved TMX 1795 and how TI's pivot to 4-bit microcontrollers left the general-purpose 8-bit field to Intel; (3) Hal Feeney and Federico Faggin rescuing and finishing Intel's silicon-gate PMOS 8008 and the speed/voltage limits of PMOS; (4) the 18-pin DIP straitjacket forcing 3-cycle time-multiplexing of addresses, data, and status across just 8 shared pins; (5) the hidden hardware cost of 20–30 external TTL glue chips needed to latch addresses and decode bus states; (6) the 14-bit, 16 KB memory ceiling and the fragile 7-level internal hardware call stack (no external stack pointer, no PUSH/POP, and interrupt wrap-around hazards); (7) the A, B, C, D, E, H, and L register set and HL indirect memory addressing through the virtual M register; (8) the first wave of 8008 microcomputers—France's pioneering commercial Micral N, Nat Wadsworth's SCELBI-8H, and Jonathan Titus's Radio-Electronics Mark-8; (9) Gary Kildall's PL/M high-level compiler and Intellec 8 software tools proving microprocessors could run structured languages; and (10) how customer frustrations with the 8008's pin bottleneck, glue chips, and tiny stack set the stage for the Intel 8080.",
+  "tag_path": [
+    "History",
+    "History of Technology",
+    "Microprocessor History"
+  ],
+  "prerequisite_ids": [
+    "four_bit_spark_early_mcus_part_3"
+  ],
+  "vetting_summary": "Sequentially vetted all 50 chunks and 100 multiple-choice questions across section_01.json through section_10.json from a college-freshman generalist perspective. Resolved 27 issues spanning 10 sections—eliminating four subtle forward references in question distractors, defining 11 technical terms or abbreviations in plain English on first appearance, balancing 11 multiple-choice questions where correct answers were slightly longer than distractors, and standardizing double-dollar LaTeX math formatting in explanations.",
+  "created_at": "2026-11-20T00:34:40Z",
+  "sections": [
+    {
+      "id": "sec_01",
+      "title": "1. The Datapoint 2200 \u0026 CTC's Single-Chip Gamble",
+      "summary": "Explore how San Antonio's Computer Terminal Corporation (CTC) envisioned the Datapoint 2200 as a programmable intelligent terminal that could emulate any mainframe terminal by loading cassette software rather than rewiring hardware. Unpack why handling 8-bit ASCII text demanded a byte-wide architecture designed by Victor Poor and Harry Pyle, how CTC first built that processor out of more than a hundred off-the-shelf 7400-series TTL chips using space-saving bit-serial execution, and why CTC used dual-sourcing—contracting both Intel (Project 1201) and Texas Instruments—to compress its hot, bulky processor board onto a single MOS chip.",
+      "introduced_terms": [
+        "intelligent terminal",
+        "bit-serial execution",
+        "dual-sourcing"
+      ],
+      "chunks": [
+        {
+          "id": "ch_001",
+          "title": "One Desk Box to Mimic Every Mainframe",
+          "content_markdown": "In the late 1960s, office computer terminals were stubbornly single-minded boxes. Each mainframe maker—IBM, Burroughs, Univac—used its own screen rules and signaling quirks, all permanently wired into a terminal's circuitry. If a bank or airline switched mainframes, every desktop terminal became instant scrap metal.\n\nIn San Antonio, Texas, a scrappy startup called Computer Terminal Corporation (CTC)—co-founded by Phil Ray and Gus Roche—posed a bold puzzle: why manufacture ten incompatible terminal models when a single desktop unit could impersonate any of them? Unveiled in June 1970, their **Datapoint 2200** looked like a compact electric typewriter crowned with a green cathode-ray screen and twin cassette tape drives. Rather than rewiring hardware for a new mainframe, an operator simply slipped in a magnetic tape cassette, loaded a fresh control program, and watched the desktop box seamlessly speak that mainframe's language.",
+          "questions": [
+            {
+              "id": "q_001",
+              "prompt": "What business problem motivated Computer Terminal Corporation to design the Datapoint 2200?",
+              "choices": [
+                "Hardwired office terminals ran too slowly to keep pace with acoustic telephone modems",
+                "Hardwired office terminals became obsolete whenever a customer changed mainframe brands",
+                "Mainframe manufacturers refused to sell desktop keyboards without leased magnetic drums",
+                "Corporate accounting teams needed portable battery-powered calculators for branch offices"
+              ],
+              "correct_index": 1,
+              "explanation": "Because conventional terminals had brand-specific communication rules permanently wired into their circuits, switching mainframes forced customers to replace them; CTC built the Datapoint 2200 to emulate any mainframe via software."
+            },
+            {
+              "id": "q_002",
+              "prompt": "How did an operator reconfigure a Datapoint 2200 to imitate a different brand of mainframe terminal?",
+              "choices": [
+                "By swapping out a stack of hand-wired aluminum plugboards inside the back chassis",
+                "By toggling mechanical rotary dials along the monitor bezel to select a voltage code",
+                "By mailing the main processor circuit board back to San Antonio for custom resoldering",
+                "By loading a new emulation program from the machine's built-in cassette tape drives"
+              ],
+              "correct_index": 3,
+              "explanation": "The Datapoint 2200 included dual cassette drives so users could load software defining whichever mainframe terminal protocol they needed, avoiding hardware redesigns."
+            }
+          ]
+        },
+        {
+          "id": "ch_002",
+          "title": "Why Text Terminals Demanded Eight-Bit Bytes",
+          "content_markdown": "Putting a real programmable brain right on the clerk's desk made the Datapoint 2200 a landmark **intelligent terminal**—a workstation with its own internal processor capable of running local software instead of waiting on a distant mainframe for every tiny screen edit. To build that internal brain, CTC engineers Victor Poor and Harry Pyle first had to decide how wide each chunk of data should be.\n\nEarly calculator chips comfortably used 4-bit nibbles because decimal digits zero through nine fit cleanly inside four binary switches. A business terminal, however, constantly shuffles letters, punctuation, and cursor controls encoded in 8-bit ASCII characters—one full byte per symbol on the screen. Building an 8-bit processor was like handing a mailroom clerk trays sized for whole envelopes rather than forcing them to fold every letter in half twice. Poor and Pyle therefore drafted a clean, byte-wide instruction set—the processor's built-in menu of commands—tailored specifically for text.",
+          "questions": [
+            {
+              "id": "q_003",
+              "prompt": "Why did Victor Poor and Harry Pyle specify an 8-bit data width for the Datapoint 2200 rather than a 4-bit width?",
+              "choices": [
+                "Business terminals process full 8-bit ASCII characters rather than just decimal digits",
+                "Magnetic cassette drives could physically record data only in eight-track parallel stripes",
+                "Cathode-ray screens required exactly eight brightness levels for every green phosphor dot",
+                "Mainframe phone lines rejected any transmission shorter than eight consecutive decimal digits"
+              ],
+              "correct_index": 0,
+              "explanation": "While 4-bit nibbles suffice for decimal digits in calculators, terminals handle full 8-bit ASCII text bytes, making an 8-bit architecture far cleaner and more efficient."
+            },
+            {
+              "id": "q_004",
+              "prompt": "What core capability defines an intelligent terminal compared to a traditional hardwired terminal?",
+              "choices": [
+                "It connects directly to a mainframe over private fiber cables instead of phone lines",
+                "It prints paper receipts automatically while displaying monochrome graphics on glass",
+                "It houses an internal programmable processor that executes local software on the desk",
+                "It stores an entire corporate payroll ledger permanently inside built-in vacuum tubes"
+              ],
+              "correct_index": 2,
+              "explanation": "An intelligent terminal embeds its own programmable CPU so it can run local software—such as terminal emulators or data-entry checks—rather than acting solely as a passive hardwired display."
+            }
+          ]
+        },
+        {
+          "id": "ch_003",
+          "title": "A Hundred Chips Adding One Bit at a Time",
+          "content_markdown": "Because no single-chip 8-bit processor existed in 1970, CTC assembled the original Datapoint 2200 Version I from more than a hundred off-the-shelf 7400-series TTL chips—standard digital building-block circuits (Transistor-Transistor Logic) that each held just a few simple yes-or-no switching gates. Wiring full 8-bit parallel arithmetic circuits out of TTL would have overflowed the compact enclosure, so CTC engineers turned to **bit-serial execution**.\n\nPicture eight accountants sitting in a row, adding two eight-digit numbers one column at a time using a single shared adding machine and passing each carry to the neighbor on the left across eight separate ticks. Software programmers still worked with crisp 8-bit bytes, yet inside the Version I hardware, one narrow logic path chewed through a single bit per rhythmic clock pulse. The trick fit the processor inside a typewriter-sized shell, but a hundred-plus TTL chips still ran uncomfortably hot, consumed heavy power, and inflated factory costs.",
+          "questions": [
+            {
+              "id": "q_005",
+              "prompt": "How did bit-serial execution help CTC squeeze the Datapoint 2200 Version I processor into a compact desktop case?",
+              "choices": [
+                "It stored every program instruction on audio cassettes instead of using internal RAM",
+                "It eliminated the keyboard and display controllers by merging them into the power supply",
+                "It processed each 8-bit operation one bit per tick through a slim shared logic path",
+                "It compressed eight ASCII letters into a single 4-bit nibble before performing addition"
+              ],
+              "correct_index": 2,
+              "explanation": "Bit-serial execution let CTC reuse a narrow 1-bit logic circuit across eight successive clock ticks to perform 8-bit operations, cutting chip count compared to a full 8-bit parallel TTL CPU."
+            },
+            {
+              "id": "q_006",
+              "prompt": "Even with bit-serial execution, what practical drawback persisted in CTC's multi-chip TTL processor board?",
+              "choices": [
+                "Software programmers had to rewrite every ASCII letter manually in four-bit Morse code",
+                "Over a hundred discrete chips generated substantial heat, power draw, and assembly cost",
+                "The circuit board could execute only one fixed mainframe protocol without cassette drives",
+                "Standard 7400-series logic gates could not retain electrical signals inside an air-conditioned room"
+              ],
+              "correct_index": 1,
+              "explanation": "Using more than a hundred discrete TTL chips kept manufacturing costs, electrical power consumption, and heat buildup high inside the compact desktop cabinet."
+            }
+          ]
+        },
+        {
+          "id": "ch_004",
+          "title": "Betting on Silicon—With a Backup Contractor",
+          "content_markdown": "Staring at that crowded, heat-radiating circuit board, Victor Poor asked whether emerging semiconductor factories could shrink the entire TTL processor onto one fingernail-sized piece of MOS (Metal-Oxide-Semiconductor) silicon—a dense chip technology capable of packing thousands of microscopic electrical switches onto a single die (a tiny cut square of silicon). In late 1969, CTC approached a young Silicon Valley memory startup named Intel, and by early 1970 Intel contracted to implement CTC's 8-bit instruction set on one chip, dubbed Project 1201.\n\nYet CTC's executives refused to stake their flagship terminal on one tiny, unproven supplier. Instead, they relied on **dual-sourcing**—commissioning two competing manufacturers to build the exact same specification independently. CTC handed its identical Datapoint 2200 blueprint to semiconductor titan Texas Instruments as well. Rather than waiting for one firm to license a finished chip later, CTC kicked off a quiet head-to-head race from day one to guarantee a reliable supply.",
+          "questions": [
+            {
+              "id": "q_007",
+              "prompt": "Why did CTC apply dual-sourcing by handing the Datapoint 2200 processor specification to both Intel and Texas Instruments?",
+              "choices": [
+                "Intel lacked legal patents to manufacture silicon wafers containing more than four bits",
+                "Each firm was assigned to build only half of the processor's 8-bit arithmetic unit",
+                "Federal telecommunications law required every office terminal to contain chips from two states",
+                "CTC wanted supply insurance rather than betting its flagship product on one small startup"
+              ],
+              "correct_index": 3,
+              "explanation": "Dual-sourcing protected CTC against manufacturing delays or failure at a single supplier—especially an unproven young startup like Intel—by having two independent chipmakers build the same spec."
+            },
+            {
+              "id": "q_008",
+              "prompt": "What internal project number did Intel assign to the single-chip 8-bit processor commissioned by CTC?",
+              "choices": [
+                "Project 1201",
+                "Project 4004",
+                "Project 1795",
+                "Project 3300"
+              ],
+              "correct_index": 0,
+              "explanation": "Intel designated CTC's single-chip Datapoint 2200 processor effort as Project 1201 before later releasing it commercially as the Intel 8008."
+            }
+          ]
+        },
+        {
+          "id": "ch_005",
+          "title": "An Accidental Blueprint for Eight-Bit Computing",
+          "content_markdown": "Take a step back and savor the quiet irony of 1970. Nobody at Computer Terminal Corporation set out to invent personal computers or establish an architectural bloodline that would still echo inside modern laptops decades later. Victor Poor and Harry Pyle simply wanted a cooler, less expensive way to power an intelligent terminal that spoke fluent 8-bit ASCII without stuffing a desktop shell full of bit-serial TTL chips.\n\nBy pursuing dual-sourcing across Intel and Texas Instruments, CTC inadvertently financed a two-company sprint to create the world's first single-chip 8-bit microprocessor—and etched its terminal's clean byte-wide instruction set into semiconductor history. Yet the finish of that race defied every expectation. Contrary to popular memory, Intel did not cross the line first. Next, we travel to Dallas to meet the working 8-bit Texas Instruments chip that beat Intel to silicon—and then disappeared into a corporate filing cabinet.",
+          "questions": [
+            {
+              "id": "q_009",
+              "prompt": "What historical irony best characterizes the birth of the processor architecture behind the Intel 8008?",
+              "choices": [
+                "It began as a military missile guidance engine that hobbyists smuggled out of defense labs",
+                "It was created merely to cut cost and heat inside a programmable office text terminal",
+                "It originated as a video-game console chipset whose makers pivoted to bank accounting",
+                "It grew out of a university project explicitly trying to replace every IBM mainframe by 1975"
+              ],
+              "correct_index": 1,
+              "explanation": "CTC did not aim to spark a personal-computing revolution; it simply wanted a cheaper, cooler single-chip replacement for the Datapoint 2200's TTL terminal processor."
+            },
+            {
+              "id": "q_010",
+              "prompt": "Which pair of engineering priorities directly drove CTC's 1970 push for a single-chip 8-bit MOS processor?",
+              "choices": [
+                "Running color arcade graphics while shrinking power consumption for handheld calculators",
+                "Eliminating magnetic cassette tapes while adding voice synthesis to mainframe phone links",
+                "Handling 8-bit ASCII text natively while replacing over a hundred hot, costly TTL chips",
+                "Supporting sixteen concurrent users while switching from decimal math to analog voltages"
+              ],
+              "correct_index": 2,
+              "explanation": "CTC needed native 8-bit byte handling for ASCII terminal work and wanted single-chip MOS silicon to eliminate the heat, bulk, and expense of its 100-plus-chip TTL processor board."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_02",
+      "title": "2. Texas Instruments' Shelved TMX 1795 \u0026 the 4-Bit Pivot",
+      "summary": "Follow the surprising semiconductor race in which Texas Instruments engineers Gary Boone and Michael Cochran delivered working 8-bit TMX 1795 prototypes to CTC in mid-1971—ahead of Intel's stalled 1201. Examine why CTC's faster parallel-TTL Datapoint 2200 Version II caused CTC to reject both MOS chips, how Intel shrewdly traded development charges for commercial rights to sell the 1201 to anyone, and why TI—treating the TMX 1795 as a dead-end custom LSI chip after failing to find a single giant buyer—shelved it to chase high-volume 4-bit calculators and TMS1000 microcontrollers, leaving the general-purpose microprocessor market open to Intel.",
+      "introduced_terms": [
+        "custom LSI",
+        "general-purpose microprocessor"
+      ],
+      "chunks": [
+        {
+          "id": "ch_006",
+          "title": "The Dallas Chip That Beat Intel to Silicon",
+          "content_markdown": "Ask most computing enthusiasts who built the first working single-chip 8-bit microprocessor, and they almost always point straight to Intel. Yet in June 1971—nearly ten months before Intel publicly announced the 8008—engineers at Texas Instruments in Dallas delivered functional single-chip prototypes of CTC's Datapoint 2200 processor.\n\nDesigned by Gary Boone and Michael Cochran, the experimental chip carried the part number **TMX 1795** and faithfully executed CTC's entire 8-bit instruction set on one slice of silicon. Texas Instruments was proud enough of the feat to showcase the TMX 1795 in *Electronics* magazine as a 'CPU on a chip.' That sets up one of technology history's great head-scratchers: how could an electronics giant build a working 8-bit processor first, publicize it to engineers nationwide, and then walk away from the entire 8-bit computing era it had practically invented?",
+          "questions": [
+            {
+              "id": "q_011",
+              "prompt": "What landmark engineering milestone did Texas Instruments' TMX 1795 reach in June 1971?",
+              "choices": [
+                "It became the first chip to integrate color video output and cassette audio decoding",
+                "It ran ten times faster than CTC's parallel TTL logic inside shipping Datapoint terminals",
+                "It delivered working single-chip 8-bit Datapoint 2200 silicon months ahead of Intel",
+                "It outsold Intel's 4004 by powering every desktop business terminal sold in Texas"
+              ],
+              "correct_index": 2,
+              "explanation": "TI's TMX 1795 implemented CTC's 8-bit Datapoint 2200 instruction set in working silicon by mid-1971, beating Intel's delayed 1201 (later 8008) by nearly ten months."
+            },
+            {
+              "id": "q_012",
+              "prompt": "Which pair of Texas Instruments engineers built the working TMX 1795 prototype?",
+              "choices": [
+                "Gary Boone and Michael Cochran",
+                "Victor Poor and Harry Pyle",
+                "Phil Ray and Gus Roche",
+                "Victor Poor and Phil Ray"
+              ],
+              "correct_index": 0,
+              "explanation": "Gary Boone and Michael Cochran designed the TMX 1795 at Texas Instruments before going on to create TI's breakthrough 4-bit calculator and microcontroller chips."
+            }
+          ]
+        },
+        {
+          "id": "ch_007",
+          "title": "Tailor-Made Silicon Versus Blank-Slate Engines",
+          "content_markdown": "To solve that mystery, we need to contrast two competing business philosophies in 1971. Established semiconductor giants viewed complex integrated circuits as **custom LSI** (Large-Scale Integration)—bespoke, single-purpose chips engineered to one buyer's exact blueprint. Think of a Savile Row tailor cutting an elaborate suit to one customer's unusual measurements: if that client cancels the order, the pattern goes straight into the bin because nobody else fits it.\n\nThe rival concept was the **general-purpose microprocessor**—a standardized, off-the-shelf catalog brain sold to thousands of unrelated builders who each shape its behavior by writing software rather than redesigning silicon. A custom LSI executive demanded one huge, guaranteed purchase contract up front before firing up the factory. A general-purpose microprocessor bet on the opposite logic: publish a clean programmable chip in your catalog, and imaginative outsiders will invent markets you never foresaw.",
+          "questions": [
+            {
+              "id": "q_013",
+              "prompt": "What fundamentally separates a general-purpose microprocessor from a custom LSI chip?",
+              "choices": [
+                "A general-purpose microprocessor uses discrete TTL gates while custom LSI uses silicon wafers",
+                "A general-purpose microprocessor is sold off the shelf and tailored via software by many buyers",
+                "A general-purpose microprocessor permanently embeds one customer's fixed program in metal masks",
+                "A general-purpose microprocessor always requires a minimum order of one million identical units"
+              ],
+              "correct_index": 1,
+              "explanation": "Rather than being hard-built for one client's machine like custom LSI, a general-purpose microprocessor is a standard catalog CPU that diverse customers adapt through software."
+            },
+            {
+              "id": "q_014",
+              "prompt": "Under a custom LSI business mindset, why did losing the original sponsoring customer usually kill a chip project?",
+              "choices": [
+                "Semiconductor factories were legally barred from selling leftover wafers across state borders",
+                "Custom chips physically degraded within weeks unless soldered into their intended circuit board",
+                "Engineers typically destroyed the photographic chip masks as soon as a prototype worked",
+                "Executives assumed a bespoke chip built for one client's spec had no viable mass market"
+              ],
+              "correct_index": 3,
+              "explanation": "Because custom LSI was viewed like a tailored suit for one client, managers expected little demand outside that single buyer once the anchor contract vanished."
+            }
+          ]
+        },
+        {
+          "id": "ch_008",
+          "title": "CTC Walks Away—and Intel Cuts a Billion-Dollar Deal",
+          "content_markdown": "That clash of mindsets played out in dramatic fashion when CTC abruptly walked away from both chipmakers. While Intel's 1201 struggled with stubborn schedule delays and early single-chip MOS circuits ran much slower than discrete desktop logic, CTC's own engineers had rolled out the upgraded Datapoint 2200 Version II. By replacing bit-serial circuits with a speedy parallel TTL board, Version II easily outran both Intel's unfinished 1201 and TI's working TMX 1795. CTC had no reason left to buy either chip.\n\nAt that tense crossroads, Intel struck one of Silicon Valley's sharpest bargains: it waived CTC's remaining development bill in exchange for full commercial rights to market the 1201 architecture to anyone. Texas Instruments, holding working TMX 1795 chips, briefly pitched them to giant industrial prospects such as Ford Motor Company—yet when no single anchor buyer stepped forward, Dallas cooled on the project.",
+          "questions": [
+            {
+              "id": "q_015",
+              "prompt": "Why did CTC ultimately reject both TI's working TMX 1795 and Intel's Project 1201 for the Datapoint 2200?",
+              "choices": [
+                "CTC's upgraded parallel-TTL Version II board ran faster than the sluggish early MOS chips",
+                "Neither semiconductor firm managed to fit all eight bits of ASCII text into its instruction set",
+                "CTC exited the office-terminal industry in 1971 to focus exclusively on pocket calculators",
+                "Both single-chip processors required external vacuum tubes that overheated the plastic case"
+              ],
+              "correct_index": 0,
+              "explanation": "By the time early MOS silicon appeared, CTC's faster parallel-TTL Datapoint 2200 Version II beat the single-chip speeds, while Intel's 1201 was also behind schedule."
+            },
+            {
+              "id": "q_016",
+              "prompt": "What pivotal bargain did Intel negotiate when CTC canceled its order for the 1201 chip?",
+              "choices": [
+                "Intel received fifty percent ownership of CTC's cassette tape patents in San Antonio",
+                "Intel agreed to buy CTC's surplus TTL boards at a steep discount for internal testing",
+                "Intel licensed Texas Instruments' working TMX 1795 masks to finish the chip faster",
+                "Intel waived CTC's development charges in return for commercial rights to sell the design"
+              ],
+              "correct_index": 3,
+              "explanation": "Trading away development fees for commercial rights allowed Intel to bring the 1201 to the open market as the Intel 8008—the foundational seed of its microprocessor business."
+            }
+          ]
+        },
+        {
+          "id": "ch_009",
+          "title": "Why TI's Four-Bit Pivot Made Total Sense in 1971",
+          "content_markdown": "With fifty years of hindsight, it is easy to mock Texas Instruments for shelving the TMX 1795. Inside a Dallas boardroom in 1971, however, that choice looked remarkably shrewd. Standalone 8-bit processors without built-in memory seemed complicated for ordinary manufacturers to wire up and program, while booming pocket calculators and consumer gadgets promised instant, multi-million-unit volume.\n\nInstead of spending marketing dollars chasing speculative buyers for the TMX 1795, TI aimed Gary Boone and Michael Cochran at self-contained 4-bit silicon—first the TMS 0100 calculator-on-a-chip and quickly afterward the landmark TMS1000 microcontroller family that packed processor, memory, and input-output onto one tiny, inexpensive die. As you saw in the Four-Bit Spark arc, TI's gamble succeeded spectacularly, putting tens of millions of 4-bit chips into calculators, toys, and home appliances. TI did not miss the chip boom; it simply bet on immediate embedded scale over an unproven general-purpose 8-bit frontier.",
+          "questions": [
+            {
+              "id": "q_017",
+              "prompt": "Why did shelving the TMX 1795 appear commercially sensible to Texas Instruments executives in 1971?",
+              "choices": [
+                "TI's fabrication lines lacked the chemical purity needed to etch any 8-bit logic circuit",
+                "CTC held an airtight court injunction barring TI from ever selling microprocessors",
+                "High-volume calculators and self-contained 4-bit gadgets offered immediate guaranteed sales",
+                "Engineers unanimously predicted that 8-bit ASCII text would soon give way to 4-bit code"
+              ],
+              "correct_index": 2,
+              "explanation": "Calculator chips and all-in-one 4-bit microcontrollers promised rapid multi-million-unit volume right away, whereas standalone 8-bit CPUs looked like a risky niche with no proven buyers."
+            },
+            {
+              "id": "q_018",
+              "prompt": "After TI shelved the TMX 1795, which massively successful product line did Gary Boone and Michael Cochran help launch?",
+              "choices": [
+                "The 16-bit desktop minicomputer line that directly replaced the DEC PDP-11",
+                "The self-contained TMS 0100 calculator chip and the 4-bit TMS1000 microcontroller family",
+                "The first commercial family of ultraviolet-erasable glass memory chips for terminals",
+                "A rival catalog line of 8-bit general-purpose processors built specifically for hobby kits"
+              ],
+              "correct_index": 1,
+              "explanation": "Reassigned from the TMX 1795, Boone and Cochran spearheaded TI's TMS 0100 calculator-on-a-chip and the massively popular 4-bit TMS1000 microcontroller family."
+            }
+          ]
+        },
+        {
+          "id": "ch_010",
+          "title": "An Open Runway for Santa Clara",
+          "content_markdown": "The quiet burial of the TMX 1795 proves that technical speed alone never guarantees historical victory. Texas Instruments proved an 8-bit terminal processor could live on one chip months before Intel did. Yet by reading the chip through a custom LSI lens and pivoting toward high-volume 4-bit microcontrollers, TI inadvertently handed the nascent general-purpose microprocessor field to a much smaller California rival.\n\nIntel—which initially hoped programmable chips would mainly help it sell more memory chips—suddenly held uncontested commercial rights to CTC's clean 8-bit architecture, with no heavyweight competitor in sight. Still, a contract on paper cannot execute a single instruction. Back in Santa Clara, Intel's Project 1201 remained stalled, behind schedule, and plagued by design hurdles. Next, we step onto Intel's drafting tables to watch Hal Feeney and Federico Faggin rescue the chip and grapple with the demanding physics of early PMOS silicon.",
+          "questions": [
+            {
+              "id": "q_019",
+              "prompt": "What unintended competitive advantage did TI's pivot to 4-bit microcontrollers hand to Intel?",
+              "choices": [
+                "It left Intel virtually unchallenged as it opened the general-purpose 8-bit microprocessor market",
+                "It forced CTC to return to Intel and buy thousands of delayed Project 1201 chips after all",
+                "It transferred TI's Dallas wafer factories and calculator patents directly to Silicon Valley",
+                "It prevented any future company from building 4-bit calculators without Intel's permission"
+              ],
+              "correct_index": 0,
+              "explanation": "By shelving the working TMX 1795 and focusing on 4-bit calculators and microcontrollers, TI left the emerging general-purpose 8-bit CPU arena wide open for Intel."
+            },
+            {
+              "id": "q_020",
+              "prompt": "Comparing Intel and Texas Instruments in 1971, which contrast best explains why Intel launched the commercial 8-bit CPU era?",
+              "choices": [
+                "Intel finished working 8-bit silicon first while TI failed to make its prototype operate",
+                "Intel enjoyed exclusive military funding while TI relied solely on consumer toy contracts",
+                "Intel built its chip from fast TTL logic while TI stuck with slow mechanical relays",
+                "Intel secured open catalog rights to a general-purpose chip while TI shelved its design as custom LSI"
+              ],
+              "correct_index": 3,
+              "explanation": "Although TI reached working silicon first, TI treated the TMX 1795 as custom LSI and shelved it, whereas Intel won commercial catalog rights and pushed its design to market."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_03",
+      "title": "3. Rescuing the 8008: Feeney, Faggin \u0026 PMOS Physics",
+      "summary": "Trace how Federico Faggin stepped in alongside lead designer Hal Feeney in 1971 to rescue Intel's delayed 1201—building on early architectural work by Ted Hoff and Stan Mazor—and bring roughly 3,500 transistors to market in April 1972 as the Intel 8008. Use plain-language analogies to understand how silicon-gate PMOS transistors conduct current with slow-moving positive electron holes rather than fast free electrons, why that physics capped the chip at 500 kHz (and 800 kHz for the 8008-1), and why split $$+5\\text{ V}$$ and $$-9\\text{ V}$$ power rails plus a high-voltage two-phase non-overlapping clock ($$\\phi_1$$ and $$\\phi_2$$) made circuit design demanding.",
+      "introduced_terms": [
+        "silicon-gate PMOS",
+        "electron hole",
+        "two-phase non-overlapping clock"
+      ],
+      "chunks": [
+        {
+          "id": "ch_011",
+          "title": "Rescuing a Stalled Project in Santa Clara",
+          "content_markdown": "By the opening months of 1971, Intel's Project 1201 looked dangerously close to collapse. While the young company poured its scarcest engineering hours into finishing the 4-bit 4004 chipset for Japanese calculator maker Busicom, CTC's 8-bit processor sat stalled amid layout snags and missed milestones. Because Intel's core revenue came from semiconductor memory chips, several managers quietly questioned whether salvaging a canceled customer's 8-bit CPU was worth the distraction.\n\nThe turnaround began in early 1971 when **Federico Faggin**, fresh from steering the 4004 to working silicon, stepped in as project leader alongside lead circuit and layout designer **Hal Feeney**, building on earlier architectural groundwork by Ted Hoff and Stan Mazor. Applying disciplined layout methods proven on the 4004, Feeney and Faggin packed roughly 3,500 microscopic transistors onto one fingernail-sized die—allowing Intel to launch the commercial **Intel 8008** in April 1972.",
+          "questions": [
+            {
+              "id": "q_021",
+              "prompt": "Why had Intel's Project 1201 stalled prior to early 1971?",
+              "choices": [
+                "Texas Instruments bought out Intel's sole wafer foundry and halted all 8-bit work",
+                "Intel prioritized its urgent 4-bit 4004 calculator contract while 1201 faced layout delays",
+                "CTC demanded that Intel abandon MOS silicon and redesign the chip using vacuum tubes",
+                "Engineers discovered that 3,500 transistors could never fit onto a single piece of silicon"
+              ],
+              "correct_index": 1,
+              "explanation": "Intel devoted its top resources to finishing the Busicom 4004 project first, leaving Project 1201 stalled until early 1971 when Faggin and Feeney took over."
+            },
+            {
+              "id": "q_022",
+              "prompt": "Which pair of Intel engineers led the 1971 rescue that delivered the commercial Intel 8008?",
+              "choices": [
+                "Gary Boone and Michael Cochran",
+                "Victor Poor and Harry Pyle",
+                "Phil Ray and Gus Roche",
+                "Federico Faggin and Hal Feeney"
+              ],
+              "correct_index": 3,
+              "explanation": "Building on early planning by Ted Hoff and Stan Mazor, Federico Faggin led the project while Hal Feeney executed the detailed logic, circuit design, and layout of the 8008."
+            }
+          ]
+        },
+        {
+          "id": "ch_012",
+          "title": "Slow Vacancies: Inside Silicon-Gate PMOS",
+          "content_markdown": "To cram 3,500 switches reliably onto one die, Feeney and Faggin relied on **silicon-gate PMOS**—an advanced metal-oxide-semiconductor fabrication process Faggin had pioneered earlier, where tiny switches used conductive silicon control gates instead of older aluminum ones, enabling sharper alignment and tighter packing. Yet the 'P' in PMOS (Positive-channel MOS) carried an unavoidable physical speed limit.\n\nRather than carrying electrical current with nimble, negatively charged free electrons, PMOS switches move charge via **electron holes**—positively charged vacancies left wherever an electron is missing from the crystal lattice. Picture a packed row of movie-theater seats with one empty chair at the end: as patrons shuffle over one seat at a time, that empty gap creeps down the aisle far slower than a single person jogging across an open row. Inside silicon, electron holes drift roughly two to three times slower than free electrons, putting a firm ceiling on switching speed.",
+          "questions": [
+            {
+              "id": "q_023",
+              "prompt": "What is an electron hole inside a PMOS silicon transistor?",
+              "choices": [
+                "A positively charged vacancy that shifts through the crystal as neighboring electrons move",
+                "A microscopic pinhole etched through the ceramic chip package to vent excess heat",
+                "An extra negative charge trapped permanently inside the aluminum wiring layer",
+                "A tiny hollow glass tube guiding clock pulses across the surface of a silicon wafer"
+              ],
+              "correct_index": 0,
+              "explanation": "An electron hole is the positively charged absence of an electron in the silicon lattice; current flows as nearby electrons hop into the vacancy, making the hole drift in the opposite direction."
+            },
+            {
+              "id": "q_024",
+              "prompt": "Why did silicon-gate PMOS inherently restrict how fast the Intel 8008 could switch?",
+              "choices": [
+                "Silicon gates melted whenever clock frequencies rose above ten thousand ticks per second",
+                "PMOS chips could process only one binary bit per second across their external power pins",
+                "Positively charged electron holes drift two to three times slower through silicon than free electrons",
+                "Conductive silicon layers blocked electrical signals from reaching standard memory chips"
+              ],
+              "correct_index": 2,
+              "explanation": "Because electron holes have lower physical mobility in silicon than free electrons, PMOS transistors switch significantly slower than later electron-driven designs."
+            }
+          ]
+        },
+        {
+          "id": "ch_013",
+          "title": "Half a Megahertz and Split Power Rails",
+          "content_markdown": "Sluggish hole physics translated straight onto the Intel 8008's specification sheet. The initial April 1972 model topped out at a calm clock rate of $$500\\text{ kHz}$$—half a million beats per second—before a refined 1973 grade, the 8008-1, stretched the ceiling to $$800\\text{ kHz}$$. Because every instruction needed multiple ticks to finish, the chip completed roughly 45,000 to 80,000 instructions per second: brisk enough for a desktop terminal or instrument panel, yet far slower than TTL minicomputers.\n\nJust as awkward were its power demands. Standard 7400-series TTL logic ran happily off one clean $$+5\\text{ V}$$ supply. The PMOS 8008, however, required two separate power rails: $$+5\\text{ V}$$ and $$-9\\text{ V}$$. Measured end to end, those split rails created a $$14\\text{ V}$$ electrical span across the chip—forcing system builders to install bulky dual-voltage power supplies and take special care when connecting the 8008 to ordinary $$+5\\text{ V}$$ circuits.",
+          "questions": [
+            {
+              "id": "q_025",
+              "prompt": "What was the maximum clock speed of the original April 1972 Intel 8008 before the faster 8008-1 arrived?",
+              "choices": [
+                "$$50\\text{ kHz}$$",
+                "$$200\\text{ kHz}$$",
+                "$$500\\text{ kHz}$$",
+                "$$2\\text{ MHz}$$"
+              ],
+              "correct_index": 2,
+              "explanation": "The original Intel 8008 had a maximum clock frequency of $$500\\text{ kHz}$$, later raised to $$800\\text{ kHz}$$ in the 1973 8008-1 revision."
+            },
+            {
+              "id": "q_026",
+              "prompt": "Why did powering an Intel 8008 complicate circuit-board design compared to standard TTL logic?",
+              "choices": [
+                "It required three-phase industrial wall current stepped directly into its silicon pins",
+                "It demanded split $$+5\\text{ V}$$ and $$-9\\text{ V}$$ power rails rather than a single $$+5\\text{ V}$$ supply",
+                "It drew so much current that every chip needed a dedicated liquid-nitrogen cooling jacket",
+                "It operated only on disposable nine-volt lantern batteries to prevent voltage ripple"
+              ],
+              "correct_index": 1,
+              "explanation": "Unlike standard TTL chips powered by a single $$+5\\text{ V}$$ rail, the PMOS 8008 required both $$+5\\text{ V}$$ and $$-9\\text{ V}$$ supplies (a $$14\\text{ V}$$ total swing), complicating power distribution."
+            }
+          ]
+        },
+        {
+          "id": "ch_014",
+          "title": "Two Heartbeats That Must Never Collide",
+          "content_markdown": "Split power rails were only half of the 8008's electrical choreography. Inside the chip, many internal storage points held binary ones and zeros as tiny, temporary pockets of electrical charge—like a bucket brigade passing water down a line. If one shared timing pulse opened both the inlet and outlet gates of the brigade at the exact same moment, adjacent data values would crash together and smear into nonsense.\n\nTo keep every stage cleanly separated, the 8008 required a **two-phase non-overlapping clock**: two distinct rhythmic pulses, labeled $$\\phi_1$$ and $$\\phi_2$$, that alternated turns with a brief quiet pause between them so both were never active simultaneously. Even trickier, those $$\\phi_1$$ and $$\\phi_2$$ signals had to swing across wide PMOS voltage levels rather than standard TTL levels—meaning engineers had to build dedicated high-voltage external clock-driver circuits just to keep the processor's heartbeat steady.",
+          "questions": [
+            {
+              "id": "q_027",
+              "prompt": "Why did the Intel 8008 rely on a two-phase non-overlapping clock ($$\\phi_1$$ and $$\\phi_2$$) instead of a single clock wire?",
+              "choices": [
+                "One clock wire powered odd-numbered instructions while the second powered even-numbered ones",
+                "It doubled the chip's clock speed to two megahertz by running two processors in parallel",
+                "One phase heated the silicon die while the other phase cooled the external ceramic legs",
+                "Alternating separated pulses kept internal charge stages from opening together and smearing data"
+              ],
+              "correct_index": 3,
+              "explanation": "Non-overlapping clock phases ensure that one internal storage stage closes before the next opens, preventing stored electrical charges from racing through and corrupting data."
+            },
+            {
+              "id": "q_028",
+              "prompt": "What practical hurdle did the 8008's $$\\phi_1$$ and $$\\phi_2$$ clocks create for system engineers?",
+              "choices": [
+                "They demanded wide high-voltage swings requiring extra external clock-driver circuitry",
+                "They drifted out of sync unless recalibrated by hand with a tuning fork each morning",
+                "They broadcast radio static so strong that nearby ASCII keyboards could not function",
+                "They forced every memory chip on the circuit board to run without electrical grounding"
+              ],
+              "correct_index": 0,
+              "explanation": "Because the PMOS 8008 needed high-voltage non-overlapping clock swings rather than standard 5-volt TTL clock signals, builders had to add dedicated external clock-driver circuits."
+            }
+          ]
+        },
+        {
+          "id": "ch_015",
+          "title": "Working Silicon—Before the Real Bottleneck Hit",
+          "content_markdown": "Step back and appreciate what Hal Feeney and Federico Faggin accomplished against daunting physical odds. Using silicon-gate PMOS, they squeezed 3,500 transistors onto a single commercial die—even while wrestling slow electron holes, split $$+5\\text{ V}$$ and $$-9\\text{ V}$$ rails, and high-voltage two-phase non-overlapping clocks. At $$500\\text{ kHz}$$, the April 1972 Intel 8008 was no speed demon, yet it was real, shipping general-purpose 8-bit silicon that any engineer could purchase off the shelf for roughly 120 dollars in volume.\n\nYet PMOS physics was not even the severest handicap saddling the 8008. While Feeney and Faggin perfected the microscopic silicon inside, Intel's management imposed a rigid packaging decision on the outside that tied the processor's hands before it ever left Santa Clara. Next, we unpack the infamous 18-pin straitjacket that forced the 8008 to push all of its addresses, control signals, and data through eight tiny legs.",
+          "questions": [
+            {
+              "id": "q_029",
+              "prompt": "Which set of hardware traits accurately summarizes the Intel 8008's silicon-gate PMOS implementation?",
+              "choices": [
+                "Fast free electrons, single $$+5\\text{ V}$$ power rail, and a built-in crystal clock generator",
+                "Slow electron holes, split $$+5\\text{ V}$$ and $$-9\\text{ V}$$ rails, and a two-phase non-overlapping clock",
+                "Discrete TTL logic gates, vacuum-tube amplifiers, and cassette-driven mechanical timing",
+                "Zero external power requirements, optical laser clocks, and ten million transistors per die"
+              ],
+              "correct_index": 1,
+              "explanation": "The 8008's silicon-gate PMOS process conducted via slow electron holes, required split $$+5\\text{ V}$$ and $$-9\\text{ V}$$ supplies, and relied on an external high-voltage two-phase non-overlapping clock."
+            },
+            {
+              "id": "q_030",
+              "prompt": "Despite its $$500\\text{ kHz}$$ ceiling and tricky electrical requirements, what historic breakthrough did the April 1972 Intel 8008 deliver?",
+              "choices": [
+                "It became the first microprocessor to include built-in color graphics and audio synthesis",
+                "It immediately displaced every IBM mainframe in North American commercial banking",
+                "It brought the first commercial general-purpose 8-bit microprocessor to the open catalog market",
+                "It ran completely without external support chips using only a single five-volt battery"
+              ],
+              "correct_index": 2,
+              "explanation": "Imperfect and slow as early PMOS was, the April 1972 Intel 8008 was the world's first commercially available general-purpose 8-bit microprocessor on a single chip."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_04",
+      "title": "4. The 18-Pin DIP Straitjacket \u0026 3-Cycle Time-Multiplexing",
+      "summary": "Investigate why Intel's memory-chip habits and packaging caution confined the 8008 to an 18-pin Dual In-line Package (DIP), leaving only 8 bidirectional pins (D0–D7) after power, clocks, and control signals took the other ten. Walk step by step through how time-multiplexing squeezed 14 address bits, 2 cycle-control bits, and 8 data bits through that narrow doorway across three phases of every machine cycle—T1 sending the lower 8 address bits, T2 sending the upper 6 address bits plus 2 cycle-type bits (fetch, read, write, or I/O), and T3 finally moving the data byte—and why those extra turns slowed instructions to 5 to 11 clock cycles.",
+      "introduced_terms": [
+        "Dual In-line Package (DIP)",
+        "time-multiplexing",
+        "machine cycle"
+      ],
+      "chunks": [
+        {
+          "id": "ch_016",
+          "title": "A Busy Post Office With One Tiny Doorway",
+          "content_markdown": "Imagine designing a bustling town post office serving 16,000 mailboxes—only to have headquarters decree that the entire building may have just one narrow mail slot wide enough for eight letters at a time. That was Federico Faggin's exact dilemma in 1971. Intel earned its bread and butter manufacturing 18-pin memory chips such as its hit 1103 dynamic RAM (a fast, compact memory chip), and executives feared that wider 24-pin or 40-pin ceramic housings were expensive, fragile to seal, and incompatible with Intel's automated factory test rigs.\n\nAlthough Faggin argued strenuously for more pins, management locked the 8008 inside an 18-pin **Dual In-line Package (DIP)**—the classic rectangular ceramic or plastic chip shell flanked by two parallel rows of nine metal legs. That cost-saving boardroom rule slammed Intel's brand-new 8-bit brain straight into a severe pin-count bottleneck before it ever executed a line of code.",
+          "questions": [
+            {
+              "id": "q_031",
+              "prompt": "Why did Intel's management insist on confining the 8008 to an 18-pin package despite Federico Faggin's warnings?",
+              "choices": [
+                "International standards forbade placing more than eighteen metal legs on any silicon chip",
+                "The 8008 silicon die was physically too wide to fit inside a 40-pin ceramic housing",
+                "Intel already standardized on 18-pin memory testers and worried wider packages cost too much",
+                "Customers specifically demanded 18-pin chips so they could plug them into 4004 sockets"
+              ],
+              "correct_index": 2,
+              "explanation": "As a memory-chip manufacturer centered on 18-pin packages like the 1103 DRAM, Intel feared larger 24- or 40-pin packages would add expense, sealing risks, and factory-testing headaches."
+            },
+            {
+              "id": "q_032",
+              "prompt": "What physical packaging design is a Dual In-line Package (DIP)?",
+              "choices": [
+                "A rectangular chip housing with two parallel rows of metal legs along opposite edges",
+                "A circular metal can with tiny wire leads arranged in a spiral ring underneath",
+                "Two stacked silicon wafers glued directly together without any protective casing",
+                "A flexible ribbon cable that solders a bare silicon die straight onto a metal chassis"
+              ],
+              "correct_index": 0,
+              "explanation": "A Dual In-line Package (DIP) is the iconic rectangular integrated-circuit shell featuring two parallel rows of evenly spaced pins along its long sides."
+            }
+          ]
+        },
+        {
+          "id": "ch_017",
+          "title": "Squeezing Twenty-Four Bits Through Eight Pins",
+          "content_markdown": "Do a quick headcount of those 18 metal legs and the squeeze becomes unmistakable. Two pins were claimed by split power ($$+5\\text{ V}$$ and $$-9\\text{ V}$$), two carried the $$\\phi_1$$ and $$\\phi_2$$ clocks, and six handled vital housekeeping signals (`READY`, `INTERRUPT`, `SYNC`, plus three status output pins `S0`, `S1`, and `S2`). That left exactly **8 two-way (bidirectional) pins**—labeled `D0` through `D7`—to handle every remaining conversation between the 8008 and the outside world.\n\nYet every memory transfer needed 14 bits of memory address, 2 bits declaring what kind of bus operation was taking place, and 8 bits of actual data: $$14 + 2 + 8 = 24$$ bits trying to pass through an 8-pin tunnel. The 8008 survived through **time-multiplexing**—sharing the exact same physical wires across consecutive clock ticks, just like a single-lane bridge where a traffic signal lets different streams of vehicles take turns crossing.",
+          "questions": [
+            {
+              "id": "q_033",
+              "prompt": "Once power, clocks, and control signals claimed ten legs of the 18-pin Intel 8008, how many pins remained for addresses, cycle type, and data?",
+              "choices": [
+                "4 bidirectional pins",
+                "8 bidirectional pins",
+                "12 unidirectional pins",
+                "14 dedicated address pins"
+              ],
+              "correct_index": 1,
+              "explanation": "With 2 power pins, 2 clock pins, and 6 control/status pins spoken for, only 8 shared bidirectional pins (D0–D7) remained for everything else."
+            },
+            {
+              "id": "q_034",
+              "prompt": "How does time-multiplexing overcome having fewer physical pins than total bits of information?",
+              "choices": [
+                "It compresses 24 binary bits mathematically into 8 bits before driving the wires",
+                "It sends three separate analog voltage levels simultaneously down every metal leg",
+                "It eliminates memory addresses altogether by storing all programs inside the CPU",
+                "It sends different categories of bits in scheduled turns over the same wires across ticks"
+              ],
+              "correct_index": 3,
+              "explanation": "Time-multiplexing reuses the same physical pins sequentially across multiple clock ticks—sending one group of bits first, then switching the pins to carry the next group."
+            }
+          ]
+        },
+        {
+          "id": "ch_018",
+          "title": "Three Turns Across the Bridge: T1, T2, and T3",
+          "content_markdown": "Watch this choreography unfold inside one 8008 **machine cycle**—the structured series of clock beats the processor uses to perform a single memory or input-output transfer. Picture those eight shared `D0`–`D7` pins running a three-part relay race.\n\nDuring state **T1**, the 8008 places the **lower 8 bits** of the memory address onto `D0`–`D7`, like calling out a house number. One tick later, during state **T2**, those identical eight pins switch to transmit the **upper 6 bits** of the address paired with **2 cycle-control bits** naming the errand: instruction fetch, memory read, memory write, or input-output operation. Only when state **T3** arrives—after the rest of the computer knows both *where* to look and *what* to do—do pins `D0`–`D7` finally carry the actual **8-bit data byte** in or out of the processor.",
+          "questions": [
+            {
+              "id": "q_035",
+              "prompt": "What specific combination of signals appears on pins D0–D7 during state T2 of an Intel 8008 machine cycle?",
+              "choices": [
+                "The upper 6 memory address bits together with 2 cycle-control bits",
+                "The lower 8 memory address bits without any cycle-control information",
+                "The 8-bit instruction or data byte being read from or written to RAM",
+                "The two high-voltage clock pulses paired with six interrupt status lines"
+              ],
+              "correct_index": 0,
+              "explanation": "State T1 carries the lower 8 address bits, state T2 carries the upper 6 address bits plus 2 cycle-control bits (fetch, read, write, or I/O), and state T3 transfers the 8-bit data byte."
+            },
+            {
+              "id": "q_036",
+              "prompt": "In what sequence do the three shared-bus phases of an Intel 8008 machine cycle occur across pins D0–D7?",
+              "choices": [
+                "Data byte in T1, upper 6 address plus control bits in T2, and lower address in T3",
+                "Cycle-control bits in T1, 8-bit data byte in T2, and full 14-bit address in T3",
+                "Lower 8 address bits in T1, upper 6 address plus control bits in T2, and data in T3",
+                "Upper 6 address bits in T1, 8-bit data byte in T2, and lower 8 address bits in T3"
+              ],
+              "correct_index": 2,
+              "explanation": "External memory must know the full address and operation type before transferring data, so the 8008 outputs low address (T1), then high address + cycle type (T2), then data (T3)."
+            }
+          ]
+        },
+        {
+          "id": "ch_019",
+          "title": "Hidden Costs Inside T2, T4, T5, and WAIT",
+          "content_markdown": "Look closely at state T2 and you can spot a subtle architectural domino effect. Because 2 of T2's 8 pins were spent broadcasting the cycle type (fetch, read, write, or I/O), only 6 pins remained for upper address lines—quietly capping the 8008's entire memory reach at $$8 + 6 = 14$$ address bits instead of a round 16.\n\nJust as striking was the invisible timing toll. T1, T2, and T3 merely delivered one byte across the doorway; the CPU still needed internal execution ticks (**T4** and **T5**) to add numbers or shuffle registers. Worse still, if a sluggish memory chip could not answer fast enough, the 8008 paused in extra **WAIT** states wedged between T2 and T3. Put all those beats together, and a single 8008 instruction commonly took 5 to 11 clock cycles—stretching to 10 to 20 microseconds (millionths of a second) per instruction at $$500\\text{ kHz}$$.",
+          "questions": [
+            {
+              "id": "q_037",
+              "prompt": "Why did the Intel 8008 end up with a 14-bit address width instead of a full 16-bit address across states T1 and T2?",
+              "choices": [
+                "PMOS silicon could not physically store binary numbers wider than fourteen bits",
+                "CTC's Datapoint 2200 terminal banned memory sizes larger than fourteen binary switches",
+                "Two of the eight shared pins during T1 were permanently wired to split power rails",
+                "Two of the eight shared pins during T2 had to carry cycle-control bits instead of address bits"
+              ],
+              "correct_index": 3,
+              "explanation": "With 8 address bits sent in T1 and 2 pins of T2 reserved for cycle-control bits, only 6 pins remained for upper address bits, yielding $$8 + 6 = 14$$ address bits."
+            },
+            {
+              "id": "q_038",
+              "prompt": "How did the Intel 8008 handle external memory chips that responded too slowly for state T3?",
+              "choices": [
+                "It automatically halved its $$\\phi_1$$ and $$\\phi_2$$ clock speeds until the program ended",
+                "It paused in extra WAIT states inserted between T2 and T3 until memory signaled READY",
+                "It skipped state T2 and guessed the upper six address bits from the previous byte",
+                "It halted permanently and flashed an error pattern across pins S0 through S2"
+              ],
+              "correct_index": 1,
+              "explanation": "When slow memory held the READY pin inactive, the 8008 inserted WAIT states between T2 and T3 so the external memory had time to supply or absorb the byte."
+            }
+          ]
+        },
+        {
+          "id": "ch_020",
+          "title": "When Half the Address Vanishes Into Thin Air",
+          "content_markdown": "Intel's 18-pin DIP compromise kept the 8008 compatible with familiar memory-chip packages, and 3-cycle time-multiplexing proved a clever workaround could cram 24 bits of bus conversation through eight shared legs. Every transfer ran its faithful machine cycle—low address in T1, high address and cycle type in T2, data in T3—even if burning extra ticks made an already slow $$500\\text{ kHz}$$ chip feel slower still.\n\nYet the nastiest surprise waited just outside those 18 metal legs. Think carefully about what happens the instant state T1 flips into state T2: the lower 8 address bits disappear off pins `D0`–`D7` to make room for the upper bits! Ordinary RAM and ROM chips expect all 14 address wires held rock-steady for the entire read or write. Next, we zoom out onto the circuit board to see the army of external helper chips needed just to catch the 8008's fleeting words.",
+          "questions": [
+            {
+              "id": "q_039",
+              "prompt": "What direct performance penalty did 3-cycle time-multiplexing inflict on the Intel 8008?",
+              "choices": [
+                "It prevented the processor from reading ASCII characters wider than six binary bits",
+                "It forced programmers to rewire the 18-pin DIP socket between every read and write",
+                "It burned extra clock ticks announcing addresses before moving data, slowing instructions to 5–11 cycles",
+                "It blocked the chip from executing internal arithmetic during states T4 and T5"
+              ],
+              "correct_index": 2,
+              "explanation": "Taking multiple clock phases just to broadcast address and control bits across shared pins—plus internal T4/T5 execution states—pushed instruction times to 5–11 clock cycles."
+            },
+            {
+              "id": "q_040",
+              "prompt": "What immediate hardware problem did the 8008's time-multiplexed T1 and T2 outputs pose for ordinary RAM and ROM chips?",
+              "choices": [
+                "Memory needs all 14 address bits steady at once, but T2 overwrites T1's bits",
+                "Memory chips reject electrical signals transmitted through an 18-pin ceramic package",
+                "Memory cannot read bytes unless every data pin runs at minus nine volts",
+                "Memory chips automatically erase themselves whenever a WAIT state pauses execution"
+              ],
+              "correct_index": 0,
+              "explanation": "Because the 8008 removes the low address bits from D0–D7 as soon as T2 begins—and removes the high bits in T3—standard memory cannot see a complete steady address without external capture hardware."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_05",
+      "title": "5. The Hidden Hardware Tax: 20 to 30 External TTL Glue Chips",
+      "summary": "Uncover the engineering irony behind the 8008's tiny package: because standard RAM and ROM chips require steady, unbroken address lines rather than fleeting multiplexed bursts, every 8008 computer had to surround the processor with 20 to 30 external TTL glue logic chips. Using everyday analogies like clipboards and traffic controllers, unpack how external address latches froze the T1 and T2 address and cycle bits, how state-decoding gates read the S0–S2 status pins and SYNC signal to choreograph reads and writes, and how weak PMOS pin drive forced designers to add bus transceivers, buffers, and clock drivers that often cost far more than the CPU itself.",
+      "introduced_terms": [
+        "TTL glue logic",
+        "address latch",
+        "bus transceiver"
+      ],
+      "chunks": [
+        {
+          "id": "ch_021",
+          "title": "A Single-Chip CPU Surrounded by Thirty Bodyguards",
+          "content_markdown": "Pop open the metal cover of an early 1973 Intel 8008 computer, and an ironic sight jumps straight out at you. Right in the middle sits the celebrated 'computer on a chip'—a tiny 18-pin ceramic bug smaller than your thumb—yet packed tightly around it like bodyguards around a fragile diplomat sit **twenty to thirty extra standard TTL chips** filling the circuit board.\n\nUnlike the 4-bit Intel 4004, which came with Intel's custom-designed MCS-4 companion memory chips built specifically to understand multiplexed cycles, the 8008 had to communicate with ordinary off-the-shelf RAM, ROM, and input-output chips. Because the 8008 wiped each half of its address off pins `D0`–`D7` a microsecond after sending it, standard memory parts were completely blind to it. System designers therefore had to build a dense perimeter of **TTL glue logic**—standard 7400-series support chips wired together to translate the 8008's fleeting multiplexed signals into steady, usable computer buses.",
+          "questions": [
+            {
+              "id": "q_041",
+              "prompt": "Why did an Intel 8008 computer board typically surround the 'single-chip' processor with 20 to 30 external TTL chips?",
+              "choices": [
+                "The 8008 contained no arithmetic circuits and offloaded all addition to external TTL chips",
+                "Standard off-the-shelf memory and I/O chips could not decode the 8008's fleeting multiplexed pins directly",
+                "Intel required builders to duplicate the 8008's internal registers externally in case of PMOS failure",
+                "Federal safety inspectors mandated twenty backup fuses for every dual-voltage PMOS microprocessor"
+              ],
+              "correct_index": 1,
+              "explanation": "Unlike the 4004's custom MCS-4 companion chips, ordinary memory chips could not interpret the 8008's time-multiplexed 18-pin bus directly, requiring 20–30 external TTL support chips."
+            },
+            {
+              "id": "q_042",
+              "prompt": "What general function does TTL glue logic perform on an early microprocessor motherboard?",
+              "choices": [
+                "It physically bonds fragile ceramic chip packages onto fiberglass boards during soldering",
+                "It stores long-term user programs permanently on removable magnetic audio cassettes",
+                "It replaces the processor's silicon-gate PMOS die whenever clock speeds exceed 500 kHz",
+                "It connects and adapts mismatched signals between the CPU and standard memory or I/O chips"
+              ],
+              "correct_index": 3,
+              "explanation": "TTL glue logic consists of standard off-the-shelf logic chips that bridge timing, signal-capturing, and electrical gaps between a microprocessor and the rest of the system."
+            }
+          ]
+        },
+        {
+          "id": "ch_022",
+          "title": "Clipboards for Vanishing Addresses",
+          "content_markdown": "The most urgent job for that surrounding TTL circuitry was catching the 8008's disappearing address bits before they vanished. Picture a hurried clerk who shouts a house number for one second and immediately replaces it with a street name a second later, while a warehouse worker must see the entire street address all at once to fetch the right box.\n\nHardware engineers solved that mismatch with an **address latch**—an external memory-holding logic chip that behaves like a snapshot clipboard, freezing whatever binary pattern appears on its input wires the instant a 'capture' pulse fires and holding those outputs rock-steady until the next cycle. Every 8008 computer needed two banks of address latches: the first clipboard snapped and held the lower 8 address bits during state T1, while the second froze the upper 6 address bits and 2 cycle-control bits during state T2—handing RAM and ROM a complete, unwavering 14-bit address throughout state T3.",
+          "questions": [
+            {
+              "id": "q_043",
+              "prompt": "What role does an external address latch play in an Intel 8008 computer?",
+              "choices": [
+                "It captures fleeting multiplexed address bits and holds them steady for memory chips",
+                "It multiplies the processor's 500 kHz clock speed to match faster RAM chips",
+                "It translates 8-bit ASCII letters automatically into decimal digits for display",
+                "It physically locks the 18-pin ceramic CPU inside its socket to prevent vibration"
+              ],
+              "correct_index": 0,
+              "explanation": "An address latch snaps and holds the momentary address bits sent during T1 and T2 so external memory chips see a steady, continuous 14-bit address during T3."
+            },
+            {
+              "id": "q_044",
+              "prompt": "Why did every Intel 8008 system need two separate external address-latch stages rather than a single 8-bit latch?",
+              "choices": [
+                "One latch stored even memory addresses while the second stored odd memory addresses",
+                "PMOS voltages destroyed one latch every cycle so a spare had to take over immediately",
+                "The 8008 transmitted its 14-bit address in two separate turns across T1 and T2",
+                "RAM chips required every 8-bit byte to be duplicated twice for error correction"
+              ],
+              "correct_index": 2,
+              "explanation": "Because the 8008 sent the lower 8 address bits in T1 and the upper 6 address bits (plus 2 cycle-control bits) in T2, one latch stage had to capture T1 and a second had to capture T2."
+            }
+          ]
+        },
+        {
+          "id": "ch_023",
+          "title": "Reading the CPU's Mood Through S0, S1, and S2",
+          "content_markdown": "Those twin clipboard latches could not guess blindly when to snap a photograph. How did the surrounding circuit board know whether pins `D0`–`D7` currently carried a T1 low address, a T2 high address, or a T3 data byte? That is why Intel dedicated three pins—`S0`, `S1`, and `S2`—plus a `SYNC` timing pulse to broadcast the CPU's internal state at every beat.\n\nEngineers wired an external cluster of TTL state-decoder gates to monitor that 3-bit code continuously. The instant `S0`–`S2` announced state T1, the decoder fired a brief trigger pulse into the low-address latch. One tick later, when `S0`–`S2` shifted to T2, it triggered the high-address and cycle-control latch. Finally, when state T3 arrived, another layer of decoding logic inspected those two latched cycle-control bits and activated the exact memory read, memory write, instruction fetch, or I/O line required.",
+          "questions": [
+            {
+              "id": "q_045",
+              "prompt": "How did external TTL state-decoder circuits know the exact clock tick to trigger the T1 latch versus the T2 latch?",
+              "choices": [
+                "By counting fixed numbers of instructions executed since the power switch flipped on",
+                "By measuring voltage drops across the processor's split $$+5\\text{ V}$$ and $$-9\\text{ V}$$ rails",
+                "By reading special timing bytes embedded inside every user program on cassette tape",
+                "By decoding the 3-bit state code broadcast continuously on pins S0, S1, and S2 with SYNC"
+              ],
+              "correct_index": 3,
+              "explanation": "The 8008 broadcast its current machine-cycle state (such as T1, T2, T3, or WAIT) on status pins S0–S2 alongside SYNC so external TTL decoders could trigger each latch at the exact right moment."
+            },
+            {
+              "id": "q_046",
+              "prompt": "Once state T3 began, what guided external TTL logic to decide between a memory read, a memory write, or an I/O transfer?",
+              "choices": [
+                "The lowest two bits of the ASCII character stored in the keyboard buffer",
+                "The two cycle-control bits that had been captured by the T2 latch one tick earlier",
+                "The relative frequency ratio between the $$\\phi_1$$ and $$\\phi_2$$ clock phases",
+                "Manual toggle switches that the operator flipped before each individual machine cycle"
+              ],
+              "correct_index": 1,
+              "explanation": "During T2, the 8008 sent two cycle-control bits alongside the upper six address bits; latched externally, those two bits told the board what type of bus operation to perform in T3."
+            }
+          ]
+        },
+        {
+          "id": "ch_024",
+          "title": "Weak Pins, Traffic Collisions, and False Economy",
+          "content_markdown": "Even with latches and state decoders wired up, two nasty electrical traps remained on `D0`–`D7`. First, the 8008's tiny PMOS output transistors had very little electrical muscle—barely enough current to drive a single standard TTL chip input, let alone a full bank of RAM and ROM. Second, because `D0`–`D7` carried both outgoing signals and incoming data over the same wires, letting memory speak while the CPU was still transmitting created a damaging electrical collision.\n\nDesigners therefore added external **bus transceivers**—bidirectional driver chips acting like one-way-at-a-time signal amplifiers that boosted weak PMOS signals and tightly gated traffic direction—plus high-voltage clock drivers and extra gates to place an interrupt command onto the bus when a device demanded urgent attention. Intel saved a dollar or two on an 18-pin package, yet forced buyers to spend 20 to 40 dollars on extra TTL chips, larger boards, and heavier power supplies.",
+          "questions": [
+            {
+              "id": "q_047",
+              "prompt": "Why did Intel 8008 boards require external bus transceivers connected to pins D0 through D7?",
+              "choices": [
+                "To convert 8-bit parallel bytes into bit-serial signals for audio cassette drives",
+                "To store permanent operating-system code inside ultraviolet-erasable glass windows",
+                "To amplify weak PMOS pin signals and prevent directional collisions on the shared bus",
+                "To combine the $$+5\\text{ V}$$ and $$-9\\text{ V}$$ power rails into a single alternating wall current"
+              ],
+              "correct_index": 2,
+              "explanation": "The 8008's PMOS pins had very low electrical drive capability and shared D0–D7 for both input and output; bus transceivers amplified the signals and prevented CPU-memory bus conflicts."
+            },
+            {
+              "id": "q_048",
+              "prompt": "What ironic economic trade-off did Intel's 18-pin DIP cost-cutting create for 8008 system builders?",
+              "choices": [
+                "Saving pennies on the CPU package forced customers to buy dozens of costly TTL chips",
+                "Cutting pin count made the 8008 so inexpensive that TTL factories closed permanently",
+                "Using an 18-pin package removed the need for external RAM on commercial boards",
+                "Smaller ceramic housings allowed 8008 boards to run without external power supplies"
+              ],
+              "correct_index": 0,
+              "explanation": "What looked like packaging economy inside Intel imposed a steep hidden hardware tax on customers, who spent far more on 20–30 external TTL chips, board area, and engineering effort."
+            }
+          ]
+        },
+        {
+          "id": "ch_025",
+          "title": "Paying the External Tax—Before Meeting the Internal Walls",
+          "content_markdown": "Zoom back out and study that bustling 1973 motherboard. Although magazine ads hailed the Intel 8008 as a 'computer on a chip,' any working machine was really a tightly choreographed village of 20 to 30 TTL glue logic chips—address latches freezing T1 and T2, state decoders reading `S0`–`S2`, bus transceivers boosting weak pins, plus clock drivers and interrupt gates—all keeping one constrained 18-pin processor connected to reality.\n\nEvery extra chip on that board traced straight back to forcing 24 bits of traffic through eight weak PMOS legs. Yet suppose an engineer patiently wired up all thirty glue chips, tamed the split power rails, and finally handed the 8008 a clean, rock-steady 14-bit memory bus. Two even more startling constraints still waited *inside* the processor's own silicon blueprint. Next, we cross inside the 8008 to confront its 16 KB memory ceiling and its notoriously fragile 7-level call stack.",
+          "questions": [
+            {
+              "id": "q_049",
+              "prompt": "Which group of components formed the backbone of the Intel 8008's external TTL glue logic?",
+              "choices": [
+                "Cathode-ray screens, keyboard matrices, and dual magnetic cassette motors",
+                "Address latches, state-decoding gates, bus transceivers, and clock drivers",
+                "Floating-point math units, color framebuffers, and multi-channel sound chips",
+                "Hardwired mainframe plugboards, mercury delay tubes, and paper-tape punches"
+              ],
+              "correct_index": 1,
+              "explanation": "An 8008 system relied on address latches, state decoders (reading S0–S2 and SYNC), bus transceivers/buffers, and high-voltage clock drivers to interface with standard memory."
+            },
+            {
+              "id": "q_050",
+              "prompt": "Why did the 8-bit Intel 8008 demand far more external TTL glue chips than Intel's earlier 4-bit 4004 chipset?",
+              "choices": [
+                "The 4004 ran on a 40-pin package that never required time-multiplexing at all",
+                "The 8008 was built from discrete vacuum tubes rather than dense MOS silicon",
+                "The 4004 stored all user memory internally and avoided talking to external chips",
+                "The 4004 used bespoke MCS-4 memory chips while the 8008 used standard memory"
+              ],
+              "correct_index": 3,
+              "explanation": "The 4004's custom MCS-4 companion chips understood its multiplexed cycles natively, whereas the 8008 interfaced with standard RAM and ROM that required 20–30 external TTL glue chips."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_06",
+      "title": "6. The 16 KB Ceiling \u0026 the Fragile 7-Level Call Stack",
+      "summary": "Connect the 8008's 14 address bits directly to its hard $$2^{14} = 16,384$$-byte (16 KB) memory ceiling, then step inside the chip to examine its most notorious architectural constraint: an on-chip hardware call stack with just 8 slots—1 for the active Program Counter and only 7 for nested subroutine return addresses. Discover why the absence of an external stack pointer and PUSH or POP instructions made software design precarious, how an 8th nested call or an untimely hardware interrupt triggered silent circular stack wrap-around that overwrote the oldest return address, and why saving registers safely during an interrupt was a chronic engineering headache.",
+      "introduced_terms": [
+        "hardware call stack",
+        "stack pointer",
+        "stack wrap-around"
+      ],
+      "chunks": [
+        {
+          "id": "ch_026",
+          "title": "Living Under a Sixteen-Kilobyte Roof",
+          "content_markdown": "Once external address latches finished stitching states T1 and T2 together into a steady 14-bit address bus, how big was the Intel 8008's world? Fourteen binary wires can spell out exactly $$2^{14} = 16,384$$ distinct byte addresses—imposing a hard memory ceiling of **16 kilobytes (16 KB)** shared across both program instructions and working data.\n\nNext to a 4-bit calculator processor squeezed into 4 KB of read-only program space, 16 KB looked roomy enough for an intelligent terminal, a cash register, or a laboratory controller. Yet the moment ambitious programmers imagined fitting a language translator, a text editor, and user files into one machine, 16 KB began feeling like a tiny studio apartment with no closet space. Even tighter than that 16 KB roof, however, was an invisible seven-step cage hidden inside the 8008's silicon whenever a program tried to call reusable helper routines.",
+          "questions": [
+            {
+              "id": "q_051",
+              "prompt": "What architectural limit capped the Intel 8008's maximum memory at $$16,384$$ bytes (16 KB)?",
+              "choices": [
+                "Early RAM factories could not manufacture memory chips larger than sixteen kilobytes",
+                "Split $$+5\\text{ V}$$ and $$-9\\text{ V}$$ power rails lost electrical stability beyond sixteen kilobytes",
+                "Its multiplexed T1 and T2 cycles produced a 14-bit address bus, giving $$2^{14} = 16,384$$ locations",
+                "Intel disabled higher memory addresses in software to protect mainframe sales"
+              ],
+              "correct_index": 2,
+              "explanation": "Sending 8 address bits in T1 and 6 address bits in T2 yielded a 14-bit address width, which can address at most $$2^{14} = 16,384$$ bytes (16 KB)."
+            },
+            {
+              "id": "q_052",
+              "prompt": "How did the Intel 8008 organize program instructions and working data within its 16 KB address ceiling?",
+              "choices": [
+                "Both program instructions and working data shared the same 16 KB unified address space",
+                "Program instructions occupied 16 KB of ROM while data received a separate 64 KB bank",
+                "Program instructions lived exclusively inside the CPU while all 16 KB held ASCII text",
+                "Half of the 16 KB space was permanently reserved for external address latches"
+              ],
+              "correct_index": 0,
+              "explanation": "Unlike Harvard-style microcontrollers with separate program and data spaces, the 8008's single 14-bit address bus spanned one unified 16 KB memory space shared by code and data."
+            }
+          ]
+        },
+        {
+          "id": "ch_027",
+          "title": "Seven Bookmarks Etched in Silicon",
+          "content_markdown": "Whenever any computer program detours into a reusable helper subroutine—say, printing a character or multiplying two numbers—it must leave behind a bookmark recording the exact line to return to when the helper finishes. More flexible processors keep those bookmarks out in external RAM, using a **stack pointer**—a dedicated internal storage slot, or register, holding the RAM address of the top of the bookmark pile—so subroutines can nest dozens or hundreds of layers deep until RAM itself runs dry.\n\nThe Intel 8008 had **no stack pointer at all**. Copying CTC's compact terminal design, Intel etched a fixed **hardware call stack** directly onto the processor die: an internal 8-slot notepad where each slot held one 14-bit address. Because one of those eight slots always served as the active Program Counter tracking the currently executing instruction, only **7 slots** remained to hold nested subroutine return addresses.",
+          "questions": [
+            {
+              "id": "q_053",
+              "prompt": "Although the Intel 8008 had 8 internal 14-bit address slots on the chip, why could programs nest only 7 subroutine calls deep?",
+              "choices": [
+                "One slot was permanently hardwired to hold the starting address of the keyboard driver",
+                "One slot always acted as the active Program Counter for the currently running instruction",
+                "Intel reserved the eighth slot exclusively for storing 8-bit ASCII arithmetic results",
+                "PMOS leakage caused the eighth silicon slot to lose its charge after every machine cycle"
+              ],
+              "correct_index": 1,
+              "explanation": "Out of the 8 on-chip 14-bit stack registers, one slot held the currently active Program Counter, leaving just 7 slots for saved return addresses."
+            },
+            {
+              "id": "q_054",
+              "prompt": "How does a flexible RAM stack guided by a stack pointer differ from the Intel 8008's hardware call stack?",
+              "choices": [
+                "A stack pointer restricts programs to four nested calls while a hardware stack allows sixty-four",
+                "A stack pointer operates only during power-up while a hardware stack runs during math",
+                "A stack pointer works exclusively with bit-serial TTL boards rather than MOS chips",
+                "A stack pointer stores bookmarks in external RAM so call depth scales with available memory"
+              ],
+              "correct_index": 3,
+              "explanation": "With a stack pointer pointing into external RAM, subroutine nesting can grow as large as available memory, whereas the 8008's fixed on-chip hardware call stack hit a hard wall at 7 levels."
+            }
+          ]
+        },
+        {
+          "id": "ch_028",
+          "title": "The Silent Merry-Go-Round: Stack Wrap-Around",
+          "content_markdown": "Watch how quickly seven levels vanish in real software. Suppose your main program calls a 'print invoice' subroutine (level 1), which calls 'format row' (level 2), which calls 'print number' (level 3), which calls 'divide by ten' (level 4), and three short helper steps later you sit at level 7. Every single bookmark slot inside the 8008 is now full.\n\nNow imagine that level 7 calls one tiny utility routine—an 8th nested call. Did the 8008 raise an error flag or halt safely? Not a whisper. Internally, its 8-slot hardware call stack behaved like an 8-seat circular merry-go-round tracked by a simple 3-bit counter. Pushing an 8th return address caused silent **stack wrap-around**: the counter spun back to slot zero and quietly overwrote the very oldest return address! The program kept humming cheerfully through the inner routines—only to leap wildly into garbage memory minutes later when it tried returning all the way home.",
+          "questions": [
+            {
+              "id": "q_055",
+              "prompt": "What happened inside the Intel 8008 when a program made an 8th nested subroutine call?",
+              "choices": [
+                "The circular internal stack wrapped around silently and overwrote the oldest return address",
+                "The processor automatically spilled the overflow return address into external RAM",
+                "A dedicated hardware alarm pin halted the CPU before corrupting any saved address",
+                "The 8008 ignored the eighth call instruction and skipped straight to the next line"
+              ],
+              "correct_index": 0,
+              "explanation": "Because the 8-entry on-chip stack operated as a circular buffer with no overflow detection, an 8th nested call wrapped around and silently clobbered the oldest return address."
+            },
+            {
+              "id": "q_056",
+              "prompt": "Why was circular stack wrap-around on the Intel 8008 so treacherous to debug?",
+              "choices": [
+                "It physically melted the silicon-gate PMOS transistors inside the 18-pin package",
+                "It erased the entire 16 KB external RAM bank the instant the eighth call occurred",
+                "No error signal fired at the overflow moment, so the crash struck much later upon returning",
+                "It reversed the direction of the $$\\phi_1$$ and $$\\phi_2$$ clocks across the whole circuit board"
+              ],
+              "correct_index": 2,
+              "explanation": "Because no overflow warning occurred, inner subroutines kept returning normally until the program finally unwound to the corrupted oldest slot and jumped to the wrong address."
+            }
+          ]
+        },
+        {
+          "id": "ch_029",
+          "title": "Why Interrupts Turned the Tiny Stack Into a Minefield",
+          "content_markdown": "Carefully counting call depths in your own program was nerve-wracking enough; adding external hardware interrupts turned it into a minefield. When a keyboard keystroke or timer pulse poked the 8008's `INTERRUPT` pin at an unpredictable moment, answering that interrupt consumed one more precious slot on the hardware call stack to remember where the main program paused. If your code happened to be seven levels deep when someone tapped a key—instant, silent stack wrap-around!\n\nWorse still, the 8008 had **no `PUSH` or `POP` instructions** to quickly save its internal working registers onto a stack and restore them afterward. When an interrupt handler jumped in, it needed to preserve whatever values the main program held in its registers before borrowing them—yet without `PUSH` and `POP`, stashing registers safely in RAM without first clobbering a register to point at RAM was famously awkward, often forcing engineers to reserve dedicated scratch registers permanently off-limits to normal code.",
+          "questions": [
+            {
+              "id": "q_057",
+              "prompt": "Why did unpredictable external interrupts make the Intel 8008's 7-level call stack especially dangerous?",
+              "choices": [
+                "Interrupt signals temporarily shrank the 8008's memory ceiling from 16 KB down to 4 KB",
+                "Interrupts cleared all seven stack slots to zero before jumping to the handler routine",
+                "Interrupts forced the 8008 to switch from 8-bit execution into 4-bit calculator mode",
+                "An interrupt used a stack slot itself, causing wrap-around if code was already 7 levels deep"
+              ],
+              "correct_index": 3,
+              "explanation": "Handling an interrupt pushed a return address onto the same 7-level hardware call stack; if the main program was already at depth 7, an unexpected interrupt silently overwrote the oldest return address."
+            },
+            {
+              "id": "q_058",
+              "prompt": "Besides stack overflow risk, what major missing capability made writing safe interrupt handlers notoriously painful on the 8008?",
+              "choices": [
+                "The processor lacked any way to receive electrical signals from keyboards or timers",
+                "It had no PUSH or POP instructions to easily save and restore working registers on a stack",
+                "External address latches shut off automatically whenever an interrupt handler started",
+                "Interrupt routines could execute only a single arithmetic instruction before halting"
+              ],
+              "correct_index": 1,
+              "explanation": "With no external RAM stack and no PUSH/POP instructions, saving the interrupted program's registers cleanly without overwriting register contents was an infamous 8008 programming headache."
+            }
+          ]
+        },
+        {
+          "id": "ch_030",
+          "title": "Terminal Shortcuts Meet General-Purpose Ambitions",
+          "content_markdown": "Looking across Section 6, you can trace every quirk straight back to the Datapoint 2200's humble birthplace. Inside a compact intelligent terminal running tight, predictable cassette routines, a 16 KB memory roof ($$2^{14}$$ bytes) and a 7-level on-chip hardware call stack saved precious transistors and worked well enough. The moment customers began turning the 8008 into a general-purpose computing engine, however, the lack of a stack pointer, missing `PUSH` and `POP` instructions, and silent circular stack wrap-around under nested calls or interrupts turned into glaring traps.\n\nNotice the teasing clue we just uncovered during that interrupt puzzle: why couldn't an interrupt routine simply copy a register straight into a fixed RAM slot in one clean instruction? To answer that, we now step right onto the 8008's programmer workbench to meet its seven real registers—and the mysterious phantom eighth register called `M`.",
+          "questions": [
+            {
+              "id": "q_059",
+              "prompt": "Why did the Intel 8008's 16 KB address ceiling and 7-level on-chip call stack exist in the first place?",
+              "choices": [
+                "Intel copied them directly from IBM's giant System/360 mainframe architecture",
+                "Texas Instruments held patents forbidding any microprocessor from having an 8th stack level",
+                "They originated as transistor-saving choices for CTC's compact Datapoint 2200 terminal",
+                "Federal rules restricted commercial microchips to 16 KB of memory until 1975"
+              ],
+              "correct_index": 2,
+              "explanation": "The 8008 inherited CTC's compact terminal design, where 16 KB and a small fixed on-chip call stack conserved silicon—limits that later pinched general-purpose software builders."
+            },
+            {
+              "id": "q_060",
+              "prompt": "Which pair of missing features kept Intel 8008 programmers from storing arbitrary subroutine depth and saved registers in external RAM?",
+              "choices": [
+                "An external stack pointer and PUSH/POP instructions",
+                "A 14-bit address bus and external address latches",
+                "A Program Counter and an INTERRUPT input pin",
+                "Two-phase clocks and silicon-gate PMOS transistors"
+              ],
+              "correct_index": 0,
+              "explanation": "Without an external stack pointer and PUSH/POP instructions, 8008 software was confined to the tiny 7-level on-chip call stack and lacked an easy way to save registers onto RAM."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_07",
+      "title": "7. Registers A through L \u0026 Virtual M Indirect Addressing",
+      "summary": "Tour the programmer's workbench inherited directly from the Datapoint 2200: the primary A accumulator (whose arithmetic and logic updates four status flags—Carry, Zero, Sign, and Parity), general-purpose scratch registers B, C, D, and E, and the H (High) and L (Low) address pair. Unpack how the 8008 omitted direct memory-addressing data instructions altogether in favor of register-indirect addressing through virtual register M—a conceptual window pointing to whichever RAM byte sits at address HL—including multi-step HL loading, manual 256-byte carry stepping, the clever repurposing of 'copy M to M' as HALT, and why this exact register layout echoed into the 8080, Z80, and x86.",
+      "introduced_terms": [
+        "accumulator",
+        "register-indirect addressing",
+        "virtual register M"
+      ],
+      "chunks": [
+        {
+          "id": "ch_031",
+          "title": "Seven Tiny Workbenches—and One Missing Instruction",
+          "content_markdown": "Open the 1972 Intel 8008 programmer's manual and you meet seven tiny, ultra-fast 8-bit scratchpad drawers built directly inside the silicon—carried over intact from CTC's Datapoint 2200. At the heart of everything sits register **`A`**, the **accumulator**: the primary math and logic workbench where additions, subtractions, comparisons, and logic tests happen and leave their answers. Each calculation in `A` automatically updates four one-bit status flags: **Carry** (did math overflow past 255?), **Zero** (was the result zero?), **Sign** (does the top bit indicate a negative number?), and **Parity** (does the byte hold an even count of 1s?).\n\nBeside `A` sit four general-purpose byte registers (`B`, `C`, `D`, and `E`) plus a special pair named **`H`** and **`L`**. Yet scan the entire instruction table and an astonishing gap jumps out: the 8008 had not a single instruction to load or store a byte straight from a fixed memory address!",
+          "questions": [
+            {
+              "id": "q_061",
+              "prompt": "What central function does the accumulator (register A) serve inside the Intel 8008?",
+              "choices": [
+                "It stores the 14-bit address of the next instruction waiting in external ROM",
+                "It acts as the main arithmetic and logic workbench where calculation results land",
+                "It holds seven nested subroutine return addresses inside a circular silicon ring",
+                "It drives the external high-voltage $$\\phi_1$$ and $$\\phi_2$$ clock phases"
+              ],
+              "correct_index": 1,
+              "explanation": "In the 8008's accumulator-centered architecture, register A is the primary workspace for arithmetic and logic operations, receiving calculation results and updating condition flags."
+            },
+            {
+              "id": "q_062",
+              "prompt": "Which four status condition flags did arithmetic and logic operations in the Intel 8008 update?",
+              "choices": [
+                "Ready, Interrupt, Sync, and Wait",
+                "Fetch, Read, Write, and Input-Output",
+                "High, Low, Virtual, and Halt",
+                "Carry, Zero, Sign, and Parity"
+              ],
+              "correct_index": 3,
+              "explanation": "Calculations in the 8008 accumulator set or cleared four condition flags—Carry, Zero, Sign, and Parity—which conditional jumps and calls tested."
+            }
+          ]
+        },
+        {
+          "id": "ch_032",
+          "title": "Reaching RAM Through Virtual Register M",
+          "content_markdown": "How can a processor read or modify external RAM if it has zero direct memory load or store instructions? CTC's compact answer—adopted wholesale by the 8008—was **register-indirect addressing**: instead of writing a 14-bit memory address inside the load or store command, the CPU looks inside a designated pair of registers to learn which RAM address to touch. On the 8008, **`H`** (High) held the upper 6 address bits and **`L`** (Low) held the lower 8 address bits, teaming up as the 14-bit pointer `HL`.\n\nEven cleverer was how the 8008 encoded registers inside every instruction using 3 binary bits—giving $$2^3 = 8$$ codes (`000` through `111`). Seven codes named the real registers `A, B, C, D, E, H, L`, while code `111` designated **virtual register M**: not a physical storage box inside the chip, but an open doorway pointing straight to whichever byte in external RAM currently sat at address `HL`!",
+          "questions": [
+            {
+              "id": "q_063",
+              "prompt": "How does register-indirect addressing let the Intel 8008 read and write RAM without direct memory load or store commands?",
+              "choices": [
+                "It uses the address stored inside registers H and L to tell the CPU which RAM byte to access",
+                "It copies the entire 16 KB RAM bank into the CPU's seven internal registers at startup",
+                "It encodes a full 14-bit memory address inside every single 8-bit arithmetic instruction",
+                "It relies on external TTL address latches to invent sequential memory addresses automatically"
+              ],
+              "correct_index": 0,
+              "explanation": "With register-indirect addressing, the programmer loads a 14-bit address into the H and L register pair, and subsequent memory operations indirectly access whatever RAM byte HL points to."
+            },
+            {
+              "id": "q_064",
+              "prompt": "What is 'virtual register M' in the Intel 8008 architecture?",
+              "choices": [
+                "An eighth physical 8-bit storage drawer reserved exclusively for interrupt handlers",
+                "A 14-bit internal register holding the maximum size of installed RAM on the board",
+                "A symbolic register name that routes instructions to the external RAM byte addressed by HL",
+                "A hidden flag bit inside the accumulator indicating whether memory chips are ready"
+              ],
+              "correct_index": 2,
+              "explanation": "Virtual register M is not a physical register inside the CPU; using code 111 for M tells the 8008 to reach out to the memory location currently pointed to by H and L."
+            }
+          ]
+        },
+        {
+          "id": "ch_033",
+          "title": "Doing the HL Dance One Byte at a Time",
+          "content_markdown": "Walk through one everyday programming chore to feel how `H`, `L`, and virtual `M` behaved in action. Suppose you want to grab one number sitting at RAM address 1,000—which splits into high byte 3 and low byte 232, since $$3 \\times 256 + 232 = 1,000$$—and add it to the accumulator `A`.\n\nOn a processor with direct addressing, that would take one instruction. On the Intel 8008, you ran a three-step sequence: first `LHI 3` (load High register with 3), second `LLI 232` (load Low register with 232), and finally `ADM` ('Add `M` to `A`'). The moment the 8008 decoded `ADM`, it automatically output `L` (232) during T1, output `H` (3) during T2, read the byte at address 1,000 during T3, and added it straight into `A`. Every copy or math **opcode** (numeric instruction code) that worked on `B` or `C` worked identically on RAM through `M`!",
+          "questions": [
+            {
+              "id": "q_065",
+              "prompt": "To add a byte from a specific RAM location into the accumulator A on an Intel 8008, what steps did a programmer perform?",
+              "choices": [
+                "Issue one direct add command holding the full 14-bit RAM address",
+                "Push the RAM address onto the 7-level stack and call virtual M",
+                "Load high address into H, low address into L, then add M to A",
+                "Store the 14-bit address in accumulator A before copying B into L"
+              ],
+              "correct_index": 2,
+              "explanation": "Because the 8008 lacked direct data addressing, programmers first loaded H with the upper address bits and L with the lower address bits, then operated on RAM via virtual register M."
+            },
+            {
+              "id": "q_066",
+              "prompt": "What compact design advantage did treating memory as virtual register M (code 111) give the Intel 8008?",
+              "choices": [
+                "It doubled the processor's maximum addressable RAM from 16 KB up to 32 KB",
+                "Every register-copy and math instruction automatically worked on memory without adding separate memory opcodes",
+                "It eliminated the need for external TTL address latches during machine cycles T1 and T2",
+                "It allowed two memory bytes to be added together directly without ever using accumulator A"
+              ],
+              "correct_index": 1,
+              "explanation": "Encoding M as the eighth 3-bit register slot let every move, add, subtract, or logical instruction seamlessly read or write RAM through HL, keeping the instruction decoder small."
+            }
+          ]
+        },
+        {
+          "id": "ch_034",
+          "title": "Page-Boundary Gymnastics and the Clever HALT Trick",
+          "content_markdown": "Clever as virtual `M` was for saving transistors, it brought three unforgettable quirks. First, it finally unlocks Section 6's interrupt puzzle: why couldn't an interrupt handler just stash `H` and `L` into RAM? Because writing to RAM required changing `H` and `L` first—wiping out the very numbers you wanted to save!\n\nSecond, the 8008 had no single instruction to add one to the combined 14-bit `HL` pointer. Stepping through a long list of bytes across a 256-byte boundary meant incrementing `L`, checking the Zero flag to see if `L` had wrapped from 255 back to 0, and conditionally incrementing `H`. Third, look at the register-copy command (`MOV dest, src`): what would binary `11111111`—meaning 'copy `M` onto `M`'—even do? Copying a memory byte straight back into itself served no purpose, so Intel cleverly repurposed that exact code as the processor's `HALT` instruction!",
+          "questions": [
+            {
+              "id": "q_067",
+              "prompt": "Why did advancing a memory pointer across a 256-byte page boundary require extra instructions on the Intel 8008?",
+              "choices": [
+                "External address latches locked up permanently after reading 256 consecutive bytes of RAM",
+                "Registers H and L stored only decimal digits ranging from zero through ninety-nine",
+                "Stepping past byte 255 triggered circular wrap-around inside the 7-level hardware call stack",
+                "No pair-increment opcode existed, so code tested L rolling over before incrementing H"
+              ],
+              "correct_index": 3,
+              "explanation": "Because the 8008 could only increment 8-bit registers individually, stepping HL across a 256-byte boundary meant incrementing L, testing the Zero flag for rollover, and conditionally incrementing H."
+            },
+            {
+              "id": "q_068",
+              "prompt": "How did Intel's designers cleverly put the useless 'copy M to M' opcode pattern to work?",
+              "choices": [
+                "They reassigned that opcode pattern to serve as the HALT instruction",
+                "They used it to automatically clear all seven slots of the hardware call stack",
+                "They reserved it to switch the CPU from PMOS split rails into single-rail mode",
+                "They made it increment both registers H and L simultaneously in one cycle"
+              ],
+              "correct_index": 0,
+              "explanation": "Since copying a memory byte to the exact same memory address was pointless, Intel reused the 'MOV M, M' bit pattern (11111111) as the HALT instruction."
+            }
+          ]
+        },
+        {
+          "id": "ch_035",
+          "title": "Seven Letters That Echoed All the Way to x86",
+          "content_markdown": "Pause to appreciate the extraordinary staying power of those seven modest Datapoint 2200 letters: **`A, B, C, D, E, H, L`**—joined by the phantom doorway **`M`**. Yes, loading `H` and `L` for every byte felt wordy, stepping across 256-byte boundaries took extra care, and relying solely on `HL` for memory access compounded the interrupt-saving nightmare. Yet this tidy accumulator-centered register set packed genuine general-purpose power into just 3,500 PMOS transistors.\n\nEven more astonishingly, those exact register names became the enduring family DNA of Intel's 8080, Zilog's Z80, and—widened into `AL, BL, CL, DL`—even the 8086 and modern x86-64 chips running today! Imperfect as the 8008 was with its 18 pins, thirty glue chips, and 7-level stack, daring builders on both sides of the Atlantic soon proved it could power real desktop computers. Next, we meet the pioneering trio of 8008 microcomputers that ignited the personal-computing revolution.",
+          "questions": [
+            {
+              "id": "q_069",
+              "prompt": "What long-term architectural legacy grew out of the Intel 8008's A, B, C, D, E, H, L, and M register set?",
+              "choices": [
+                "It was abandoned immediately in 1974 because no later processor used an accumulator",
+                "It shaped the enduring register lineage of the Intel 8080, Z80, and x86",
+                "It became exclusively a calculator standard inside Texas Instruments' 4-bit TMS1000 chips",
+                "It remained legally restricted to French agricultural computers until the early 1990s"
+              ],
+              "correct_index": 1,
+              "explanation": "Inherited from the Datapoint 2200, the 8008's seven-register plus virtual-M model was carried directly into the Intel 8080 and Z80 and echoed in the 8086/x86 family."
+            },
+            {
+              "id": "q_070",
+              "prompt": "Connecting Section 6 and Section 7, why did virtual M addressing make saving registers during an interrupt especially difficult on the 8008?",
+              "choices": [
+                "Virtual register M automatically turned off whenever the INTERRUPT pin went active",
+                "The accumulator A was physically disconnected from pins D0–D7 during interrupt service",
+                "Writing any register to RAM required modifying H and L first, destroying their prior values",
+                "Condition flags prevented registers B, C, D, and E from being copied into external memory"
+              ],
+              "correct_index": 2,
+              "explanation": "With no PUSH/POP and no direct memory stores, an interrupt handler had to load a scratch RAM address into H and L to save registers—clobbering whatever H and L held before the interrupt."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_08",
+      "title": "8. First Wave of 8008 Microcomputers: Micral N, SCELBI-8H \u0026 Mark-8",
+      "summary": "Meet the pioneering 1973–1974 machines that tamed the 8008 and its TTL glue chips before the Altair 8800 ever existed, launching the microcomputer era on both sides of the Atlantic. Compare France's Micral N—built by François Gernelle and André Truong's R2E for agricultural lab automation as the world's first commercial, fully assembled microcomputer with a modular backplane bus—against America's first advertised U.S. kit computer, Nat Wadsworth's QST-promoted SCELBI-8H, and Virginia Tech graduate student Jonathan Titus's July 1974 Radio-Electronics cover project, the DIY Mark-8, whose front-panel programming switches ignited nationwide hobbyist hunger.",
+      "introduced_terms": [
+        "microcomputer",
+        "backplane bus",
+        "front-panel programming"
+      ],
+      "chunks": [
+        {
+          "id": "ch_036",
+          "title": "Two Years Before the Altair: A Quiet Transatlantic Dawn",
+          "content_markdown": "Ask most tech fans to name the first small computer built around a microprocessor, and they immediately blurt out 'the Altair 8800!'—the famous January 1975 kit powered by Intel's later 8080. Yet nearly two years earlier, a bold first wave of pioneers in France and the United States had already wrangled the demanding Intel 8008 and its thirty TTL glue chips into working desktop **microcomputers**—complete general-purpose small computers whose central brain was a single microprocessor chip instead of refrigerator-sized cabinets of discrete minicomputer boards.\n\nEven more surprisingly, the world's first commercial microprocessor-based microcomputer did not emerge from a Silicon Valley garage at all. In early 1973, near Paris, a tiny French electronics firm named R2E received a contract from the French National Institute for Agricultural Research (INRA) to automate field measurements of crop evaporation cheaply—and bet the project on Intel's brand-new 8008.",
+          "questions": [
+            {
+              "id": "q_071",
+              "prompt": "What core architectural trait defines a microcomputer compared with earlier 1960s minicomputers?",
+              "choices": [
+                "It builds a complete small general-purpose computer around a single-chip microprocessor CPU",
+                "It eliminates external RAM completely by storing all user files on magnetic cassette tapes",
+                "It operates exclusively on four-bit decimal nibbles for handheld pocket calculations",
+                "It connects dozens of office terminals simultaneously to one room-sized central mainframe"
+              ],
+              "correct_index": 0,
+              "explanation": "A microcomputer is a full, compact general-purpose computer built using a single-chip microprocessor as its CPU rather than multi-board discrete minicomputer processors."
+            },
+            {
+              "id": "q_072",
+              "prompt": "What practical project sparked the creation of the world's first commercial 8008-based microcomputer in early 1973?",
+              "choices": [
+                "A Silicon Valley video-game studio building a home television console",
+                "An American bank replacing hardwired IBM terminals at branch teller desks",
+                "A French agricultural research agency seeking low-cost lab automation for crop studies",
+                "A university astronomy department calculating planetary orbits for deep-space probes"
+              ],
+              "correct_index": 2,
+              "explanation": "R2E built the Micral N in early 1973 for INRA (the French National Institute for Agricultural Research) to automate crop-evaporation measurements at a fraction of minicomputer cost."
+            }
+          ]
+        },
+        {
+          "id": "ch_037",
+          "title": "France's Micral N and the Modular Backplane Bus",
+          "content_markdown": "Engineered by **François Gernelle** under company founder **André Truong Trong Thi** at R2E, that French machine was the **Micral N**—widely recognized as the world's first commercial, fully assembled, non-kit microcomputer built around a microprocessor. Selling for roughly 8,500 French francs (about 1,750 dollars, far below a minicomputer's price), the Micral N even gave the French language the word *micro-ordinateur*.\n\nTo tame the 8008's sprawling TTL glue logic cleanly, Gernelle organized the Micral N around a **backplane bus**—a shared multi-slot motherboard spine (which R2E named *Pluribus*) wired with parallel power, address, data, and control tracks. Think of a backplane bus like a heavy-duty power strip fused with an internal expressway: the 8008 processor board slid into one slot, RAM and ROM cards into adjacent slots, and agricultural sensor interfaces into others—turning a tricky chip into an expandable, serviceable commercial machine.",
+          "questions": [
+            {
+              "id": "q_073",
+              "prompt": "Who led the engineering of France's Micral N at R2E, and what historic first does the computer hold?",
+              "choices": [
+                "Victor Poor; the first computer built entirely without external TTL glue chips",
+                "Gary Boone; the first microprocessor design printed inside a monthly trade magazine",
+                "Hal Feeney; the first desktop workstation to include a graphical color monitor",
+                "François Gernelle; the first commercial, fully assembled microcomputer using a microprocessor"
+              ],
+              "correct_index": 3,
+              "explanation": "Designed by François Gernelle at André Truong's R2E in early 1973, the Micral N was the first commercial, pre-assembled (non-kit) microcomputer built around a microprocessor."
+            },
+            {
+              "id": "q_074",
+              "prompt": "How did using a backplane bus benefit the design of the Micral N?",
+              "choices": [
+                "It allowed the Intel 8008 to operate at 2 MHz without needing a two-phase clock",
+                "It provided shared multi-slot tracks so CPU, memory, and I/O cards plugged in modularly",
+                "It replaced the 8008's 14-bit address space with an automatic 64 KB memory manager",
+                "It removed the need for external address latches by wiring RAM straight to the CPU die"
+              ],
+              "correct_index": 1,
+              "explanation": "A backplane bus acts as a shared internal highway of connector slots, letting separate CPU, memory, and specialized I/O cards plug in cleanly for modular expansion and repair."
+            }
+          ]
+        },
+        {
+          "id": "ch_038",
+          "title": "SCELBI-8H and Mark-8: Hobby Computers Reach America",
+          "content_markdown": "Across the Atlantic, American enthusiasts met the Intel 8008 through two pioneering 1974 machines built for adventurous do-it-yourselfers. In March 1974, Connecticut engineer **Nat Wadsworth** ran a tiny advertisement in *QST*, a magazine for amateur radio operators, introducing the **SCELBI-8H** (short for *Scientific, Electronic, and Biological*). Priced at roughly 440 dollars as a bare kit or 565 dollars assembled with 1 KB of RAM, the SCELBI-8H became the first commercially advertised microprocessor kit computer in the United States.\n\nJust four months later, in July 1974, Virginia Tech chemistry graduate student **Jonathan Titus** burst onto the cover of *Radio-Electronics* magazine with his **Mark-8**, hailed as 'Your Personal Minicomputer.' Rather than shipping a boxed kit, Titus sold a five-dollar plan booklet and bare circuit boards—challenging readers to source their own 120-dollar Intel 8008 and hand-solder dozens of TTL glue chips onto four stacked boards.",
+          "questions": [
+            {
+              "id": "q_075",
+              "prompt": "How did acquiring Nat Wadsworth's SCELBI-8H differ from building Jonathan Titus's Mark-8?",
+              "choices": [
+                "SCELBI-8H came only as magazine plans; Mark-8 shipped ready-built in a steel cabinet",
+                "SCELBI-8H sold as a kit or assembled unit; Mark-8 offered plans and bare boards",
+                "SCELBI-8H ran on Texas Instruments' TMX 1795; Mark-8 ran on Intel's 8008 chip",
+                "SCELBI-8H targeted French agricultural labs; Mark-8 sold exclusively to American airlines"
+              ],
+              "correct_index": 1,
+              "explanation": "SCELBI offered a commercial kit or assembled computer through QST ads, whereas the Mark-8 was a DIY magazine project supplying plans and bare circuit boards for builders who sourced their own parts."
+            },
+            {
+              "id": "q_076",
+              "prompt": "Which American electronics magazine put Jonathan Titus's Intel 8008-based Mark-8 on its July 1974 cover?",
+              "choices": [
+                "*QST*",
+                "*Electronics*",
+                "*Popular Electronics*",
+                "*Radio-Electronics*"
+              ],
+              "correct_index": 3,
+              "explanation": "Jonathan Titus's Mark-8 appeared on the July 1974 cover of Radio-Electronics as 'Your Personal Minicomputer,' inspiring hobbyists nationwide."
+            }
+          ]
+        },
+        {
+          "id": "ch_039",
+          "title": "Toggle Switches, Glowing LEDs, and Heroic Patience",
+          "content_markdown": "Suppose you actually finished soldering a SCELBI-8H or Mark-8 on your basement workbench in 1974—how did you communicate with it? Few hobbyists could afford a thousand-dollar clattering Teletype printer-keyboard right away, so they turned to **front-panel programming**: flipping rows of metal toggle switches up and down to form each 8-bit binary number, tapping a deposit lever to store that byte in RAM, and squinting at rows of glowing red LEDs (light-emitting diodes) to read binary answers back!\n\nLoading even a modest 100-byte program meant flipping hundreds of switches in exact order—and one power flicker wiped volatile (power-dependent) RAM clean. Because wrangling the 8008's split voltages and thirty TTL glue chips demanded serious electronics skill, only around 200 SCELBI-8Hs and perhaps several hundred to a couple thousand Mark-8s ever came to life—yet their builders founded the earliest personal-computer newsletters and clubs.",
+          "questions": [
+            {
+              "id": "q_077",
+              "prompt": "How did most early SCELBI-8H and Mark-8 builders enter programs and inspect outputs without an expensive Teletype?",
+              "choices": [
+                "Through front-panel programming—toggling binary switches by hand and reading indicator LEDs",
+                "By dictating high-level English sentences into a built-in acoustic microphone",
+                "By plugging pre-loaded plastic video-game ROM cartridges into the backplane",
+                "By typing directly on an integrated green cathode-ray intelligent terminal"
+              ],
+              "correct_index": 0,
+              "explanation": "Without affordable keyboards or displays, early hobbyist 8008 computers relied on front-panel toggle switches to key in binary bytes and LED indicator lights to display binary outputs."
+            },
+            {
+              "id": "q_078",
+              "prompt": "Why did only a modest number of builders manage to assemble a fully working Mark-8 in 1974?",
+              "choices": [
+                "Intel stopped selling 8008 chips to individual buyers right after July 1974",
+                "The Mark-8 plans accidentally omitted the accumulator and the H and L registers",
+                "Builders had to source the costly 8008 and hand-solder dozens of TTL chips",
+                "Radio-Electronics recalled the July issue over a trademark dispute with Micral N"
+              ],
+              "correct_index": 2,
+              "explanation": "Turning the Mark-8 plans and bare boards into a working machine required independently purchasing a 120-dollar 8008 plus dozens of TTL support chips and debugging complex hand-soldered wiring."
+            }
+          ]
+        },
+        {
+          "id": "ch_040",
+          "title": "Lighting the Fuse—and Confronting the Software Wall",
+          "content_markdown": "Together, the Micral N, SCELBI-8H, and Mark-8 overturn the fable that personal computing began out of thin air in 1975. Despite the Intel 8008's 18-pin squeeze, thirty glue chips, and tedious front-panel programming, France's Micral N proved a microprocessor paired with a clean backplane bus could handle real commercial lab automation, while the SCELBI-8H and Mark-8 revealed an unmistakable grass-roots hunger for personal computers.\n\nIn fact, watching the Mark-8 splash across *Radio-Electronics* immediately lit a competitive fire under rival magazine *Popular Electronics*, pushing its editors to commission the blockbuster cover story that became the Altair 8800 six months later! Yet flipping binary toggle switches could never persuade mainstream companies to adopt microprocessors at scale. For 8-bit chips to conquer industry, programmers needed real software tools—and next we meet Intel's Intellec 8 box and Gary Kildall's groundbreaking PL/M language.",
+          "questions": [
+            {
+              "id": "q_079",
+              "prompt": "What direct competitive chain reaction in hobbyist publishing did the July 1974 Mark-8 cover feature spark?",
+              "choices": [
+                "It convinced Texas Instruments to release the TMX 1795 for amateur radio builders",
+                "It forced R2E to withdraw the Micral N from European agricultural research labs",
+                "It prompted rival *Popular Electronics* to seek the cover story behind the Altair 8800",
+                "It persuaded Intel to abandon general-purpose CPUs and sell only 18-pin memory"
+              ],
+              "correct_index": 2,
+              "explanation": "Seeing Radio-Electronics score a huge hit with Jonathan Titus's Mark-8 prompted Popular Electronics editors to hunt for a stronger rival computer project—leading directly to the January 1975 Altair 8800."
+            },
+            {
+              "id": "q_080",
+              "prompt": "Which summary accurately pairs each pioneering 8008 microcomputer with its historical hallmark?",
+              "choices": [
+                "Micral N: assembled commercial machine; SCELBI-8H: advertised U.S. kit; Mark-8: DIY magazine build",
+                "Micral N: DIY magazine build; SCELBI-8H: French lab machine; Mark-8: assembled corporate terminal",
+                "Micral N: advertised U.S. kit; SCELBI-8H: DIY magazine build; Mark-8: assembled commercial machine",
+                "Micral N: Texas Instruments prototype; SCELBI-8H: Intel factory tester; Mark-8: CTC cassette terminal"
+              ],
+              "correct_index": 0,
+              "explanation": "France's Micral N (1973) was the first commercial pre-assembled microcomputer, Nat Wadsworth's SCELBI-8H (March 1974) was the first advertised U.S. kit, and Jonathan Titus's Mark-8 (July 1974) was the DIY magazine cover build."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_09",
+      "title": "9. Intellec 8 \u0026 Gary Kildall's PL/M: Teaching Microprocessors High-Level Code",
+      "summary": "See how Intel solved early engineers' frustration with hand-assembling octal machine code by pairing silicon with a real software ecosystem, beginning with the 1973 Intellec 8—a turnkey tabletop development system combining an 8008, Teletype interface, debugging panel, and built-in UV-EPROM programmer. Follow Naval Postgraduate School professor Gary Kildall as he built an 8008 mainframe simulator and then created PL/M (Programming Language for Microcomputers), the first structured high-level language tailored to microprocessors, using a mainframe FORTRAN cross-compiler to overcome the 8008's 16 KB ceiling and prove tiny chips could run clean, readable software.",
+      "introduced_terms": [
+        "development system",
+        "high-level language",
+        "cross-compiler"
+      ],
+      "chunks": [
+        {
+          "id": "ch_041",
+          "title": "Selling Silicon Meant Selling a Prototyping Workbench",
+          "content_markdown": "Imagine pitching Intel's brand-new 8008 to a company designing electronic cash registers or medical analyzers in 1973. Their chief engineer examines your tiny 18-pin chip and asks two tough questions: 'How do we test our software before spending months wiring up thirty glue chips? And do we really have to hand-translate every program into cryptic numeric machine codes on graph paper?'\n\nIntel's marketing team—championed by Bill Davidow—grasped a vital truth: selling microprocessors meant selling a complete **development system**, a turnkey desktop computer outfitted with memory, debugging switches, and chip-burning tools so customer engineers could write and test software immediately. Unveiled in 1973, Intel's blue tabletop **Intellec 8** packed an 8008, expandable RAM, a Teletype serial port, paper-tape support, and a built-in 1702A UV-EPROM programmer right into one sturdy chassis—giving companies a ready-made prototyping kitchen instead of raw ingredients.",
+          "questions": [
+            {
+              "id": "q_081",
+              "prompt": "Why did Intel introduce the Intellec 8 tabletop workstation alongside its standalone 8008 chips in 1973?",
+              "choices": [
+                "To compete directly against amateur radio hobby kits advertised in *QST* magazine",
+                "To give industrial customers a turnkey development system for writing and testing 8008 software",
+                "To replace IBM System/360 mainframes inside large commercial banking data centers",
+                "To bundle Texas Instruments' TMX 1795 with Intel's 18-pin dynamic RAM chips"
+              ],
+              "correct_index": 1,
+              "explanation": "Intel realized engineers would adopt the 8008 far faster if they could buy a ready-built development system (the Intellec 8) for debugging code before constructing custom hardware."
+            },
+            {
+              "id": "q_082",
+              "prompt": "Which built-in hardware feature on the Intellec 8 let engineers quickly burn and update prototype ROM programs?",
+              "choices": [
+                "A dual audio-cassette duplicator inherited from the Datapoint 2200",
+                "A forty-pin PMOS socket adapter with automatic clock doubling",
+                "An internal laser etcher for fabricating custom silicon-gate PMOS dies",
+                "An integrated UV-EPROM programmer for writing 1702A erasable memory chips"
+              ],
+              "correct_index": 3,
+              "explanation": "The Intellec 8 included a built-in 1702A UV-EPROM programmer so engineers could burn debugged 8008 code straight into erasable prototype ROMs right at their desk."
+            }
+          ]
+        },
+        {
+          "id": "ch_042",
+          "title": "From Numeric Opcodes to Human-Readable Recipes",
+          "content_markdown": "Having an Intellec 8 box solved the hardware startup hurdle, yet programmers still faced an exhausting daily slog: hand-coding raw numeric machine opcodes (often written in base-8 octal digits) or terse assembly abbreviations (short letter codes like `ADM` for each numeric opcode) where every register move, `H` and `L` load, and jump address had to be tracked manually.\n\nMainframe programmers had already escaped that tedious grind using a **high-level language**—a structured, human-readable notation built around English-like commands (`IF ... THEN`, `DO WHILE`, named variables, and reusable procedures) that a translator program converts automatically into raw CPU instructions. Think of assembly code like dictating every individual wrist twist and knife angle to a line cook, whereas a high-level language is writing a clear recipe ('simmer until reduced by half') and letting a skilled translator handle the micro-motions. In 1972, most veterans scoffed that tiny microprocessors were too slow for high-level languages—until a young Monterey professor proved them wrong.",
+          "questions": [
+            {
+              "id": "q_083",
+              "prompt": "What central advantage does a high-level language offer over hand-written machine code or assembly?",
+              "choices": [
+                "It lets programmers express logic in readable structured statements that translate into CPU instructions",
+                "It doubles the processor's physical clock speed by bypassing external TTL glue chips",
+                "It eliminates the need for RAM by storing all variables inside the seven-level call stack",
+                "It runs directly on silicon transistors without needing any translation into binary opcodes"
+              ],
+              "correct_index": 0,
+              "explanation": "A high-level language replaces tedious register-by-register instructions with structured, human-readable constructs that a compiler translates into low-level machine code."
+            },
+            {
+              "id": "q_084",
+              "prompt": "Why did many veteran engineers in 1972 doubt that high-level languages belonged on microprocessors like the 8008?",
+              "choices": [
+                "No human-readable programming language had ever been invented for mainframes yet",
+                "Intel's commercial contract with CTC forbade using structured loops on the 8008",
+                "They assumed tiny, slow 8-bit chips lacked the memory and speed for automated code translation",
+                "Teletype keyboards could not type alphabetic letters like IF, THEN, or WHILE"
+              ],
+              "correct_index": 2,
+              "explanation": "With only 16 KB of memory, a 500 kHz clock, and a 7-level stack, many engineers believed the 8008 required hand-tuned assembly and could never support structured high-level code efficiently."
+            }
+          ]
+        },
+        {
+          "id": "ch_043",
+          "title": "Gary Kildall Invents PL/M",
+          "content_markdown": "Enter **Gary Kildall**, a creative young computer-science professor at the Naval Postgraduate School in Monterey, California, who began consulting for Intel in 1972. Kildall started modestly by writing an 8008 software simulator (`INTERP/8`) on an IBM mainframe so engineers could trace virtual 8008 registers before physical circuit boards even existed.\n\nThen, in 1973, Kildall persuaded Intel to sponsor **PL/M** (*Programming Language for Microcomputers*)—the first high-level programming language designed specifically for microprocessors. Drawing clean structural ideas from IBM's PL/I language while stripping away heavy mainframe features, PL/M let programmers declare hardware-friendly `BYTE` (8-bit) and `ADDRESS` (16-bit) variables, organize code into neat `PROCEDURE` blocks, and write crystal-clear `IF ... THEN` branches and `DO WHILE` loops. Behind the curtain, PL/M quietly generated all the fussy `H` and `L` loads, virtual `M` reads, and flag tests automatically—turning weeks of bug-prone assembly into days of readable programming.",
+          "questions": [
+            {
+              "id": "q_085",
+              "prompt": "Who designed the PL/M programming language for the Intel 8008 in 1973?",
+              "choices": [
+                "Federico Faggin",
+                "François Gernelle",
+                "Nat Wadsworth",
+                "Gary Kildall"
+              ],
+              "correct_index": 3,
+              "explanation": "While teaching at the Naval Postgraduate School and consulting for Intel, Gary Kildall created both the INTERP/8 simulator and PL/M, the first high-level language built for microprocessors."
+            },
+            {
+              "id": "q_086",
+              "prompt": "How did Gary Kildall's PL/M ease the daily frustrations of programming the Intel 8008?",
+              "choices": [
+                "It added an external stack pointer and PUSH/POP circuits onto the existing 18-pin silicon die",
+                "It offered structured loops, procedures, and BYTE/ADDRESS types while generating HL/M code automatically",
+                "It eliminated the need for an Intellec 8 by executing English text straight off cassette tapes",
+                "It allowed 8008 programs to address 64 KB of memory without using external address latches"
+              ],
+              "correct_index": 1,
+              "explanation": "PL/M provided clean structured control flow and hardware-friendly BYTE and ADDRESS data types, letting the compiler handle tedious HL register setup and 8008 opcode details."
+            }
+          ]
+        },
+        {
+          "id": "ch_044",
+          "title": "Big Factories Printing Pocket Books: Cross-Compilation",
+          "content_markdown": "Hold on—spot the sneaky paradox here! If the Intel 8008 was pinched inside a 16 KB memory roof, a 7-level hardware call stack, and $$500\\text{ kHz}$$ PMOS speed, how could a tiny 8008 possibly run a full PL/M language translator itself? The answer is simple: it never had to.\n\nKildall engineered PL/M as a **cross-compiler**—a translator program that runs on one much larger host computer while emitting ready-to-run binary machine code for a completely different, smaller target processor. Imagine an industrial newspaper press printing pocket-sized field guides that a tiny handheld printer could never manufacture on its own. Written in portable FORTRAN—a scientific programming language installed on mainframes and minicomputers worldwide—Kildall's PL/M cross-compiler ran on customers' existing big computers (or rented dial-up shared mainframes) and punched out paper tapes of lean 8008 binary code ready to feed directly into an Intellec 8!",
+          "questions": [
+            {
+              "id": "q_087",
+              "prompt": "What defines a cross-compiler in software development?",
+              "choices": [
+                "A compiler that translates one high-level language into two unrelated human languages at once",
+                "A hardware circuit card that plugs into a backplane bus to decode T1 and T2 states",
+                "A compiler running on one host computer that generates machine code for a different CPU",
+                "A debugging utility that simulates front-panel toggle switches inside an 8-bit accumulator"
+              ],
+              "correct_index": 2,
+              "explanation": "A cross-compiler runs on a capable host machine (such as a mainframe or minicomputer) to produce executable binary machine code intended for a different target processor (the Intel 8008)."
+            },
+            {
+              "id": "q_088",
+              "prompt": "Why did Gary Kildall implement the original PL/M compiler in portable FORTRAN running on larger computers?",
+              "choices": [
+                "The 8008 lacked memory to host a compiler, while customers already owned FORTRAN machines",
+                "Intel's Intellec 8 hardware lacked any RAM or serial ports capable of holding binary files",
+                "FORTRAN was the only language legally permitted inside United States Navy research laboratories",
+                "Cross-compiling on a mainframe automatically doubled the 8008's clock speed to one megahertz"
+              ],
+              "correct_index": 0,
+              "explanation": "Writing PL/M as a portable FORTRAN cross-compiler bypassed the 8008's tiny memory and stack limits while letting industrial buyers compile on mainframes or shared systems they already used."
+            }
+          ]
+        },
+        {
+          "id": "ch_045",
+          "title": "Proving Microprocessors Could Speak Structured Software",
+          "content_markdown": "Put the blue Intellec 8 development system beside Gary Kildall's PL/M cross-compiler, and Intel's quiet strategic genius snaps into focus. Years before competitors caught on, Intel realized that a microprocessor is only half a product—the surrounding software tools and debugging boxes turn curious tinkerers into loyal industrial customers. PL/M demolished the assumption that microprocessors were forever trapped in tedious assembly code, proving even a constrained 1972 chip could run clean, structured software.\n\n(Just as notably, Kildall's hands-on experiments wiring floppy disk drives to his Intellec 8 soon sparked the operating-system vision that would reshape 8-bit personal computing!) Yet as hundreds of engineers wrote serious programs in PL/M and assembly, every single one of the 8008's hardware bottlenecks—18 pins, thirty glue chips, slow PMOS, 16 KB RAM, and the fragile 7-level stack—ached louder than ever. Next, we watch those frustrations turn straight into the blueprint for the Intel 8080.",
+          "questions": [
+            {
+              "id": "q_089",
+              "prompt": "What strategic lesson did Intel prove early by investing in both the Intellec 8 and Gary Kildall's PL/M compiler?",
+              "choices": [
+                "Microprocessors sell fastest when companies keep their instruction sets strictly secret",
+                "Providing strong development hardware and high-level software tools is essential for chip adoption",
+                "High-level compilers make external memory chips unnecessary in industrial equipment",
+                "Paper-tape readers permanently outperformed UV-EPROMs for storing embedded firmware"
+              ],
+              "correct_index": 1,
+              "explanation": "By offering turnkey development hardware (Intellec 8) and the first microprocessor high-level language (PL/M), Intel lowered engineering barriers and built lasting ecosystem loyalty."
+            },
+            {
+              "id": "q_090",
+              "prompt": "How did the PL/M cross-compiler and the Intellec 8 fit together inside a typical 1973–1974 engineering workflow?",
+              "choices": [
+                "The Intellec 8 compiled FORTRAN source files and sent them to IBM mainframes to run",
+                "Engineers keyed PL/M directly via front-panel toggle switches without needing any host computer",
+                "PL/M ran inside the 7-level call stack while the Intellec 8 fabricated ceramic chip shells",
+                "Mainframes cross-compiled PL/M into 8008 binary code for debugging and UV-EPROM burning on Intellec 8"
+              ],
+              "correct_index": 3,
+              "explanation": "Engineers compiled structured PL/M code on a larger host machine via the cross-compiler, then loaded the resulting 8008 binary onto the Intellec 8 to debug and program into UV-EPROMs."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_10",
+      "title": "10. Pain Points Into Blueprints: How the 8008 Forged the Intel 8080",
+      "summary": "Synthesize how every real-world complaint from 8008 adopters turned into a concrete engineering requirement for Intel's next generation. Trace how Federico Faggin and Masatoshi Shima traded the 18-pin bottleneck for a 40-pin DIP with dedicated 16-bit address (64 KB) and 8-bit data buses, migrated from sluggish PMOS to fast electron-driven NMOS, replaced the fragile 7-level on-chip stack with an unlimited RAM-based stack and real PUSH/POP instructions, and preserved the 8008's A–L and M register family through source-code compatibility—transforming an imperfect 1972 rough draft into the April 1974 Intel 8080 springboard for Part II.",
+      "introduced_terms": [
+        "NMOS",
+        "RAM-based stack",
+        "source-code compatibility"
+      ],
+      "chunks": [
+        {
+          "id": "ch_046",
+          "title": "Turning Customer Frustrations Into a Design Wish List",
+          "content_markdown": "By late 1972, Federico Faggin was hearing a loud, consistent chorus from engineers building real products around the Intel 8008. Customers loved having a programmable 8-bit brain they could wire into terminals, lab instruments, and factory controllers—yet they were exhausted by its daily compromises.\n\nNearly every customer visit repeated the exact same five grievances: twenty to thirty TTL glue chips devouring circuit-board space and money; sluggish $$500\\text{ kHz}$$ PMOS execution; a tight 16 KB memory roof; a fragile 7-level hardware call stack with no clean way to save registers during interrupts; and wordy `H` and `L` juggling just to grab a single byte from RAM. Rather than brushing off those complaints, Faggin treated every single pain point as a priceless design checklist—proposing a muscular, cleaned-up successor before the Intel 8008 had even celebrated its first birthday.",
+          "questions": [
+            {
+              "id": "q_091",
+              "prompt": "How did Federico Faggin respond to the mounting wave of customer complaints about the Intel 8008 in late 1972?",
+              "choices": [
+                "He advised Intel management to exit the 8-bit CPU market and focus solely on 4-bit calculators",
+                "He redesigned the 8008's marketing brochures to hide its 18-pin packaging limitations",
+                "He converted customers' five recurring frustrations into the core engineering checklist for a successor chip",
+                "He replaced silicon-gate MOS manufacturing with discrete 7400-series TTL processor boards"
+              ],
+              "correct_index": 2,
+              "explanation": "Listening closely to frustrated 8008 users, Faggin mapped every major limitation—pins, glue chips, PMOS speed, tiny stack, and clunky memory access—directly into the blueprint for the Intel 8080."
+            },
+            {
+              "id": "q_092",
+              "prompt": "Which group accurately summarizes the top hardware and programming complaints raised by early Intel 8008 adopters?",
+              "choices": [
+                "TTL glue chips, slow PMOS speed, 16 KB RAM, 7-level stack, and HL-only access",
+                "Oversized 40-pin packages, excessive heat from PMOS circuits, and incompatibility with ASCII text",
+                "Too many PUSH/POP instructions, confusing 64 KB memory banks, and missing backplane buses",
+                "No UV-EPROM programmer support, missing condition flags, and mandatory four-bit nibble arithmetic"
+              ],
+              "correct_index": 0,
+              "explanation": "Early 8008 adopters struggled with the 18-pin glue-chip tax, sluggish PMOS clock speeds, the 16 KB limit, the fragile 7-level stack without PUSH/POP, and awkward HL-only data addressing."
+            }
+          ]
+        },
+        {
+          "id": "ch_047",
+          "title": "Forty Pins and Fast Electrons: Breaking the Physical Walls",
+          "content_markdown": "Teaming up with brilliant chip architect **Masatoshi Shima**—who had helped bring the 4004 to life—Faggin first demolished the 8008's two biggest physical walls. On the outside, Intel's management finally relented and approved a spacious **40-pin DIP** for the upcoming **Intel 8080**! Forty metal legs meant the 8080 could dedicate 16 pins strictly to addresses and 8 separate pins strictly to data simultaneously—wiping out 3-cycle time-multiplexing, external address latches, and most of the 8008's dreaded 20-to-30-chip TTL glue tax overnight.\n\nInside the silicon, Intel migrated from PMOS to **NMOS** (Negative-channel MOS)—transistors conducting electrical current with agile, negatively charged free electrons instead of slow-drifting positive electron holes. Paired with sleek non-multiplexed machine cycles, NMOS rocketed the 8080 up to $$2\\text{ MHz}$$, delivering roughly a **tenfold leap in real-world speed** over the 8008!",
+          "questions": [
+            {
+              "id": "q_093",
+              "prompt": "Why did transitioning from PMOS to NMOS silicon dramatically accelerate microprocessor performance between the 8008 and the 8080?",
+              "choices": [
+                "NMOS chips eliminated the need for any electrical clock signal during execution",
+                "NMOS transistors used mechanical copper relays instead of microscopic silicon switches",
+                "NMOS doubled the number of bits inside every ASCII character from eight to sixteen",
+                "NMOS conducted current via fast free electrons rather than slower-drifting positive electron holes"
+              ],
+              "correct_index": 3,
+              "explanation": "Free electrons move roughly two to three times faster through silicon than electron holes, letting NMOS transistors switch far faster and helping propel the 8080 to 2 MHz."
+            },
+            {
+              "id": "q_094",
+              "prompt": "What major circuit-board headache vanished when Intel expanded from the 8008's 18-pin shell to the 8080's 40-pin DIP?",
+              "choices": [
+                "The need for external RAM chips when running structured PL/M programs",
+                "3-cycle address multiplexing, external address latches, and most of the 20–30 TTL glue chips",
+                "The requirement to organize desktop microcomputers around a modular backplane bus",
+                "The difference between high-level cross-compilers and low-level assembly mnemonics"
+              ],
+              "correct_index": 1,
+              "explanation": "A 40-pin DIP provided dedicated, simultaneous 16-bit address and 8-bit data buses, eliminating 3-cycle multiplexing, external address latches, and much of the 8008's glue logic."
+            }
+          ]
+        },
+        {
+          "id": "ch_048",
+          "title": "Quadrupling Memory and Freeing the Stack Into RAM",
+          "content_markdown": "With the physical cage shattered, Faggin and Shima methodically fixed every internal software trap we unpacked in Sections 6 and 7. Widening the dedicated address bus from 14 bits to 16 bits immediately quadrupled reachable memory from 16 KB up to $$2^{16} = 65,536$$ bytes (**64 KB**)—plenty of elbow room for real operating systems and compilers.\n\nJust as transformative, they discarded the fragile 7-level on-chip hardware call stack in favor of a **RAM-based stack**—storing return addresses and saved registers right out in external RAM, steered by a real 16-bit stack pointer register (`SP`) and crisp `PUSH` and `POP` instructions! Subroutines could now nest hundreds of layers deep with zero circular wrap-around panic, and interrupt handlers could safely save every register in four swift `PUSH` commands. Adding direct memory load/store instructions plus 16-bit pair operations (`BC`, `DE`, `HL`) finally ended clunky page-boundary carries too.",
+          "questions": [
+            {
+              "id": "q_095",
+              "prompt": "How did replacing the 8008's 7-level hardware stack with a RAM-based stack and PUSH/POP instructions solve the interrupt nightmare?",
+              "choices": [
+                "Interrupt handlers could safely push registers and deep return addresses straight into external RAM",
+                "External RAM automatically blocked keyboard interrupts whenever a program entered a nested subroutine",
+                "PUSH and POP bypassed internal CPU registers by running arithmetic inside external address latches",
+                "The RAM-based stack compressed every 16-bit memory address back down into a single byte"
+              ],
+              "correct_index": 0,
+              "explanation": "A 16-bit stack pointer pointing into external RAM allowed deep nesting without 7-level wrap-around, and PUSH/POP let interrupt routines save and restore registers cleanly without corrupting HL."
+            },
+            {
+              "id": "q_096",
+              "prompt": "Which pair of architectural additions resolved the 8008's 16 KB ceiling and its tedious HL-only memory juggling?",
+              "choices": [
+                "Bit-serial execution units paired with two-phase high-voltage PMOS clock drivers",
+                "Dual magnetic audio cassette drives paired with front-panel binary toggle switches",
+                "A 16-bit (64 KB) address bus paired with direct memory and 16-bit pair commands",
+                "An 8-slot circular silicon call stack paired with a repurposed HALT opcode"
+              ],
+              "correct_index": 2,
+              "explanation": "Moving to a 16-bit address bus raised addressable memory to 64 KB, while direct memory load/store commands and 16-bit BC/DE/HL pair operations eliminated clumsy multi-step pointer gymnastics."
+            }
+          ]
+        },
+        {
+          "id": "ch_049",
+          "title": "Preserving the Bloodline Through Source-Code Compatibility",
+          "content_markdown": "Here came one of the smartest strategic calls in computing history. After fixing pins, speed, memory, and the stack, Intel could easily have invented a totally unfamiliar new register layout—leaving early 8008 buyers stranded with useless software. Instead, Faggin and Shima engineered **source-code compatibility**: keeping the 8008's exact `A, B, C, D, E, H, L` registers, virtual `M` window, and condition flags so existing 8008 human-readable source programs could move smoothly onto the April 1974 Intel 8080.\n\nSpot the subtle distinction here! The 8080 was *not* binary-compatible—you could not yank an old 8008 UV-EPROM out of a socket and run its raw ones and zeros unchanged on an 8080, because Intel reorganized numeric opcode patterns to make room for new instructions. Yet simply re-assembling an 8008 source file or re-running Gary Kildall's PL/M cross-compiler migrated years of software investment cleanly onto the faster 8080!",
+          "questions": [
+            {
+              "id": "q_097",
+              "prompt": "What practical benefit did source-code compatibility between the Intel 8008 and Intel 8080 deliver to existing customers?",
+              "choices": [
+                "Customers could plug an 8008 chip straight into an 8080 socket without rewiring circuit boards",
+                "Customers could migrate existing 8008 assembly and PL/M programs by re-assembling or recompiling them",
+                "Customers could execute unaltered 8008 binary UV-EPROM chips directly on the 8080 without changes",
+                "Customers could run Texas Instruments' 4-bit TMS1000 calculator code natively on Intel silicon"
+              ],
+              "correct_index": 1,
+              "explanation": "By keeping the 8008's register model and instruction semantics, source-code compatibility let developers carry existing assembly and PL/M source files forward simply by re-assembling or recompiling for the 8080."
+            },
+            {
+              "id": "q_098",
+              "prompt": "Why was the Intel 8080 source-code compatible—rather than strictly binary-compatible—with the Intel 8008?",
+              "choices": [
+                "The 8080 dropped registers H, L, and virtual M to save silicon area",
+                "The 8080 switched from 8-bit ASCII bytes to 12-bit minicomputer data words",
+                "The 8080 abandoned high-level PL/M support in favor of front-panel toggle switches",
+                "Intel remapped numeric binary opcodes to make room for new 8080 instructions"
+              ],
+              "correct_index": 3,
+              "explanation": "To cleanly integrate direct memory access, PUSH/POP, and 16-bit pair operations, Intel remapped the numeric binary opcodes—so old source code compiled smoothly, even though raw binary ROMs did not."
+            }
+          ]
+        },
+        {
+          "id": "ch_050",
+          "title": "The Imperfect Rough Draft That Launched a Dynasty",
+          "content_markdown": "Look back across all ten sections and savor the unlikely saga of the Intel 8008. Conceived in San Antonio for CTC's Datapoint 2200 intelligent terminal, left unchallenged when Texas Instruments shelved its working TMX 1795 to pursue 4-bit microcontrollers, rescued by Feeney and Faggin in slow split-rail PMOS, trapped inside an 18-pin DIP propped up by thirty TTL glue chips, and pinched by a 16 KB ceiling and 7-level call stack—the 8008 was undeniably a rough draft.\n\nYet what an epoch-making rough draft it proved! It launched France's Micral N alongside America's SCELBI-8H and Mark-8, inspired Gary Kildall's PL/M compiler, proved a vast catalog market existed for general-purpose 8-bit chips, and etched CTC's `A–L` register DNA permanently into the Intel 8080, Zilog Z80, and modern x86 family. Armed with every hard lesson the 8008 taught, you are ready for Part II—where the 40-pin NMOS Intel 8080 unleashes the Altair 8800, Gary Kildall's CP/M operating system, and the personal-computer explosion!",
+          "questions": [
+            {
+              "id": "q_099",
+              "prompt": "Stepping back across the entire module, which description best captures the Intel 8008's historical significance?",
+              "choices": [
+                "A flawless 40-pin commercial juggernaut that outsold every later 8-bit microprocessor combined",
+                "A dead-end custom LSI calculator chip whose architecture disappeared completely by 1974",
+                "A constrained pioneer whose real-world lessons and register model launched the 8080 dynasty",
+                "A French agricultural computer project that Intel later copied for mainframe banking terminals"
+              ],
+              "correct_index": 2,
+              "explanation": "Despite severe pin, speed, glue-chip, and stack limits, the 8008 proved the general-purpose 8-bit CPU market, sparked the first microcomputers and PL/M, and directly shaped the landmark Intel 8080."
+            },
+            {
+              "id": "q_100",
+              "prompt": "Which continuous architectural thread connects CTC's 1970 Datapoint 2200 straight through the 8008 into the Intel 8080 and modern x86?",
+              "choices": [
+                "Its byte-wide 8-bit accumulator design and A–L register lineage carried forward via compatibility",
+                "Its 18-pin time-multiplexed DIP shell and mandatory 20-to-30 external TTL glue chips",
+                "Its split $$+5\\text{ V}$$ and $$-9\\text{ V}$$ PMOS rails and 7-level circular call stack",
+                "Its bit-serial TTL processor board powered exclusively by twin magnetic cassette drives"
+              ],
+              "correct_index": 0,
+              "explanation": "While pins, silicon physics, and stack design evolved dramatically, the Datapoint 2200's 8-bit byte orientation and A–L register lineage passed straight through the 8008 into the 8080, Z80, and x86."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
