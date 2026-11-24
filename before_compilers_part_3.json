@@ -1,0 +1,1683 @@
+{
+  "id": "before_compilers_part_3",
+  "title": "Before Compilers III: COBOL, Decimal Math, Mainframe Culture \u0026 IBM RPG (1955–Present)",
+  "summary": "Part 3 of the 'Before Compilers' Quest Arc traces how enterprise data processing diverged from scientific computing through COBOL and IBM's RPG, explaining every language, hardware, compiler, and corporate-culture concept from first principles at a relaxed, one-idea-per-chunk pace. Building smoothly on Part II's scientific-computing foundations, learners travel from the late-1950s commercial tower of Babel, CODASYL, Grace Hopper's FLOW-MATIC, four-division portability, hierarchical PICTURE records, and exact packed-decimal arithmetic to 'glass house' mainframe culture, Y2K remediation, RPG's midrange tabulator-to-IBM-i evolution, and a brief PL/I bridge synthesizing enterprise computing's lasting innovations.",
+  "topic_prompt": "Teach from first principles for an educated generalist (no unintroduced jargon) how enterprise data processing diverged from scientific computing through COBOL and IBM's RPG, emphasizing language semantics, hardware fit, corporate IT culture, dead ends vs. lasting innovations, and compiler/runtime concepts (~14 cohesive concepts across 10 sections). Cover: (1) the late-1950s commercial tower of Babel—banks, insurers, and the U.S. Department of Defense facing incompatible business machines—and the 1959 CODASYL committee formed to create a portable Common Business-Oriented Language; (2) Grace Hopper's FLOW-MATIC lineage (alongside AIMACO and COMTRAN), the goal of English-like self-documenting code readable by business auditors, and the famous 'COBOL tombstone' skepticism; (3) COBOL's four-division architecture (IDENTIFICATION, ENVIRONMENT, DATA, PROCEDURE), highlighting how cleanly separating machine/file configuration from data schemas and business logic pioneered enterprise portability; (4) record-oriented structured data in the DATA DIVISION—hierarchical level numbers and PICTURE (PIC) field templates—introducing composite record structures tailored to fixed-width punch-card and tape batch processing; (5) exact fixed-point decimal arithmetic (such as packed Binary-Coded Decimal) versus binary floating-point—showing from first principles why binary fractions introduce tiny rounding errors on values like $$0.1 + 0.2$$, why financial ledgers demand exact penny arithmetic, and how business mainframe instructions directly supported decimal math; (6) COBOL's verb-driven control flow (PERFORM paragraphs, early lack of local scope/parameters) and what compilers had to generate for bulk record-moving and decimal I/O; (7) mainframe 'glass house' culture—contrasting academic disdain for COBOL's verbosity with corporate priorities of auditability, throughput, and decades-long backward compatibility; (8) mainframe longevity and the Y2K remediation story, framing two-digit year fields ('PIC 99') as a rational 1960s memory optimization whose software outlived every expectation; (9) IBM's RPG (Report Program Generator, 1959) on midrange business systems (IBM 1401, System/3, AS/400 / IBM i)—how it migrated electromechanical plugboard tabulator operators via its built-in fixed-logic read-calculate-output program cycle and positional spec sheets, later evolving into free-format RPG IV; and (10) a brief, gentle cross-reference (1–2 chunks only, without retelling its full history) to IBM's mid-1960s PL/I attempt to unify FORTRAN and COBOL on System/360—pointing learners to the dedicated PL/I Quest Arc while synthesizing enterprise computing's lasting innovations (structured records, decimal types, schema-logic separation).",
+  "tag_path": [
+    "History",
+    "History of Technology",
+    "Programming Language History"
+  ],
+  "vetting_summary": "Completed a full sequential college-freshman generalist audit across all 10 sections (50 chunks and 100 questions) of 'Before Compilers III', verifying 120-200 word relaxed pacing, valid JSON and double-dollar LaTeX formatting, and balanced A-D choice structure. Refined 24 chunks and questions across all 10 sections to eliminate forward references, define every specialized acronym or computing term on first appearance, and tighten distractor plausibility and choice-length balance.",
+  "created_at": "2026-11-23T17:59:22Z",
+  "sections": [
+    {
+      "id": "sec_01",
+      "title": "1. The Commercial Tower of Babel \u0026 the 1959 CODASYL Mandate",
+      "summary": "Contrast late-1950s scientific number-crunching with high-volume commercial batch processing at banks, insurers, payroll bureaus, and the U.S. Department of Defense, where incompatible business machines forced costly rewrites after every hardware upgrade. Trace how the May 1959 Pentagon-sponsored CODASYL committee united rival vendors and government buyers around a common, portable business language—and how federal procurement power turned a fragile committee draft into an industry standard.",
+      "introduced_terms": [
+        "batch processing",
+        "CODASYL",
+        "software portability"
+      ],
+      "chunks": [
+        {
+          "id": "ch_001",
+          "title": "Two Worlds of Late-1950s Computing",
+          "content_markdown": "By 1958, scientists and aerospace engineers had a powerful new helper: **FORTRAN** (short for *Formula Translation*), an early programming language paired with a **compiler**—a translator program that turns human-readable formulas into a computer's native electronic instructions. FORTRAN thrived on physics problems that fed a modest table of measurements into thousands of intricate mathematical equations.\n\nAcross town, banks, insurance companies, and government payroll offices faced the exact opposite challenge. A bank clearing two million checks every evening barely needed algebra beyond addition, subtraction, and percentages. Instead, its computers had to read, sort, update, and print staggering mountains of customer records without losing a single cent. Worse, every computer maker—IBM, Remington Rand, RCA, Honeywell, and Burroughs—sold machines speaking completely incompatible instruction sets, trapping corporate computing in a commercial Tower of Babel.",
+          "questions": [
+            {
+              "id": "q_001",
+              "prompt": "How did late-1950s commercial business computing differ most sharply from scientific computing?",
+              "choices": [
+                "Commercial jobs ran tiny files through complex algebraic formulas",
+                "Commercial jobs performed simple math across massive record volumes",
+                "Commercial jobs avoided compilers by running only hand-wired circuits",
+                "Commercial jobs required specialized graphics displays for accountants"
+              ],
+              "correct_index": 1,
+              "explanation": "Scientific programs applied heavy mathematics to relatively small inputs, whereas banks, insurers, and payroll bureaus ran simple arithmetic over millions of customer records."
+            },
+            {
+              "id": "q_002",
+              "prompt": "Why did observers call late-1950s corporate computing a 'commercial Tower of Babel'?",
+              "choices": [
+                "Each hardware manufacturer used mutually incompatible machine instructions",
+                "Banks refused to share accounting formulas across national borders",
+                "Early compilers translated source code into spoken audio commands",
+                "Business machines could process numbers but not alphabetical names"
+              ],
+              "correct_index": 0,
+              "explanation": "Because IBM, Remington Rand, RCA, Honeywell, and Burroughs built machines with incompatible instruction sets, software written for one brand could not run on another."
+            }
+          ]
+        },
+        {
+          "id": "ch_002",
+          "title": "How Commercial Batch Processing Worked",
+          "content_markdown": "To understand why business languages evolved differently from scientific ones, picture how a 1950s corporate computer room actually operated. Nobody sat at a glowing keyboard typing live queries. Instead, enterprises relied on **batch processing**—collecting thousands of similar transactions over hours or days and feeding the entire bundle through the computer in one uninterrupted scheduled run.\n\nThink of it like a neighborhood laundromat rather than hand-washing one shirt at a time. Clerks typed daily deposits, invoices, or hours worked onto stiff rectangular **punch cards** (cardboard cards holding data as patterns of tiny punched holes) or copied them onto spinning reels of **magnetic tape**. After closing time, operators loaded those decks and reels so the machine could sweep through every account sequentially, producing updated master tapes and stacks of printed statements by morning. Speed meant moving data in and out smoothly, not solving calculus.",
+          "questions": [
+            {
+              "id": "q_003",
+              "prompt": "What best defines batch processing in a 1950s business computer center?",
+              "choices": [
+                "Answering individual customer inquiries interactively at a desk screen",
+                "Dividing one physics equation across multiple linked room-sized computers",
+                "Grouping many transactions together for one uninterrupted scheduled run",
+                "Manually recalculating daily balances whenever a magnetic tape jammed"
+              ],
+              "correct_index": 2,
+              "explanation": "Batch processing accumulated thousands of transactions on punch cards or magnetic tape and ran the entire bundle through the computer in one continuous pass, often overnight."
+            },
+            {
+              "id": "q_004",
+              "prompt": "In overnight commercial batch runs, what was typically the main performance bottleneck?",
+              "choices": [
+                "Solving multi-step trigonometric equations for each account",
+                "Reading, updating, and printing huge streams of stored records",
+                "Generating real-time video charts for executives on terminals",
+                "Converting spoken bank-teller instructions into binary signals"
+              ],
+              "correct_index": 1,
+              "explanation": "Commercial workloads performed light arithmetic per customer but had to stream enormous quantities of records off cards and tapes and write updated outputs reliably."
+            }
+          ]
+        },
+        {
+          "id": "ch_003",
+          "title": "The Pentagon's Dilemma and the 1959 CODASYL Committee",
+          "content_markdown": "No organization suffered more from incompatible business machines than the U.S. Department of Defense, the world's largest computer customer. Whenever a military base upgraded from an aging machine made by one company to a faster computer from a rival vendor, programmers had to rewrite every payroll, spare-parts, and inventory system from scratch. Those rewrites devoured millions of taxpayer dollars and years of scarce engineering labor.\n\nIn April 1959, a small group of practitioners—including Mary Hawes of Burroughs and Navy computer pioneer Grace Hopper—met in Philadelphia and urged the Pentagon to sponsor a single, vendor-neutral business language. One month later, Pentagon official Charles Phillips convened computer makers, universities, and government agencies at a landmark meeting that created **CODASYL** (*Conference on Data Systems Languages*). Its Short Range Committee was handed a bold deadline: design a **Common Business-Oriented Language**—soon named **COBOL**—within months.",
+          "questions": [
+            {
+              "id": "q_005",
+              "prompt": "What practical crisis prompted the U.S. Department of Defense to convene CODASYL in May 1959?",
+              "choices": [
+                "Scientific satellites needed faster algebraic rocket trajectory simulations",
+                "Military bases faced a nationwide shortage of cardboard punch cards",
+                "Commercial computer makers had stopped building large business computers",
+                "Upgrading between rival computer brands forced costly software rewrites"
+              ],
+              "correct_index": 3,
+              "explanation": "Because the Defense Department bought machines from many competing vendors, incompatible instruction sets forced agencies to rewrite payroll and logistics software every time hardware changed."
+            },
+            {
+              "id": "q_006",
+              "prompt": "What was CODASYL's primary organizational role in 1959?",
+              "choices": [
+                "It united rival vendors and users to specify a shared business language",
+                "It built a single federal computer to replace all commercial manufacturers",
+                "It licensed FORTRAN compilers exclusively to Wall Street banking firms",
+                "It audited private insurance companies for handwritten bookkeeping errors"
+              ],
+              "correct_index": 0,
+              "explanation": "CODASYL (Conference on Data Systems Languages) was the Pentagon-sponsored consortium of vendors, users, and government agencies that designed the COBOL specification."
+            }
+          ]
+        },
+        {
+          "id": "ch_004",
+          "title": "Software Portability and the Power of the Purse",
+          "content_markdown": "CODASYL's central technical goal was **software portability**—the ability to write one business program and run it on computers from competing manufacturers with minimal changes. To a modern reader, portability sounds obviously desirable. To a 1959 computer executive, it looked downright threatening.\n\nHardware makers actually profited from incompatibility. Once a bank invested years writing custom payroll routines for Brand A's machine, switching to Brand B became prohibitively expensive—a trap known as customer lock-in. Unsurprisingly, several major vendors initially dragged their feet on building COBOL translators, hoping the committee's draft would quietly fade away.\n\nWhat broke the stalemate was not a clever algorithm, but the Pentagon's checkbook. In 1960, the Defense Department declared that it would neither purchase nor lease new commercial computers unless the manufacturer supplied a working COBOL compiler. Faced with losing their biggest customer, rival vendors raced to build COBOL compilers overnight.",
+          "questions": [
+            {
+              "id": "q_007",
+              "prompt": "Why were several major computer manufacturers initially reluctant to embrace software portability?",
+              "choices": [
+                "Portable languages forced customers to discard existing magnetic tape reels",
+                "Incompatible software kept existing customers locked into their hardware",
+                "Federal committees charged steep annual royalties on portable compilers",
+                "Portable programs could run only on scientific physics computers"
+              ],
+              "correct_index": 1,
+              "explanation": "When customer software only ran on one vendor's machine, switching to a rival became financially painful, giving hardware manufacturers a powerful incentive against portability."
+            },
+            {
+              "id": "q_008",
+              "prompt": "What decisive step forced reluctant computer vendors to build working COBOL compilers?",
+              "choices": [
+                "Universities made COBOL mandatory across every engineering degree program",
+                "Major banks pooled funds to manufacture their own standardized computers",
+                "The Defense Department tied new computer contracts to COBOL support",
+                "Hardware rivals signed a voluntary patent treaty sharing machine designs"
+              ],
+              "correct_index": 2,
+              "explanation": "By refusing to buy or lease new business computers that lacked a COBOL compiler, the Pentagon used its unmatched procurement leverage to establish an industry-wide standard."
+            }
+          ]
+        },
+        {
+          "id": "ch_005",
+          "title": "Why Enterprise Computing Needed Its Own Path",
+          "content_markdown": "Looking back across the 1950s divide, COBOL's birth reveals a foundational lesson in computing history: programming languages are shaped as much by economics and institutions as by pure mathematics. Scientific users wanted tight, formula-heavy tools for numerical research; enterprises needed dependable, portable machinery for high-volume batch processing that could survive hardware transitions without bankrupting the corporate computing budget.\n\nThrough CODASYL, the federal government and corporate data-processing managers proved that buyers could collectively demand software portability across competing vendors—a bold break from hardware-specific silos. Yet agreeing *why* business needed a common language left an equally heated design question unresolved. What should a business programming language actually look like on the page, and who should be able to read it? Answering that question brings us directly to Grace Hopper and one of the most daring bets in software history.",
+          "questions": [
+            {
+              "id": "q_009",
+              "prompt": "Which combination of pressures best explains why COBOL emerged alongside rather than inside FORTRAN?",
+              "choices": [
+                "Massive batch record volumes, vendor incompatibility, and federal procurement leverage",
+                "Shortages of scientific physicists, university mandates, and shared machine designs",
+                "Interactive office keyboards, slow card sorters, and military secrecy rules",
+                "Expired FORTRAN copyrights, low tape costs, and private banking mergers"
+              ],
+              "correct_index": 0,
+              "explanation": "Business computing's focus on massive batch record processing, combined with painful vendor incompatibility and the Pentagon's procurement mandate, drove the creation of a dedicated portable business language."
+            },
+            {
+              "id": "q_010",
+              "prompt": "What major unresolved design challenge remained once CODASYL agreed to pursue software portability?",
+              "choices": [
+                "Deciding whether to expand FORTRAN's scientific math library for banks",
+                "Choosing which single manufacturer would supply standardized Pentagon computers",
+                "Determining how business programs should be written and who should read them",
+                "Setting uniform rental prices for magnetic tape drives across companies"
+              ],
+              "correct_index": 2,
+              "explanation": "After establishing the need for a portable vendor-neutral business language, CODASYL still had to decide its surface syntax and target readership—setting the stage for Grace Hopper's English-like vision."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_02",
+      "title": "2. Grace Hopper's FLOW-MATIC, Self-Documenting Code \u0026 the 'COBOL Tombstone'",
+      "summary": "Trace COBOL's direct intellectual ancestry through Grace Hopper's UNIVAC FLOW-MATIC alongside the Air Force's AIMACO and IBM's COMTRAN, unpacking Hopper's radical bet on English-like, self-documenting code that business managers and financial auditors could read without mastering machine instructions. Weigh the real readability gains and hidden verbosity trade-offs of English-style syntax, and revisit Howard Bromberg's famous 1960 'COBOL tombstone' prank capturing early industry skepticism right before COBOL's landmark cross-vendor demonstration.",
+      "introduced_terms": [
+        "FLOW-MATIC",
+        "self-documenting code"
+      ],
+      "chunks": [
+        {
+          "id": "ch_006",
+          "title": "Grace Hopper's Radical Bet on Plain English",
+          "content_markdown": "When Navy veteran and computer pioneer Grace Hopper proposed in 1955 that business computers should accept instructions written in everyday English words, many seasoned engineers rolled their eyes. Computers ran on binary (two-state on-or-off) switches and mathematical notation, they insisted; real programmers wrote terse numeric codes, not prose sentences.\n\nHopper saw a different reality inside the corporations buying Remington Rand's room-sized UNIVAC **mainframes** (large centralized corporate computers). Business rules—how overtime pay is calculated, when an insurance policy lapses, or how sales tax applies—were owned by accountants, supervisors, and financial auditors who had no interest in decoding cryptic algebraic symbols. If the only people who could read a payroll program were a handful of hardware specialists, companies could never easily verify that their computers followed the law. Hopper bet that computers should adapt to human business vocabulary, not the other way around.",
+          "questions": [
+            {
+              "id": "q_011",
+              "prompt": "Why did Grace Hopper advocate writing business programs using everyday English words?",
+              "choices": [
+                "Early UNIVAC hardware could only process letters rather than numeric digits",
+                "Business supervisors and auditors needed to read and verify company rules",
+                "English sentences executed twice as fast as terse numeric instructions",
+                "Hardware vendors wanted to stop scientists from buying UNIVAC machines"
+              ],
+              "correct_index": 1,
+              "explanation": "Hopper realized that business logic belonged to accountants, managers, and auditors, so expressing programs in English-like words made corporate software far easier to inspect and verify."
+            },
+            {
+              "id": "q_012",
+              "prompt": "How did many mathematically trained engineers initially react to Hopper's English-word programming proposal?",
+              "choices": [
+                "They immediately rewrote FORTRAN to replace every math sign with words",
+                "They argued English words were too brief to explain simple arithmetic",
+                "They claimed computers could never translate text strings into switches",
+                "They dismissed prose-like commands as clumsy compared to terse symbols"
+              ],
+              "correct_index": 3,
+              "explanation": "Many early engineers, accustomed to compact mathematical notation and low-level numeric codes, viewed English-like programming statements with skepticism."
+            }
+          ]
+        },
+        {
+          "id": "ch_007",
+          "title": "FLOW-MATIC and Self-Documenting Code",
+          "content_markdown": "Hopper proved her skeptics wrong at Remington Rand UNIVAC by leading the team that built **FLOW-MATIC** (originally called B-0), completed in 1958 as the first practical English-like business data-processing language. Instead of cryptic numeric operation codes, a FLOW-MATIC programmer wrote crisp imperative phrases such as `INPUT INVENTORY FILE`, `COMPARE PRODUCT-NO`, or `TRANSFER TO OUTPUT`.\n\nThis approach championed **self-documenting code**—source text written so clearly that the program itself serves as its own readable explanation. Think of a well-written kitchen recipe or a plain-language loan agreement: rather than forcing you to flip back and forth to a separate manual that might be months out of date, the instructions explain their own intent right on the page. Even better, FLOW-MATIC kept descriptions of business files separate from the step-by-step processing verbs, planting a crucial seed for COBOL.",
+          "questions": [
+            {
+              "id": "q_013",
+              "prompt": "What is the core idea behind self-documenting code?",
+              "choices": [
+                "Writing programs so clearly that the source text explains its own logic",
+                "Using a compiler to print a separate user manual after each run",
+                "Attaching mandatory paper flowcharts to every batch punch-card deck",
+                "Embedding customer receipts directly inside a program's input records"
+              ],
+              "correct_index": 0,
+              "explanation": "Self-documenting code uses descriptive words and clear structure so human readers can understand what the software does directly from the program itself without relying solely on separate manuals."
+            },
+            {
+              "id": "q_014",
+              "prompt": "Beyond English-like verbs, what key structural idea from FLOW-MATIC directly shaped COBOL?",
+              "choices": [
+                "Embedding hardware voltage settings directly inside every arithmetic line",
+                "Requiring every payroll program to fit onto a single punch card",
+                "Keeping data file descriptions separate from processing instructions",
+                "Eliminating compilers so computers executed English directly in circuits"
+              ],
+              "correct_index": 2,
+              "explanation": "FLOW-MATIC pioneered separating descriptions of business files from the procedural commands acting on them, a design principle that became central to COBOL."
+            }
+          ]
+        },
+        {
+          "id": "ch_008",
+          "title": "Three Ancestors Blended into COBOL-60",
+          "content_markdown": "When CODASYL's Short Range Committee—including designers Jean Sammet, Joseph Wegstein, Gertrude Tierney, and Howard Bromberg, with Grace Hopper advising—drafted the first **COBOL-60** specification in late 1959, they did not start from a blank sheet. Instead, they synthesized three existing business languages into a single compromise design.\n\n**FLOW-MATIC** supplied the backbone: English-like verbs, multi-word hyphenated names, and separate data descriptions. The U.S. Air Force's **AIMACO** (*Air Materiel Command Automatic Compiler*), itself an offshoot of FLOW-MATIC, reinforced military inventory needs and expanded English phrasing. Finally, IBM's **COMTRAN** (*Commercial Translator*), led by Bob Bemer, contributed compact data-field templates and structured `IF ... THEN ... ELSE` decision logic. Put together, a COBOL payroll calculation read almost like a clerical memo: `MULTIPLY HOURS-WORKED BY HOURLY-RATE GIVING GROSS-PAY.` Any auditor could follow the rule at a glance.",
+          "questions": [
+            {
+              "id": "q_015",
+              "prompt": "Which three earlier business languages directly fed ideas into the original COBOL-60 design?",
+              "choices": [
+                "FORTRAN, punch-card sorting codes, and numeric machine instructions",
+                "FLOW-MATIC, the Air Force's AIMACO, and IBM's COMTRAN",
+                "UNIVAC scientific tables, RCA wiring charts, and bank ledger codes",
+                "IBM payroll formulas, federal tax manuals, and clerical shorthand"
+              ],
+              "correct_index": 1,
+              "explanation": "CODASYL's Short Range Committee built COBOL-60 primarily by combining Hopper's FLOW-MATIC, the Air Force's FLOW-MATIC-based AIMACO, and IBM's COMTRAN."
+            },
+            {
+              "id": "q_016",
+              "prompt": "What major contribution did IBM's COMTRAN bring to the blended COBOL design?",
+              "choices": [
+                "Eliminating English words in favor of pure Greek math notation",
+                "Running interactive queries over long-distance telephone wire links",
+                "Replacing batch magnetic tapes with hand-wired mechanical sorters",
+                "Compact data-field templates and structured conditional branching"
+              ],
+              "correct_index": 3,
+              "explanation": "Bob Bemer's COMTRAN at IBM contributed structured field templates and clear IF-THEN-ELSE branching rules alongside FLOW-MATIC's English-like verbs."
+            }
+          ]
+        },
+        {
+          "id": "ch_009",
+          "title": "The Readability Mirage and the 'COBOL Tombstone'",
+          "content_markdown": "English-like code came with a subtle twist that software designers still debate today. Making *one* sentence look like English (`ADD BONUS TO SALARY`) certainly helped an auditor verify a single rule. Yet verbosity was a double-edged sword: business executives almost never wrote programs themselves, programmers had to punch far more characters onto cards, and reading fifty thousand lines of chatty prose could still feel like wading through an endless tax manual.\n\nEarly skepticism ran even deeper inside the industry itself. Because CODASYL was a committee of fierce rivals rushing against an impossible deadline, many insiders predicted COBOL would die within two years. In 1960, frustrated RCA committee member Howard Bromberg famously bought a small granite headstone engraved with `COBOL` and mailed it to Pentagon sponsor Charles Phillips. The **'COBOL tombstone'** became a beloved piece of computing folklore—an obituary delivered decades too soon.",
+          "questions": [
+            {
+              "id": "q_017",
+              "prompt": "What real-world trade-off emerged from COBOL's English-like, verbose style?",
+              "choices": [
+                "Individual rules were easy to scan, yet large systems required heavy typing",
+                "Business executives quickly replaced all professional programmers overnight",
+                "Auditors could read the code, but compilers could not check spelling errors",
+                "English syntax prevented programs from performing subtraction or division"
+              ],
+              "correct_index": 0,
+              "explanation": "While English-style phrasing made individual statements transparent to non-specialists, executives rarely coded themselves and programmers faced far more verbose source text across large systems."
+            },
+            {
+              "id": "q_018",
+              "prompt": "Why did RCA's Howard Bromberg mail a granite 'COBOL tombstone' to Pentagon sponsor Charles Phillips in 1960?",
+              "choices": [
+                "To commemorate the official retirement of Grace Hopper's FLOW-MATIC",
+                "To protest federal plans to cancel all punch-card manufacturing plants",
+                "To joke about widespread doubts that the committee language would survive",
+                "To mark the death of IBM's scientific FORTRAN compiler project"
+              ],
+              "correct_index": 2,
+              "explanation": "Frustrated by vendor foot-dragging and pervasive industry skepticism that COBOL had any future, Bromberg sent the engraved tombstone as a sardonic prank."
+            }
+          ]
+        },
+        {
+          "id": "ch_010",
+          "title": "Outliving Its Own Obituary",
+          "content_markdown": "Today, Howard Bromberg's granite tombstone rests in California's Computer History Museum as one of technology's sharpest ironies. Just months after that prank arrived at the Pentagon, COBOL silenced its loudest doubters. In December 1960, engineers staged a dramatic public test: they took the very same COBOL payroll program and ran it successfully on two completely different machines—an RCA 501 and a Remington Rand UNIVAC II.\n\nThat milestone validated both halves of the CODASYL vision. Grace Hopper's FLOW-MATIC dream of English-like, self-documenting business code had fused with multi-vendor portability to launch a language that would outlive nearly every critic who laughed at it. Yet that December 1960 demonstration raises an intriguing engineering puzzle. An RCA 501 and a UNIVAC II attached their tape drives, printers, and memory in totally different ways. How could one COBOL program cross that hardware gulf without being rewritten from top to bottom?",
+          "questions": [
+            {
+              "id": "q_019",
+              "prompt": "What did the December 1960 demonstration on an RCA 501 and a UNIVAC II prove?",
+              "choices": [
+                "English-like programs no longer required any compiler to execute",
+                "RCA and Remington Rand had merged into one unified hardware company",
+                "COBOL outperformed FORTRAN on supersonic aircraft wind-tunnel math",
+                "A single COBOL program could run across rival manufacturers' computers"
+              ],
+              "correct_index": 3,
+              "explanation": "Running essentially the same COBOL program on both an RCA 501 and a UNIVAC II proved in practice that vendor-independent business software portability really worked."
+            },
+            {
+              "id": "q_020",
+              "prompt": "What engineering puzzle naturally follows from moving one COBOL program between an RCA 501 and a UNIVAC II?",
+              "choices": [
+                "Why auditors preferred handwritten ledgers over magnetic tape reels",
+                "How COBOL kept machine-specific hardware details from breaking shared logic",
+                "Why UNIVAC machines refused to read alphabetical customer names",
+                "How Grace Hopper designed integrated microchips inside the Pentagon"
+              ],
+              "correct_index": 1,
+              "explanation": "Because competing computers connected printers, card readers, and tape drives differently, COBOL needed a clean structural way to isolate hardware settings from business logic."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_03",
+      "title": "3. COBOL's Four-Division Architecture \u0026 Enterprise Portability",
+      "summary": "Unpack COBOL's strict four-division structure—IDENTIFICATION, ENVIRONMENT, DATA, and PROCEDURE—to see how isolating machine-specific hardware and file bindings from data layouts and business rules pioneered enterprise software portability. Follow how clean separation of concerns allowed the December 1960 RCA-and-UNIVAC compatibility test to move a working business program between rival computers largely by editing only the ENVIRONMENT DIVISION, while noting fixed-column 80-character coding sheets as an artifact of the punch-card era.",
+      "introduced_terms": [
+        "four-division architecture",
+        "data schema",
+        "separation of concerns"
+      ],
+      "chunks": [
+        {
+          "id": "ch_011",
+          "title": "The Portable Kitchen Recipe Puzzle",
+          "content_markdown": "Imagine writing down a cherished family soup recipe to mail to a cousin in another state. If step three says, 'Turn the cracked brass knob on the 1956 gas range halfway and reach into the tall pantry for the green tin,' your cousin will be baffled. Every kitchen has a different stove, different shelves, and different cookware.\n\nEarly business programmers ran headfirst into that exact kitchen problem. When a program mixed payroll tax formulas right alongside hardware addresses for a specific tape drive or line printer, moving the program to a different computer meant hunting through thousands of tangled lines to tear out machine-specific assumptions. To make enterprise software truly portable across competing mainframes, COBOL's architects had to invent a disciplined way to wall off local kitchen equipment from the universal ingredients and cooking steps.",
+          "questions": [
+            {
+              "id": "q_021",
+              "prompt": "Why does mixing stove-specific instructions into a family recipe mirror the challenge of 1950s software portability?",
+              "choices": [
+                "Both fail because human readers prefer numerical tables over prose",
+                "Both require specialized thermometers before any ingredients are measured",
+                "Embedding local hardware details prevents reusing the same core steps elsewhere",
+                "Replacing old equipment forces rewriting basic arithmetic rules from scratch"
+              ],
+              "correct_index": 2,
+              "explanation": "Just as stove-specific directions break in another kitchen, tangling tape-drive or printer addresses into business rules stops a program from moving cleanly to another machine."
+            },
+            {
+              "id": "q_022",
+              "prompt": "What happened when early business programs scattered hardware device references throughout their calculation lines?",
+              "choices": [
+                "Porting to a new machine required combing through thousands of mixed lines",
+                "Compilers automatically ignored hardware names and guessed the right drive",
+                "Magnetic tapes spun backward whenever two brands exchanged payroll files",
+                "Business auditors gained faster access to underlying electronic circuit diagrams"
+              ],
+              "correct_index": 0,
+              "explanation": "When device-specific references were woven directly into business calculations, migrating to new hardware forced painstaking, error-prone edits across the entire program."
+            }
+          ]
+        },
+        {
+          "id": "ch_012",
+          "title": "Separation of Concerns and COBOL's Four Divisions",
+          "content_markdown": "COBOL solved the portability puzzle through **separation of concerns**—a software design principle that divides a program into distinct sections, each responsible for one clear job so edits in one place do not ripple everywhere else. Every classic COBOL program enforced a mandatory **four-division architecture**, always written in the same sequence.\n\nFirst came the **IDENTIFICATION DIVISION**, a title page naming the program, author, and date written. Second came the **ENVIRONMENT DIVISION**, the quarantine zone holding every machine-specific detail—which computer compiles the code and how logical names like `PAYROLL-FILE` attach to physical tape drives or card readers. Third came the **DATA DIVISION**, defining the program's **data schema**—a formal blueprint of every input record, output report line, and workspace field. Finally came the **PROCEDURE DIVISION**, holding the actual step-by-step business calculations and rules.",
+          "questions": [
+            {
+              "id": "q_023",
+              "prompt": "Which COBOL division acted as the quarantine zone for machine models and physical tape-drive assignments?",
+              "choices": [
+                "The IDENTIFICATION DIVISION at the top of the source deck",
+                "The PROCEDURE DIVISION holding all executable business verbs",
+                "The DATA DIVISION describing every customer field and balance",
+                "The ENVIRONMENT DIVISION linking logical files to local hardware"
+              ],
+              "correct_index": 3,
+              "explanation": "COBOL isolated computer names and physical device-to-file mappings inside the ENVIRONMENT DIVISION so the rest of the program remained hardware-independent."
+            },
+            {
+              "id": "q_024",
+              "prompt": "In COBOL's four-division architecture, what is the primary job of the DATA DIVISION?",
+              "choices": [
+                "Listing the programmer's name, department, and original creation date",
+                "Defining the formal data schema for all records, reports, and workspace fields",
+                "Executing overtime calculations and writing finished paychecks to paper",
+                "Specifying which vendor's tape reels mount onto each physical drive unit"
+              ],
+              "correct_index": 1,
+              "explanation": "The DATA DIVISION serves as the program's data schema, specifying the exact layout of every file record, report line, and temporary variable before any processing begins."
+            }
+          ]
+        },
+        {
+          "id": "ch_013",
+          "title": "Walkthrough: Crossing the RCA–UNIVAC Chasm",
+          "content_markdown": "Watch how cleanly this four-division architecture worked during the landmark December 1960 compatibility test between an RCA 501 and a Remington Rand UNIVAC II. Suppose a company already had a working COBOL payroll program running on its UNIVAC machine and wanted to compile and run the very same program on an RCA 501 across town.\n\nThe porting engineer opened the source deck and left three of the four divisions virtually untouched. The `IDENTIFICATION DIVISION` still named the payroll job. The `DATA DIVISION` still described the same employee names, tax codes, and pay balances. The `PROCEDURE DIVISION` still applied the exact same overtime and withholding logic. Nearly every required change sat neatly inside the `ENVIRONMENT DIVISION`, where the engineer swapped the machine name and redirected logical file labels like `TIME-CARDS` from a UNIVAC drive to an RCA unit—then fed the deck to the RCA compiler.",
+          "questions": [
+            {
+              "id": "q_025",
+              "prompt": "When engineers moved a COBOL payroll program from a UNIVAC II to an RCA 501 in 1960, which division absorbed almost all the edits?",
+              "choices": [
+                "The DATA DIVISION, because employee names required different alphabets",
+                "The PROCEDURE DIVISION, because multiplication verbs varied by brand",
+                "The ENVIRONMENT DIVISION, where hardware models and file devices were mapped",
+                "The IDENTIFICATION DIVISION, where federal tax tables were stored"
+              ],
+              "correct_index": 2,
+              "explanation": "Because machine configurations and physical file bindings lived inside the ENVIRONMENT DIVISION, programmers could port COBOL software across rival hardware while leaving data schemas and business logic intact."
+            },
+            {
+              "id": "q_026",
+              "prompt": "Why did separating logical file names from physical drive units help enterprises survive hardware upgrades?",
+              "choices": [
+                "Business rules could reference stable file names even when hardware changed",
+                "Compilers could remap hardware wiring automatically without editing any division",
+                "Logical file names removed the need for separate input and output drives",
+                "Tape drives from rival vendors all adopted identical electrical connectors"
+              ],
+              "correct_index": 0,
+              "explanation": "Because the PROCEDURE DIVISION referred only to abstract logical names like TIME-CARDS, changing the underlying physical device only required updating the mapping in the ENVIRONMENT DIVISION."
+            }
+          ]
+        },
+        {
+          "id": "ch_014",
+          "title": "A Modern Architecture Inside an 80-Column Cage",
+          "content_markdown": "COBOL's four-division layout offers a classic study in lasting innovations versus historical dead ends. The conceptual split between environment wiring, data schemas, and business logic proved timeless. Yet right alongside that forward-looking architecture sat a rigid physical relic: the **80-column punch card**.\n\nProgrammers wrote COBOL on gridded paper coding sheets whose eighty columns matched a standard cardboard card. Columns 1 through 6 held card sequence numbers—a lifesaver if an operator tripped and spilled two thousand cards across the floor! Column 7 marked comments or wrapped lines. Division, section, and named block headers *had* to begin in **Area A** (columns 8 through 11), while ordinary statements belonged in **Area B** (columns 12 through 72), leaving columns 73 through 80 for deck identification tags. Slipping a division header one column too far right caused the compiler to reject the card—a finicky punch-card constraint that outlived punch cards by decades.",
+          "questions": [
+            {
+              "id": "q_027",
+              "prompt": "Why did classic COBOL coding sheets reserve columns 1 through 6 on every line for sequence numbers?",
+              "choices": [
+                "To store each customer's six-digit bank account number on the line",
+                "To measure how many microseconds the processor spent executing that card",
+                "To tell the compiler which brand of mainframe should compile the code",
+                "To let operators re-sort a punch-card deck if someone dropped it"
+              ],
+              "correct_index": 3,
+              "explanation": "Before screens and files replaced cardboard decks, sequence numbers in columns 1–6 allowed a mechanical card sorter to put a dropped stack of COBOL cards back in order."
+            },
+            {
+              "id": "q_028",
+              "prompt": "What aspect of classic COBOL's line layout illustrates a hardware-era dead end rather than a lasting software innovation?",
+              "choices": [
+                "Separating physical file bindings from reusable business logic",
+                "Forcing headers and statements into rigid column zones on 80-character lines",
+                "Keeping employee data schemas grouped together in one dedicated section",
+                "Allowing different computer vendors to compile the same source deck"
+              ],
+              "correct_index": 1,
+              "explanation": "Strict Area A and Area B column margins reflected 1950s 80-column punch cards and became an awkward formatting annoyance once programmers moved to free-form text editors."
+            }
+          ]
+        },
+        {
+          "id": "ch_015",
+          "title": "Pioneering Layered Enterprise Software",
+          "content_markdown": "Even though nobody misses counting spaces across Area A and Area B, COBOL's four-division architecture quietly established one of the bedrock patterns of modern software engineering. Today, when web developers keep server addresses in configuration files, define customer tables in separate database schemas, and write application logic in cleanly isolated source modules, they are practicing the exact separation of concerns that CODASYL baked into COBOL in 1959.\n\nFor 1960s corporations investing millions in business software, that architectural discipline transformed code from a disposable hardware accessory into a durable corporate asset that could outlive the computer it was born on. Now that we have seen how COBOL partitioned a whole program into four tidy rooms, let's step inside the third room—the `DATA DIVISION`—to discover how COBOL invented an extraordinary new way to describe messy, real-world business records.",
+          "questions": [
+            {
+              "id": "q_029",
+              "prompt": "Which modern software practice directly echoes COBOL's separation of its ENVIRONMENT, DATA, and PROCEDURE divisions?",
+              "choices": [
+                "Keeping deployment configs, database schemas, and business logic in separate layers",
+                "Hard-coding server network addresses inside every arithmetic calculation function",
+                "Restricting every source file to exactly eighty characters per line",
+                "Requiring developers to number every line sequentially by hand"
+              ],
+              "correct_index": 0,
+              "explanation": "Modern layered systems separate environment configuration, data schemas, and core application logic for the same portability and maintainability reasons COBOL pioneered in 1959."
+            },
+            {
+              "id": "q_030",
+              "prompt": "How did COBOL's four-division portability change the economic role of business software inside large companies?",
+              "choices": [
+                "It forced corporations to buy every future mainframe from a single vendor",
+                "It eliminated the need for compilers by standardizing physical wiring",
+                "It shrank corporate payroll programs so they ran without data schemas",
+                "It turned business code into a long-lived asset able to outlast hardware"
+              ],
+              "correct_index": 3,
+              "explanation": "By isolating machine dependencies so programs could migrate across hardware generations, COBOL transformed corporate software from throwaway machine code into a durable business asset."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_04",
+      "title": "4. Structured Records, Level Numbers \u0026 PICTURE Templates in the DATA DIVISION",
+      "summary": "Explore how COBOL moved beyond uniform arrays of scientific numbers by inventing hierarchical composite record structures inside the DATA DIVISION, using indented level numbers (such as 01, 05, and 10) to group heterogeneous customer, payroll, and ledger fields into clean tree-like schemas. Demystify PICTURE (PIC) field templates—including fixed-width text, numeric digits, implied decimal points, and check-printing masks—and see how byte-exact record layouts mapped effortlessly onto fixed-width punch-card and magnetic-tape batch processing.",
+      "introduced_terms": [
+        "composite record structure",
+        "level number",
+        "PICTURE clause"
+      ],
+      "chunks": [
+        {
+          "id": "ch_016",
+          "title": "Why Scientific Arrays Couldn't Hold a Bank Customer",
+          "content_markdown": "Early scientific languages like FORTRAN revolved around a clean mathematical building block called an **array**—a numbered list or grid where every single slot holds the exact same kind of value, such as ten thousand temperature readings measured across an airplane wing. For physics and engineering, uniform arrays of numbers were a dream come true.\n\nNow try stuffing a real-world bank customer or factory employee into a uniform grid of numbers. An employee file mixes wildly different kinds of facts: an alphabetical surname, a numeric badge ID, a three-part hire date, a two-letter state code, and an hourly wage with cents. Storing each piece in a separate disconnected array forced programmers to juggle fragile parallel lists that easily slipped out of sync. Business computing urgently needed a way to bundle mixed, heterogeneous facts into one cohesive unit.",
+          "questions": [
+            {
+              "id": "q_031",
+              "prompt": "Why were FORTRAN-style uniform arrays poorly suited for representing corporate payroll or customer files?",
+              "choices": [
+                "Arrays could store alphabetical names but refused to hold numeric digits",
+                "Business records bundle mixed types like text, dates, codes, and money together",
+                "Arrays could not be read sequentially from punch cards or magnetic tape",
+                "Business files rarely contained more than ten rows of customer information"
+              ],
+              "correct_index": 1,
+              "explanation": "Arrays hold homogeneous elements of one type, whereas a single business record combines heterogeneous fields—such as names, ID numbers, dates, and dollar balances—that belong together."
+            },
+            {
+              "id": "q_032",
+              "prompt": "What risk arose when programmers split one customer's mixed details across several separate parallel arrays?",
+              "choices": [
+                "The computer could no longer print reports on continuous paper",
+                "Each separate array automatically converted text letters into zeroes",
+                "Batch tape drives refused to read more than one file per night",
+                "Keeping matching rows aligned across disconnected lists was fragile and error-prone"
+              ],
+              "correct_index": 3,
+              "explanation": "When names, dates, and balances lived in separate arrays, sorting or deleting an entry in one list could easily leave the other lists misaligned."
+            }
+          ]
+        },
+        {
+          "id": "ch_017",
+          "title": "Composite Record Structures and Level Numbers",
+          "content_markdown": "COBOL answered that challenge inside its `DATA DIVISION` by pioneering the **composite record structure**—a single named bundle that groups mixed fields together like a printed personnel form divided into labeled boxes. Even better, boxes could nest inside larger boxes to form a tidy hierarchy.\n\nTo express that tree-like outline without messy punctuation, COBOL introduced the **level number** at the start of each field line. Level `01` always marks the entire outer record, such as `01 EMPLOYEE-RECORD`. Indented lines marked `05` declare major sub-groups inside it, like `05 EMPLOYEE-NAME` or `05 HIRE-DATE`. Lines marked `10` break a group down further into elementary pieces—`10 HIRE-YEAR`, `10 HIRE-MONTH`, and `10 HIRE-DAY`. Programmers deliberately stepped by fives (`05`, `10`, `15`) rather than ones so future maintainers could insert a new intermediate grouping without renumbering the entire schema.",
+          "questions": [
+            {
+              "id": "q_033",
+              "prompt": "How do COBOL level numbers organize a composite record structure inside the DATA DIVISION?",
+              "choices": [
+                "Level 01 names the whole record while higher numbers nest sub-groups and fields",
+                "Level 01 holds the smallest digit while higher numbers merge separate files",
+                "Level numbers indicate how many times a line should repeat on a paycheck",
+                "Level numbers rank employees by corporate seniority inside payroll batches"
+              ],
+              "correct_index": 0,
+              "explanation": "COBOL uses level 01 for the outer record and progressively higher numbers such as 05 and 10 to show nested sub-groups and elementary fields inside that record."
+            },
+            {
+              "id": "q_034",
+              "prompt": "Why did COBOL programmers typically increment nested level numbers by fives (05, 10, 15) instead of by ones?",
+              "choices": [
+                "Early compilers only recognized multiples of five after the number one",
+                "Punch cards had five pre-printed vertical lines across every column",
+                "Leaving gaps let maintainers insert new grouping levels without renumbering",
+                "Incrementing by fives reserved extra blank memory bytes for inflation"
+              ],
+              "correct_index": 2,
+              "explanation": "Numbering nested levels in steps of five left room to insert new intermediate hierarchy levels later without rewriting every existing level number below."
+            }
+          ]
+        },
+        {
+          "id": "ch_018",
+          "title": "Reading PICTURE (PIC) Field Templates",
+          "content_markdown": "Once a group narrowed down to an individual field, how did COBOL specify its exact shape? Using the **PICTURE clause** (usually shortened to `PIC`), an ingenious notation adapted from IBM's COMTRAN that literally drew a character-by-character template of the data.\n\nWatch how readable a `PIC` template is. `PIC X(20)` reserves twenty alphanumeric characters—letters, digits, or spaces—for a surname. `PIC 9(5)` reserves five unsigned digits from `0` through `9`, such as a postal code. For money, `PIC S9(5)V99` reserves a signed seven-digit number (`S` tracks positive or negative) where `V` marks an **implied decimal point**: the computer remembers that the last two digits are cents without wasting a **byte** (one character-sized slot of computer memory) storing a literal dot! When printing a paycheck, an edited template like `PIC ZZ,ZZ9.99` automatically suppresses leading zeros (`00,045.20` prints neatly as `45.20`), inserts commas, and can even slide a currency symbol snug against the first digit.",
+          "questions": [
+            {
+              "id": "q_035",
+              "prompt": "In the COBOL template `PIC S9(5)V99`, what does the letter `V` tell the compiler?",
+              "choices": [
+                "Store the numeric value using variable-length alphabetical text characters",
+                "Track an implied decimal point between dollars and cents without storing a dot",
+                "Verify that the employee's name begins with a valid alphabetical letter",
+                "Reserve one physical byte exclusively for a printed comma separator"
+              ],
+              "correct_index": 1,
+              "explanation": "The `V` symbol marks an implied decimal point: the compiler aligns decimal arithmetic at that position without spending an extra storage character on a literal period."
+            },
+            {
+              "id": "q_036",
+              "prompt": "What formatting transformation does an editing template like `PIC ZZ,ZZ9.99` perform for printed reports?",
+              "choices": [
+                "It converts alphabetical customer names into six-digit numeric account IDs",
+                "It rounds every paycheck down to the nearest whole hundred dollars",
+                "It compresses two customer records onto one eighty-column punch card",
+                "It suppresses leading zeros while inserting commas and a visible decimal point"
+              ],
+              "correct_index": 3,
+              "explanation": "COBOL's `Z` editing characters replace unwanted leading zeros with spaces while inserting literal commas and a decimal point to produce clean, human-ready statements and checks."
+            }
+          ]
+        },
+        {
+          "id": "ch_019",
+          "title": "Byte-Exact Fit for Punch Cards and Magnetic Tapes",
+          "content_markdown": "Look closely at why `PIC` templates made so much sense on 1960s hardware. Every elementary field had a rigid, fixed character width known before the program ever ran. Add up all the `PIC` widths inside a payroll record—say `20` bytes for name, `5` for badge ID, `6` for hire date, `7` for salary, and `42` for address—and the total equaled **80 characters**: the exact width of one standard punch card!\n\nThat byte-exact alignment made batch processing blisteringly efficient. A single `READ` command pulled an entire eighty-character card or fixed-width tape block straight into memory, where the `01` record layout overlaid every field instantly—zero scanning for commas or quotes required! Of course, this hardware fit carried a quirky trade-off: short names like `LI` wasted eighteen trailing blank spaces, while long surnames risked getting chopped right off at column twenty.",
+          "questions": [
+            {
+              "id": "q_037",
+              "prompt": "Why did COBOL's fixed-width `PIC` templates pair so efficiently with 1960s punch-card and tape batch processing?",
+              "choices": [
+                "Variable-length fields automatically expanded cardboard cards during reading",
+                "Fixed widths let computers compress English words into single bits",
+                "Reading a raw card or tape block overlaid every defined field directly in memory",
+                "Fixed-width records eliminated the need for an ENVIRONMENT DIVISION"
+              ],
+              "correct_index": 2,
+              "explanation": "Because every field occupied exact predetermined character positions, reading a fixed-width punch card or tape record into memory immediately aligned every field without slow delimiter parsing."
+            },
+            {
+              "id": "q_038",
+              "prompt": "What practical drawback came with COBOL's rigid fixed-width record fields?",
+              "choices": [
+                "Short entries wasted blank padding while overly long names could be truncated",
+                "Programmers could no longer store numeric digits beside text fields",
+                "Tape drives had to rewind to the start after reading each individual character",
+                "Auditors were unable to inspect the total byte length of a customer record"
+              ],
+              "correct_index": 0,
+              "explanation": "Fixed-width fields traded storage flexibility for speed: short strings padded out unused space with blanks, and unusually long values risked being cut off at the field boundary."
+            }
+          ]
+        },
+        {
+          "id": "ch_020",
+          "title": "From DATA DIVISION Records to Modern Schemas",
+          "content_markdown": "Step back and appreciate how quietly revolutionary COBOL's `DATA DIVISION` really was. Long before modern programming languages existed, COBOL proved that real-world software needs richly structured, nested records mixing text, dates, and numbers under one clear schema. That single breakthrough echoed across decades of computing—reappearing as grouped record types (`record` in Pascal and `struct` in C), table row schemas in modern databases, and nested objects in contemporary web data formats.\n\nYet one tantalizing detail inside our `PIC S9(5)V99` example deserves a closer look. Why did COBOL go to such lengths to store base-10 decimal digits and track an implied decimal point, instead of simply reusing the fast binary fractional numbers that scientific computers already used in FORTRAN? The answer exposes a surprising trap hiding inside ordinary binary arithmetic—one that can make a bank's books refuse to balance.",
+          "questions": [
+            {
+              "id": "q_039",
+              "prompt": "Which modern computing concepts descend most directly from COBOL's hierarchical composite record structures?",
+              "choices": [
+                "Graphics pixel shaders and three-dimensional rendering pipelines",
+                "Wireless radio signal modulation and network encryption keys",
+                "Touchscreen gesture recognition and voice-assistant microphones",
+                "C structs, database table schemas, and nested structured data formats"
+              ],
+              "correct_index": 3,
+              "explanation": "COBOL's composite records pioneered bundling heterogeneous fields into structured schemas, directly inspiring Pascal records, C structs, database rows, and modern nested data formats."
+            },
+            {
+              "id": "q_040",
+              "prompt": "What puzzle raised by COBOL's `PIC S9(5)V99` monetary templates motivates looking closely at computer arithmetic next?",
+              "choices": [
+                "Why keyboards lacked a key for typing the letter V in 1959",
+                "Why financial software avoided ordinary binary fractions in favor of decimal digits",
+                "Why scientific FORTRAN programs refused to store positive integers",
+                "Why punch cards could only hold seven digits across an entire line"
+              ],
+              "correct_index": 1,
+              "explanation": "Seeing COBOL carefully track decimal digits and implied decimal points raises the fundamental question of why binary floating-point numbers fail penny-exact financial accounting."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_05",
+      "title": "5. Exact Fixed-Point Decimal Math vs. Binary Floating-Point",
+      "summary": "Show from first principles why binary floating-point numbers cannot represent simple base-10 fractions like $$0.1$$ or $$0.2$$ cleanly, introducing tiny rounding errors on sums like $$0.1 + 0.2$$ that are harmless in physics but unacceptable on penny-exact financial ledgers. Explain how COBOL solved this with fixed-point decimal arithmetic and space-saving packed Binary-Coded Decimal (BCD)—storing two base-10 digits per byte plus a sign—and how commercial mainframes baked dedicated decimal instructions straight into hardware and microcode.",
+      "introduced_terms": [
+        "binary floating-point",
+        "fixed-point decimal arithmetic",
+        "packed Binary-Coded Decimal (BCD)"
+      ],
+      "chunks": [
+        {
+          "id": "ch_021",
+          "title": "The Ten-Cent Puzzle: Why 0.1 + 0.2 Goes Slightly Awry",
+          "content_markdown": "Here is a startling quirk you can still reproduce on almost any computer today: ask a standard scientific programming language to compute $$0.1 + 0.2$$, and instead of an exact $$0.3$$, the answer under the hood is $$0.30000000000000004$$! Why would a sophisticated electronic brain stumble over ten cents plus twenty cents?\n\nThe culprit is how scientific computers store fractional numbers. Inside their circuits, computers represent information using **bits**—tiny electronic switches that can only be `0` or `1`, forming a base-2 (**binary**) number system. To handle measurements ranging from microscopic atoms to distant galaxies, scientific machines relied on **binary floating-point** arithmetic. Think of it as base-2 scientific notation: the computer stores a string of binary digits alongside an exponent that lets the fractional point 'float' left or right. That design is remarkably fast and versatile—until it meets ordinary base-10 money.",
+          "questions": [
+            {
+              "id": "q_041",
+              "prompt": "How does binary floating-point representation allow scientific computers to cover both tiny atomic and vast astronomical scales?",
+              "choices": [
+                "It switches automatically to exact base-10 digits for tiny fractions",
+                "It reserves a fixed number of columns strictly for whole integers",
+                "It stores binary digits with an exponent that slides the fractional point",
+                "It links several separate punch cards together for every large number"
+              ],
+              "correct_index": 2,
+              "explanation": "Binary floating-point works like base-2 scientific notation, pairing a fixed set of binary digits with an exponent that shifts the fractional point across huge ranges."
+            },
+            {
+              "id": "q_042",
+              "prompt": "What surprising behavior happens when standard binary floating-point arithmetic evaluates $$0.1 + 0.2$$?",
+              "choices": [
+                "Tiny representation slivers yield a value slightly off from exact $$0.3$$",
+                "The computer crashes because binary circuits cannot add two fractions",
+                "The result rounds cleanly to $$0.0$$ whenever values are under one",
+                "The hardware automatically converts the sum into a text string"
+              ],
+              "correct_index": 0,
+              "explanation": "Because $$0.1$$ and $$0.2$$ cannot be represented finitely in base 2, adding their binary floating-point approximations yields a tiny discrepancy such as $$0.30000000000000004$$."
+            }
+          ]
+        },
+        {
+          "id": "ch_022",
+          "title": "Why Binary Fractions Cannot Hold One-Tenth Cleanly",
+          "content_markdown": "You already know the exact math behind this bug from grade-school division! In our everyday base-10 system—built from fractions whose denominators use powers of $$10$$—try writing $$\\frac{1}{3}$$ as a decimal. You get $$0.3333\\dots$$ repeating forever, because $$3$$ does not divide evenly into $$10$$.\n\nBinary floating-point faces the exact mirror-image trap. Because binary is base-2, its neat fractional building blocks are powers of two: $$\\frac{1}{2} = 0.5$$, $$\\frac{1}{4} = 0.25$$, $$\\frac{1}{8} = 0.125$$, and $$\\frac{1}{16} = 0.0625$$. Half a dollar ($$0.50$$) or a quarter ($$0.25$$) fits cleanly into binary. Now try writing one dime, $$\\frac{1}{10} = 0.1$$, as a sum of binary halves, quarters, and eighths. Because $$10$$ contains a factor of $$5$$ that never divides cleanly into any power of $$2$$, $$0.1$$ stretches into an endless repeating binary pattern: $$0.0001100110011\\dots_2$$. Chopping off that infinite tail to fit inside memory introduces a tiny error on every single dime.",
+          "questions": [
+            {
+              "id": "q_043",
+              "prompt": "Why does $$0.1$$ repeat endlessly in binary just as $$\\frac{1}{3}$$ repeats endlessly in base-10?",
+              "choices": [
+                "Binary switches cannot store any number smaller than $$1$$",
+                "Base-10 numbers use more ink on paper ledgers than binary digits",
+                "Computers discard all fractions whose numerators are odd integers",
+                "The denominator $$10$$ has a factor of $$5$$ that never divides powers of $$2$$"
+              ],
+              "correct_index": 3,
+              "explanation": "A fraction terminates in base 2 only when its reduced denominator is a power of $$2$$; because $$10 = 2 \\times 5$$ includes a factor of $$5$$, $$\\frac{1}{10}$$ repeats forever in binary."
+            },
+            {
+              "id": "q_044",
+              "prompt": "Which currency amount CAN be represented with zero rounding error in binary floating-point?",
+              "choices": [
+                "Ten cents ($$0.10$$), because it equals one divided by ten",
+                "Twenty-five cents ($$0.25$$), because it equals $$\\frac{1}{4}$$, a power of two",
+                "Twenty cents ($$0.20$$), because it equals one divided by five",
+                "Thirty cents ($$0.30$$), because three is an odd prime number"
+              ],
+              "correct_index": 1,
+              "explanation": "$$0.25 = \\frac{1}{4} = \\frac{1}{2^2}$$ uses only a power of two in its denominator, so it terminates cleanly in binary, unlike $$\\frac{1}{10}$$, $$\\frac{1}{5}$$, or $$\\frac{3}{10}$$."
+            }
+          ]
+        },
+        {
+          "id": "ch_023",
+          "title": "Fixed-Point Decimal and Packed BCD Walkthrough",
+          "content_markdown": "COBOL sidestepped binary fraction drift with **fixed-point decimal arithmetic**—storing numbers in base 10 with the decimal point locked in a fixed column, exactly like counting whole cents. Adding $$0.10 + 0.20$$ becomes adding $$10 + 20 = 30$$ cents: always exact, zero repeating binary tails!\n\nTo store those base-10 digits compactly on binary hardware, COBOL embraced **packed Binary-Coded Decimal (BCD)** (written `COMP-3` or `PACKED-DECIMAL`). Remember that one **byte** contains 8 bits, which splits cleanly into two 4-bit halves. Four bits hold sixteen patterns—plenty to encode any single decimal digit from `0` (`0000`) through `9` (`1001`). Packed BCD tucks **two** decimal digits into every byte, plus a 4-bit positive or negative sign code at the end. Walk through storing `+123.45`: the five digits and sign pack into just three bytes—`12`, `34`, and `5+`—nearly halving storage compared to storing one full character byte per digit while preserving exact decimal accuracy.",
+          "questions": [
+            {
+              "id": "q_045",
+              "prompt": "How does packed Binary-Coded Decimal (BCD) store base-10 digits inside standard 8-bit bytes?",
+              "choices": [
+                "It encodes two decimal digits per byte using 4-bit halves plus a 4-bit sign",
+                "It converts every whole dollar into an approximate binary floating-point exponent",
+                "It assigns one full 8-bit alphabetical letter to each decimal digit",
+                "It compresses an entire bank ledger into a single 4-bit switch"
+              ],
+              "correct_index": 0,
+              "explanation": "Packed BCD splits each 8-bit byte into two 4-bit halves—each holding one base-10 digit from 0 to 9—with a final 4-bit sign half-byte at the end."
+            },
+            {
+              "id": "q_046",
+              "prompt": "How many bytes does packed BCD need to store the signed five-digit monetary figure `+123.45` (five digits plus one sign)?",
+              "choices": [
+                "One byte, because all five digits fit inside eight bits",
+                "Six bytes, using one full byte for each digit and the decimal dot",
+                "Three bytes, holding six 4-bit slots for five digits and a sign",
+                "Ten bytes, doubling each digit to check for magnetic tape scratches"
+              ],
+              "correct_index": 2,
+              "explanation": "Five decimal digits plus one sign code require six 4-bit halves, and at two halves per 8-bit byte that packs cleanly into exactly 3 bytes."
+            }
+          ]
+        },
+        {
+          "id": "ch_024",
+          "title": "Why Ledgers Demand Pennies—and Silicon Followed the Money",
+          "content_markdown": "Wait—if binary floating-point error on $$0.1 + 0.2$$ is down in the seventeenth decimal place, why did banks refuse to ignore it? Think about the cultural divide between science and accounting. A physicist measuring airflow over a rocket wing works with sensors accurate to perhaps four or five digits; a tiny seventeenth-place binary sliver is billions of times smaller than instrument noise. Financial accounting operates under strict legal and audit rules: debits must equal credits to the exact penny, and tax or interest rounding follows legally mandated base-10 rules. Over ten million accounts, tiny binary rounding quirks cause penny mismatches that trigger regulatory audits!\n\nHardware makers listened closely to those corporate checkbooks. Rather than forcing COBOL compilers to fake decimal arithmetic slowly in software, commercial mainframes—such as IBM's decimal-oriented 1401 and System/360 business mainframes—built instructions like `Add Packed` and `Multiply Packed` right into hardware and **microcode** (tiny internal control instructions stored inside the **CPU**, or central processing unit).",
+          "questions": [
+            {
+              "id": "q_047",
+              "prompt": "Why could scientific engineers live happily with tiny binary floating-point rounding slivers while banks could not?",
+              "choices": [
+                "Scientists only ever worked with whole integers like 1, 2, and 3",
+                "Sensor data tolerates tiny drift, whereas financial ledgers must balance exactly",
+                "Banking regulations required every computer to run slower than scientific machines",
+                "Binary floating-point worked only on European currencies rather than dollars"
+              ],
+              "correct_index": 1,
+              "explanation": "In science, seventeenth-digit rounding error is dwarfed by real-world measurement uncertainty, whereas accounting and tax laws demand exact base-10 penny arithmetic and balancing ledgers."
+            },
+            {
+              "id": "q_048",
+              "prompt": "How did commercial mainframe designers like IBM support COBOL's packed decimal arithmetic at high business speeds?",
+              "choices": [
+                "By pre-calculating daily interest totals on mechanical desk calculators first",
+                "By banning binary floating-point hardware from every corporate data center",
+                "By requiring programmers to rewrite every addition loop in FORTRAN",
+                "By baking native decimal instructions directly into CPU hardware and microcode"
+              ],
+              "correct_index": 3,
+              "explanation": "Business mainframes such as the IBM 1401 and System/360 provided native decimal instructions—such as Add Packed and Multiply Packed—in hardware and microcode so exact decimal math ran natively."
+            }
+          ]
+        },
+        {
+          "id": "ch_025",
+          "title": "When Language, Math, and Hardware Fit Like Gears",
+          "content_markdown": "Take a moment to admire how tightly COBOL's arithmetic, data layout, and mainframe hardware locked together. Base-10 currency rules demanded exact penny math; fixed-point decimal arithmetic eliminated repeating binary fractions; packed BCD squeezed two base-10 digits into every byte; and mainframe CPUs executed packed-decimal instructions straight in silicon and microcode.\n\nThat hardware-to-language partnership is a textbook example of an enterprise computing innovation that never died: even today, financial databases and modern languages provide exact decimal types whenever real money is on the line. Now we have seen how COBOL separates hardware from logic, builds nested `DATA DIVISION` records, and protects every cent with decimal math. Next, let's step into the fourth and final compartment—the `PROCEDURE DIVISION`—to see how COBOL's action verbs actually control a program and what its compiler has to construct behind the scenes.",
+          "questions": [
+            {
+              "id": "q_049",
+              "prompt": "Which chain best captures how enterprise language semantics and mainframe hardware reinforced each other in COBOL?",
+              "choices": [
+                "Visual charts led to floating-point arrays and specialized display units",
+                "Interactive keyboards led to free-form text parsing and variable tape blocks",
+                "Penny-exact ledgers drove packed BCD and native decimal CPU instructions",
+                "Academic math proofs led to binary fractions and card sequence columns"
+              ],
+              "correct_index": 2,
+              "explanation": "Corporate accounting's need for penny-exact math drove fixed-point decimal semantics, packed BCD storage, and dedicated decimal CPU instructions on business mainframes."
+            },
+            {
+              "id": "q_050",
+              "prompt": "After mastering COBOL's divisions, hierarchical records, and exact decimal math, what part of the language remains to explore next?",
+              "choices": [
+                "How PROCEDURE DIVISION verbs control execution and what COBOL compilers generate",
+                "Why FORTRAN abandoned arrays to adopt eighty-column punch cards",
+                "How Grace Hopper designed the first electronic mainframe in 1945",
+                "Why binary floating-point numbers cannot represent one-half cleanly"
+              ],
+              "correct_index": 0,
+              "explanation": "With COBOL's structure, data layouts, and decimal arithmetic clear, the next step is examining how the PROCEDURE DIVISION expresses control flow and how COBOL compilers translate those verbs into machine code."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_06",
+      "title": "6. Verb-Driven Control Flow \u0026 Inside the COBOL Compiler",
+      "summary": "Examine COBOL's verb-driven PROCEDURE DIVISION—where imperative sentences like MOVE, COMPUTE, READ, and WRITE live inside named paragraphs invoked via PERFORM—and explore why early COBOL's lack of local variables or paragraph parameters kept every field in shared global scope, creating real maintenance hazards alongside notorious dead ends like the ALTER statement. Look under the hood at what COBOL compilers actually generated: not scientific loop optimizations, but dense sequences and runtime-library calls for bulk record moving, format conversion, numeric editing masks, and buffered decimal file I/O.",
+      "introduced_terms": [
+        "PERFORM paragraph",
+        "global scope",
+        "runtime library"
+      ],
+      "chunks": [
+        {
+          "id": "ch_026",
+          "title": "A Program Written Like an Office Procedures Manual",
+          "content_markdown": "Open the `PROCEDURE DIVISION` of a 1960s COBOL payroll program and you will spot something striking right away: there are almost no terse algebraic equations or nested brackets. Instead, the code reads like an office procedures binder written for a methodical clerk.\n\nEvery action begins with an explicit English verb—`READ`, `MOVE`, `ADD`, `SUBTRACT`, `COMPUTE`, `WRITE`, or `CLOSE`. Related commands string together into **sentences** ending in a period, and related sentences gather under descriptive headings called **paragraphs**, such as `CALCULATE-OVERTIME.` or `PRINT-PAY-STUB.` Notice the deliberate psychology here: a human reviewer scanning a tax calculation could follow the high-level workflow almost like reading numbered office checklists. Still, reading a batch of five hundred thousand employee cards requires repeating those paragraphs cleanly without losing track of where you came from.",
+          "questions": [
+            {
+              "id": "q_051",
+              "prompt": "How is executable business logic visually structured inside COBOL's PROCEDURE DIVISION?",
+              "choices": [
+                "Imperative English verbs form period-ended sentences grouped into named paragraphs",
+                "Single-letter Greek variables fill unlabeled grids of mathematical matrices",
+                "Raw binary ones and zeros appear inside columns one through six",
+                "Hardware wire numbers connect relays without any readable text labels"
+              ],
+              "correct_index": 0,
+              "explanation": "COBOL's PROCEDURE DIVISION organizes executable rules using imperative English verbs arranged into sentences (ending with periods) inside named paragraphs."
+            },
+            {
+              "id": "q_052",
+              "prompt": "Why did COBOL organize executable steps into descriptively named paragraphs like `CALCULATE-OVERTIME`?",
+              "choices": [
+                "Mainframe CPUs refused to run instructions longer than one English word",
+                "Periods at the end of sentences doubled the speed of magnetic tape drives",
+                "Paragraph headers replaced the need to define customer files in DATA DIVISION",
+                "Clear procedural headings let teams and auditors follow business workflows easily"
+              ],
+              "correct_index": 3,
+              "explanation": "Structuring code into clearly named paragraphs mirrored office procedure manuals, making complex payroll or billing workflows easier for humans to trace and audit."
+            }
+          ]
+        },
+        {
+          "id": "ch_027",
+          "title": "PERFORM Paragraphs and Structured Business Loops",
+          "content_markdown": "In early computing, one-way jump commands (`GO TO`) frequently tangled large programs into unreadable 'spaghetti code' where control bounced unpredictably from page to page. COBOL offered a far cleaner workhorse: the **PERFORM paragraph**.\n\nThink of `PERFORM` like a checklist item that tells an accounting clerk, 'Go complete Appendix B, and when you hit the end of Appendix B, return right back to step four.' A programmer could write `PERFORM CALCULATE-TAX` to invoke a named paragraph once and return automatically, or write `PERFORM PROCESS-EMPLOYEE UNTIL END-OF-FILE` to repeat an entire processing block for every single card or tape record until the input file ran dry. Better still, `PERFORM ... VARYING` stepped cleanly through tables of tax brackets or monthly totals, keeping routine business loops readable and orderly.",
+          "questions": [
+            {
+              "id": "q_053",
+              "prompt": "How does invoking a COBOL paragraph with `PERFORM` differ from a one-way `GO TO` jump?",
+              "choices": [
+                "`PERFORM` jumps ahead permanently without returning to the original spot",
+                "`PERFORM` executes the named paragraph and automatically returns afterward",
+                "`PERFORM` clears all input files before restarting from the first line",
+                "`PERFORM` compiles the named paragraph into scientific FORTRAN equations"
+              ],
+              "correct_index": 1,
+              "explanation": "Unlike a one-way `GO TO` leap, `PERFORM` transfers control to a named paragraph (once or repeatedly in a loop) and automatically returns to the caller afterward."
+            },
+            {
+              "id": "q_054",
+              "prompt": "What everyday batch-processing task is expressed naturally by `PERFORM PROCESS-EMPLOYEE UNTIL END-OF-FILE`?",
+              "choices": [
+                "Sorting dropped punch cards back into sequence-number order",
+                "Rewriting the ENVIRONMENT DIVISION for a different mainframe brand",
+                "Repeating one employee-processing block across every record in a file",
+                "Converting a printed paper check back into packed decimal bytes"
+              ],
+              "correct_index": 2,
+              "explanation": "`PERFORM ... UNTIL END-OF-FILE` cleanly drives the core commercial batch loop—running a named processing paragraph once for each incoming record until the file finishes."
+            }
+          ]
+        },
+        {
+          "id": "ch_028",
+          "title": "What a COBOL Compiler Actually Generates Under the Hood",
+          "content_markdown": "Here is where compiler engineering diverged dramatically between scientific and enterprise computing. A FORTRAN compiler poured its cleverness into optimizing tight algebraic loops inside high-speed temporary math slots (called **registers**) inside the CPU. A COBOL compiler had a completely different job: expanding deceptively calm one-line English verbs into heavy data-shuffling machinery.\n\nTrace a single harmless-looking sentence: `MOVE NET-PAY TO PRINTED-CHECK-AMOUNT.` Behind the scenes, `NET-PAY` might sit in 4-byte packed BCD with an implied decimal point, while `PRINTED-CHECK-AMOUNT` uses an edited text mask (`PIC ZZ,ZZ9.99`). The compiler had to generate multi-step machine instructions—or calls into a **runtime library**, a pre-built toolkit of helper routines bundled with the compiled program—to unpack every digit, align decimal columns, suppress leading zeros, insert commas, and copy the result cleanly. Similarly, `READ` and `WRITE` relied on runtime routines managing **buffered** (temporarily grouped in fast memory) file **I/O** (input and output) across tape drives and disks.",
+          "questions": [
+            {
+              "id": "q_055",
+              "prompt": "What is the role of a runtime library attached to a compiled COBOL program?",
+              "choices": [
+                "It stores reusable paper manuals alongside every compiled COBOL deck",
+                "It converts English COBOL sentences into FORTRAN before compiling starts",
+                "It manages operator schedules for mounting verified magnetic tape reels",
+                "It supplies pre-written helper routines for editing masks and file I/O"
+              ],
+              "correct_index": 3,
+              "explanation": "A runtime library packages reusable machine-level routines—handling buffered file I/O, numeric format conversions, and report editing masks—that compiled COBOL verbs call while running."
+            },
+            {
+              "id": "q_056",
+              "prompt": "Why did a single COBOL `MOVE` statement often require far more generated work than copying one scientific number?",
+              "choices": [
+                "Moving between fields could require unpacking BCD, aligning decimals, and formatting text",
+                "COBOL compilers had to sort the entire input tape before copying each field",
+                "Mainframe memory refused to copy bytes unless they were sorted alphabetically",
+                "Every `MOVE` statement automatically recompiled the entire DATA DIVISION"
+              ],
+              "correct_index": 0,
+              "explanation": "Because source and destination fields often had different `PIC` widths, padding rules, decimal alignments, or editing masks, a single `MOVE` triggered substantial conversion and formatting logic."
+            }
+          ]
+        },
+        {
+          "id": "ch_029",
+          "title": "Global Scope, Missing Parameters, and the Infamous ALTER",
+          "content_markdown": "Early COBOL's simplicity also hid two notorious semantic flaws that later language designers worked hard to avoid. First, classic COBOL paragraphs had **no private local variables and no parameter lists**. Every single field in the program lived in **global scope**—like one giant shared chalkboard inside the `DATA DIVISION` that every paragraph could read and erase at any time! That made early compilers easier to write, since they needed no private temporary workspace per call, yet it made big programs fragile: if `CALCULATE-BONUS` reused a helper field called `TEMP-RATE` while `PERFORM`ing another paragraph that also overwrote `TEMP-RATE`, a silent bug crept straight into payroll! (Later COBOL editions added separate subprograms receiving explicit input values via `CALL ... USING` alongside private `LOCAL-STORAGE` workspaces.)\n\nEven more infamous was the **`ALTER`** verb, which let one statement dynamically rewrite where a distant `GO TO` jumped—turning code into a self-modifying maze that became a textbook language dead end.",
+          "questions": [
+            {
+              "id": "q_057",
+              "prompt": "What maintenance hazard arose because classic COBOL paragraphs shared all fields in global scope?",
+              "choices": [
+                "Paragraphs were unable to read customer records from magnetic tape",
+                "Compilers prevented two paragraphs from using English verbs in one file",
+                "One paragraph could accidentally overwrite temporary fields used by another",
+                "Programmers could not name variables longer than two single letters"
+              ],
+              "correct_index": 2,
+              "explanation": "Without private local variables or paragraph parameters, all fields lived on one shared DATA DIVISION chalkboard, risking accidental side effects when nested paragraphs reused temporary fields."
+            },
+            {
+              "id": "q_058",
+              "prompt": "Why did COBOL's early `ALTER` statement become famous as a programming-language dead end?",
+              "choices": [
+                "It forced numeric fields to convert silently from decimal back to binary",
+                "It dynamically changed where a `GO TO` jumped during program execution",
+                "It erased the IDENTIFICATION DIVISION whenever a batch job ended early",
+                "It capped every PROCEDURE DIVISION paragraph at eighty punched card lines"
+              ],
+              "correct_index": 1,
+              "explanation": "`ALTER` silently modified the target of a `GO TO` statement at runtime, making printed source code actively mislead anyone trying to trace or audit control flow."
+            }
+          ]
+        },
+        {
+          "id": "ch_030",
+          "title": "Heavy-Duty Plumbing Behind Plain-Spoken Verbs",
+          "content_markdown": "Looking inside the `PROCEDURE DIVISION` and its compiler exposes COBOL's true engineering personality. On the surface, `PERFORM` paragraphs and English verbs made business rules look calm, linear, and approachable. Underneath, COBOL compilers and runtime libraries did heavy, unglamorous industrial lifting—shuffling fixed-width records in bulk, converting packed decimal fields, stamping commas onto paychecks, and streaming buffered files without dropping a single transaction.\n\nAt the same time, global-only paragraphs, verbose phrasing, and quirks like `ALTER` gave critics plenty of ammunition. By the 1970s, those sharp contrasts between COBOL's pragmatic corporate plumbing and emerging theories of elegant software design sparked one of computing's fiercest cultural divides: the clash between university computer science departments and the gleaming corporate 'glass house' computer centers running the world's economy.",
+          "questions": [
+            {
+              "id": "q_059",
+              "prompt": "How did the primary workload of a classic COBOL compiler differ from that of a classic scientific FORTRAN compiler?",
+              "choices": [
+                "COBOL focused on bulk record moves, decimal formatting, and buffered I/O",
+                "COBOL focused on graphics rendering while FORTRAN focused on check-printing",
+                "COBOL avoided runtime libraries while FORTRAN required them for addition",
+                "COBOL compiled programs interactively line by line without batch decks"
+              ],
+              "correct_index": 0,
+              "explanation": "Rather than focusing on dense algebraic register optimization like FORTRAN, COBOL compilers specialized in heavy record movement, decimal formatting, and reliable buffered file I/O."
+            },
+            {
+              "id": "q_060",
+              "prompt": "Which tension inside COBOL's design directly fueled the 1970s clash between university theorists and corporate computing shops?",
+              "choices": [
+                "COBOL's refusal to run on any machine manufactured by IBM",
+                "COBOL's lack of support for alphabetical names or positive integers",
+                "COBOL's verbose style and global-scope quirks versus its industrial business reliability",
+                "COBOL's requirement that banks pay royalties to university math professors"
+              ],
+              "correct_index": 2,
+              "explanation": "Academic theorists criticized COBOL's verbosity, global scope, and committee quirks, whereas corporate IT prized its dependable bulk data processing and readability—setting up the cultural divide explored next."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_07",
+      "title": "7. Mainframe 'Glass House' Culture vs. Academic Computer Science",
+      "summary": "Step inside the raised-floor, climate-controlled 'glass house' data centers of the 1960s through the 1980s, where corporate IT departments ran overnight batch schedules on shared mainframes with strict operator discipline. Contrast academic computer scientists' famous disdain for COBOL's verbosity and committee quirks—exemplified by Edsger Dijkstra's sharp critique—with enterprise priorities of regulatory auditability, predictable high-volume transaction throughput, interchangeable developer teams, and multi-decade backward compatibility.",
+      "introduced_terms": [
+        "glass house data center",
+        "transaction throughput",
+        "backward compatibility"
+      ],
+      "chunks": [
+        {
+          "id": "ch_031",
+          "title": "Behind the Plate Glass: Inside the Corporate Mainframe Room",
+          "content_markdown": "Visit the headquarters of a major bank, airline, or insurance company in 1972 and an executive would proudly escort you down a hallway lined with floor-to-ceiling windows. Behind that plate glass sat a gleaming **mainframe**—a room-sized centralized corporate computer—flanked by whirring magnetic tape cabinets and roaring line printers, all perched atop raised floor tiles hiding thick bundles of power and data cables inside a chilly, dust-filtered sanctuary.\n\nInsiders nicknamed this gleaming showcase the **glass house data center**. Programmers almost never walked inside or pressed console buttons themselves. Instead, they handed punch-card decks through a service window to uniformed computer operators who enforced strict schedules, mounted verified tape reels, and guarded company data around the clock. That formal, disciplined environment shaped every value corporate **IT** (information technology) held dear—and felt worlds apart from a freewheeling university lab.",
+          "questions": [
+            {
+              "id": "q_061",
+              "prompt": "Why were 1960s and 1970s corporate mainframe rooms commonly nicknamed 'glass house' data centers?",
+              "choices": [
+                "Early mainframe processors were built inside fragile glass vacuum globes",
+                "Climate-controlled computer rooms were displayed behind large viewing windows",
+                "Programmers wrote COBOL code directly on transparent glass tracing sheets",
+                "Banks required transparent ceilings so skylights could power tape drives"
+              ],
+              "correct_index": 1,
+              "explanation": "Corporations proudly showcased their expensive, climate-controlled, raised-floor mainframe rooms behind plate-glass walls while restricting physical access to trained operators."
+            },
+            {
+              "id": "q_062",
+              "prompt": "How did typical corporate COBOL programmers interact with the mainframe inside a classic glass house?",
+              "choices": [
+                "They sat directly at the mainframe console typing live interactive code",
+                "They rewired the machine's processor boards before every evening run",
+                "They took portable tape drives home to debug payroll over weekends",
+                "They submitted card decks through a window for specialized operators to run"
+              ],
+              "correct_index": 3,
+              "explanation": "Strict glass-house operational discipline separated software developers from hardware operations: programmers submitted jobs to operators who controlled scheduling, tapes, and security."
+            }
+          ]
+        },
+        {
+          "id": "ch_032",
+          "title": "What Corporate IT Actually Optimized For",
+          "content_markdown": "Inside the glass house, corporate leaders judged software by two unforgiving yardsticks that rarely appeared in college textbooks. The first was **transaction throughput**—how many customer actions, such as cleared checks, insurance claims, or payroll deposits, a system could finish reliably every hour or overnight batch window without crashing or corrupting a single balance. Think of a heavy freight railroad hauling ten thousand tons of cargo on an exact timetable rather than an agile sports car built for one solo driver.\n\nThe second yardstick was **backward compatibility**—the guarantee that business programs written years earlier would continue compiling and running unchanged on newer, faster generations of hardware. When IBM launched its iconic System/360 mainframe family in 1964 and evolved it over decades, banks stayed fiercely loyal because backward compatibility protected tens of millions of dollars in already-tested COBOL business rules.",
+          "questions": [
+            {
+              "id": "q_063",
+              "prompt": "What does 'transaction throughput' measure inside a corporate mainframe data center?",
+              "choices": [
+                "The volume of reliable business operations completed per unit of time",
+                "The physical weight of punch-card boxes carried by one operator",
+                "The number of English words squeezed onto a single COBOL line",
+                "The temperature difference across a raised computer-room floor"
+              ],
+              "correct_index": 0,
+              "explanation": "Transaction throughput measures how many reliable customer transactions—such as deposits, claims, or payroll checks—a system can process continuously over a given window."
+            },
+            {
+              "id": "q_064",
+              "prompt": "Why did corporate IT leaders value backward compatibility so intensely when upgrading mainframes?",
+              "choices": [
+                "It let new computers physically spin older vinyl records for office music",
+                "It allowed programmers to delete all data schemas before each upgrade",
+                "It kept decades of proven, expensive business software running unchanged",
+                "It forced university students to purchase proprietary mainframe manuals"
+              ],
+              "correct_index": 2,
+              "explanation": "Backward compatibility protected enormous corporate investments by letting existing, thoroughly audited COBOL programs keep running smoothly on newer hardware generations."
+            }
+          ]
+        },
+        {
+          "id": "ch_033",
+          "title": "Dijkstra's Famous Jab and the Academic–Corporate Divide",
+          "content_markdown": "By the mid-1970s, the cultural gulf between universities and corporate glass houses exploded into open sarcasm. In 1975, celebrated Dutch computer scientist Edsger Dijkstra penned a notorious one-sentence verdict: *'The use of COBOL cripples the mind; its teaching should, therefore, be regarded as a criminal offense.'*\n\nWalk through why university theorists recoiled from COBOL. Academics prized concise mathematical elegance, private local variables, compact self-contained functions, and formal proofs of correctness—traits that made COBOL's wordy sentences, committee compromises, and giant shared `DATA DIVISION` look ungainly. Yet step across town to a major insurer and COBOL's virtues looked completely different. Standardized four-division layouts meant a new hire could pick up a departed colleague's payroll program without decoding clever personal tricks, regulators could audit tax formulas directly, and the software ran relentlessly night after night.",
+          "questions": [
+            {
+              "id": "q_065",
+              "prompt": "Why did academic computer scientists such as Edsger Dijkstra criticize COBOL so harshly in the 1970s?",
+              "choices": [
+                "COBOL failed to support printing commas on paper payroll reports",
+                "Its verbosity, committee quirks, and global state clashed with mathematical elegance",
+                "COBOL ran too fast for universities to observe student errors clearly",
+                "Banks refused to allow academic researchers to read English sentences"
+              ],
+              "correct_index": 1,
+              "explanation": "Academic theorists valued compact mathematical notation, local scoping, and formal elegance, making COBOL's verbose English-like syntax and shared global state look clumsy."
+            },
+            {
+              "id": "q_066",
+              "prompt": "Why did corporate IT managers value COBOL's rigid, standardized structure despite academic disdain?",
+              "choices": [
+                "Standardization guaranteed every bank program ran in under one second",
+                "Verbose syntax kept business auditors from understanding company tax rules",
+                "Rigid divisions eliminated the need to test software after upgrades",
+                "Predictable layouts let interchangeable teams maintain and audit shared code safely"
+              ],
+              "correct_index": 3,
+              "explanation": "In large enterprises where developers came and went over decades, COBOL's rigid, predictable layout reduced reliance on lone 'hero' coders and kept rules auditable by teams and regulators."
+            }
+          ]
+        },
+        {
+          "id": "ch_034",
+          "title": "Blind Spots on Both Sides of the Glass",
+          "content_markdown": "With fifty years of hindsight, the most honest takeaway from the university-versus-glass-house war is that **both** camps spotted real truths—and both carried blind spots.\n\nAcademic critics were completely right that COBOL's early design flaws had genuine engineering costs. Global-only paragraphs invited accidental data overwrites, verbose repetitive setup text (**boilerplate**) bloated simple tasks, and rigid 80-column margins felt archaic once screens replaced punch cards. Later enterprise languages borrowed heavily from academic ideas like private local variables and clean modular functions. Yet university purists often suffered an equally large blind spot: they vastly underestimated the sheer economic cost and operational danger of rewriting battle-tested financial software just for prettier syntax. When a single subtle bug can misroute a million paychecks on Friday morning, boring predictability is not mediocrity—it is disciplined engineering.",
+          "questions": [
+            {
+              "id": "q_067",
+              "prompt": "What genuine technical weakness did academic critics rightly diagnose in early COBOL?",
+              "choices": [
+                "Global-only paragraphs, verbose boilerplate, and rigid punch-card column rules",
+                "An inability to process exact base-10 dollars and cents on ledgers",
+                "A total refusal to separate file hardware mappings from business rules",
+                "Lack of support for batch processing across magnetic tape reels"
+              ],
+              "correct_index": 0,
+              "explanation": "Academic critiques accurately pointed out real semantic and ergonomic flaws—especially shared global scope, heavy boilerplate, and punch-card column constraints—that later languages improved."
+            },
+            {
+              "id": "q_068",
+              "prompt": "What major real-world constraint did university critics of COBOL frequently underestimate?",
+              "choices": [
+                "The speed at which mainframe computer memory dropped in price by 1980",
+                "The ease of translating payroll rules into pure calculus equations",
+                "The huge financial cost and risk of rewriting battle-tested business systems",
+                "The difficulty of hiring trained tape operators for overnight batch runs"
+              ],
+              "correct_index": 2,
+              "explanation": "Rewriting massive, legally regulated financial software carries enormous cost and bug risk, making proven stability and backward compatibility far more valuable to enterprises than syntactic elegance."
+            }
+          ]
+        },
+        {
+          "id": "ch_035",
+          "title": "When Multi-Decade Stability Becomes Permanence",
+          "content_markdown": "Step back from the glass house and see how corporate IT culture shaped computing's destiny. By prioritizing regulatory auditability, high-volume transaction throughput, team maintainability, and ironclad backward compatibility over academic fashion, enterprise computing turned COBOL into the quiet, dependable plumbing beneath global banking, insurance, airlines, and government benefits.\n\nYet extraordinary longevity carries a hidden surprise. When hardware vendors preserve backward compatibility so faithfully that a payroll or mortgage program written in 1968 keeps running cleanly through the 1970s, the 1980s, and right up to the end of the century, tiny engineering trade-offs made under 1960s memory limits don't fade away—they travel straight into the future. Next, let's examine how COBOL's astonishing survival set the stage for computing's most famous calendar crisis: the Year 2000 story.",
+          "questions": [
+            {
+              "id": "q_069",
+              "prompt": "Which cluster of priorities best defined classic mainframe 'glass house' IT culture?",
+              "choices": [
+                "Experimental syntax, solo tinkering, and frequent clean-slate rewrites",
+                "Minimalist mathematical proofs, abstract math puzzles, and tiny datasets",
+                "Interactive video graphics, desktop portability, and consumer gaming",
+                "Auditability, high transaction throughput, team standards, and backward compatibility"
+              ],
+              "correct_index": 3,
+              "explanation": "Corporate mainframe culture centered on regulatory auditability, reliable high-volume throughput, standardized team maintenance, and decades-long backward compatibility."
+            },
+            {
+              "id": "q_070",
+              "prompt": "What unintended consequence grew directly out of mainframe software's remarkable multi-decade backward compatibility?",
+              "choices": [
+                "Banks permanently eliminated human financial auditors from corporate offices",
+                "Early 1960s memory-saving shortcuts survived decades longer than expected",
+                "Mainframes eventually stopped supporting exact packed decimal arithmetic instructions",
+                "Compilers automatically deleted business programs older than twenty years"
+              ],
+              "correct_index": 1,
+              "explanation": "Because backward compatibility allowed 1960s and 1970s COBOL programs to stay in production for decades, early space-saving shortcuts—such as two-digit year fields—survived right up to the year 2000."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_08",
+      "title": "8. Mainframe Longevity \u0026 the Y2K Remediation Story",
+      "summary": "Trace why core banking, insurance, and payroll programs written in the 1960s and 1970s outlived every hardware generation through high switching costs, embedded institutional rules, and unbroken mainframe compatibility. Reframe two-digit year fields ('PIC 99') not as careless shortsightedness but as a rational memory- and card-column optimization for scarce 1960s storage, then walk through how teams prevented New Year's 2000 failures using date expansion and date windowing—turning a quiet midnight rollover into a landmark triumph of preventive software maintenance.",
+      "introduced_terms": [
+        "legacy system",
+        "date expansion",
+        "date windowing"
+      ],
+      "chunks": [
+        {
+          "id": "ch_036",
+          "title": "The Software That Outlived Every Hardware Generation",
+          "content_markdown": "Imagine buying a delivery truck in 1967 and discovering thirty-two years later that your grandchildren are still hauling freight with the exact same engine block—transplanted seamlessly into sleek new trucks every decade—because it never stalls and nobody knows every tiny quirk keeping it tuned. That is precisely what happened to enterprise COBOL.\n\nBy the late 1990s, major banks, insurers, tax agencies, and airlines were still running billions of lines of COBOL drafted in the 1960s and 1970s. Engineers call such durable, mission-critical older software a **legacy system**. Why hadn't companies replaced it? Three powerful anchors held it in place: staggering switching costs, unbroken mainframe backward compatibility, and decades of subtle legal and business edge cases—special tax clauses, pension exceptions, and policy rules—quietly baked into working code that nobody wanted to break.",
+          "questions": [
+            {
+              "id": "q_071",
+              "prompt": "What best defines a 'legacy system' in enterprise computing?",
+              "choices": [
+                "A museum display computer powered off for public historical tours",
+                "An experimental prototype built inside a university research laboratory",
+                "Older mission-critical software kept running because replacement is costly and risky",
+                "A freshly rewritten cloud program replacing paper punch-card readers"
+              ],
+              "correct_index": 2,
+              "explanation": "A legacy system is older software that remains in active daily production because it runs vital operations and replacing it carries high financial cost and operational risk."
+            },
+            {
+              "id": "q_072",
+              "prompt": "Besides unbroken hardware compatibility, what major hidden reason made corporations reluctant to rewrite 1960s COBOL systems?",
+              "choices": [
+                "Decades of subtle legal and business exceptions lived inside working code",
+                "Newer mainframe keyboards lacked keys for typing uppercase English statements",
+                "Federal banking rules barred retiring software under fifty years old",
+                "Modern processors stopped supporting exact integer addition on batch files"
+              ],
+              "correct_index": 0,
+              "explanation": "Over decades of maintenance, thousands of hard-won regulatory exceptions and institutional business rules accumulated inside legacy COBOL systems, making clean-slate rewrites extraordinarily risky."
+            }
+          ]
+        },
+        {
+          "id": "ch_037",
+          "title": "Why 'PIC 99' Was a Rational 1960s Optimization",
+          "content_markdown": "In the late 1990s, headlines worldwide warned about the **Y2K ('Year 2000') bug**, often mocking 1960s programmers as careless for storing calendar years with just two digits—writing `PIC 99` (`68` instead of `1968`) inside COBOL records. Looked at from first principles inside a 1965 data center, however, `'PIC 99'` wasn't laziness at all—it was shrewd engineering!\n\nRemember the tight physical economy of the 1960s. Every punch card held only eighty precious columns. Early mainframe memory was astonishingly expensive per byte, and magnetic tape reels filled up fast across millions of accounts. Suppose an insurance company stored ten million customer records, each containing four dates (birth, policy start, renewal, and claim). Dropping `'19'` from every year saved eight bytes per customer—**eighty million bytes** saved across one file, cutting card decks, tape reels, and nightly batch runtimes! Besides, almost no engineer in 1965 imagined their payroll program would still be running thirty-five years later.",
+          "questions": [
+            {
+              "id": "q_073",
+              "prompt": "Why was defining year fields as `'PIC 99'` a rational engineering decision in the 1960s?",
+              "choices": [
+                "COBOL's `PICTURE` syntax restricted every numeric field to two digits",
+                "Banks only offered short checking accounts lasting eleven months each",
+                "Two-digit numbers automatically switched into faster binary floating-point math",
+                "Omitting century digits saved scarce card columns, memory, and tape"
+              ],
+              "correct_index": 3,
+              "explanation": "On 80-column punch cards and costly 1960s memory and tape storage, saving two bytes per date across millions of records produced substantial cost and batch-speed savings."
+            },
+            {
+              "id": "q_074",
+              "prompt": "What key human assumption made `'PIC 99'` seem completely safe to 1960s enterprise developers?",
+              "choices": [
+                "They believed the Gregorian calendar would switch to a decimal system in 1990",
+                "They assumed software written in the 1960s would be replaced long before the year 2000",
+                "They expected future compilers to guess missing centuries automatically without edits",
+                "They assumed mainframes would never need to calculate customer ages or interest"
+              ],
+              "correct_index": 1,
+              "explanation": "Because hardware generations turned over rapidly, 1960s engineers reasonably expected their software to be retired well before 2000—underestimating how long COBOL legacy systems would endure."
+            }
+          ]
+        },
+        {
+          "id": "ch_038",
+          "title": "When '00' Broke the Math: Date Expansion vs. Date Windowing",
+          "content_markdown": "Watch what broke when a `PIC 99` year rolled over from `99` to `00` on January 1, 2000. Subtract a customer's birth year `65` from `00` and a naive COBOL program computed an age of `-65`! Interest formulas saw a loan running backward for ninety-nine years, expiration checks rejected brand-new credit cards, and alphabetical tape sorts filed year `00` *before* year `99`.\n\nTo prevent nationwide chaos, remediation teams chose between two main technical fixes. The gold-standard fix was **date expansion**: widening every `PIC 99` field into four digits (`PIC 9(4)`) across source code, stored databases, tape archives, and printed forms. Expansion cured the problem permanently, yet updating intertwined file schemas across dozens of systems took huge effort. When deadlines grew tight, teams turned to **date windowing**: leaving two-digit `PIC 99` files untouched while adding code logic with a sliding pivot year—say treating `00`–`49` as `2000`–`2049` and `50`–`99` as `1950`–`1999`. Windowing shipped faster, though it merely kicked the calendar puzzle down the road!",
+          "questions": [
+            {
+              "id": "q_075",
+              "prompt": "How did 'date expansion' solve the Y2K two-digit year problem inside COBOL systems?",
+              "choices": [
+                "It widened `PIC 99` fields to four digits across schemas, files, and programs",
+                "It reset mainframe system clocks back by twenty-eight years before midnight",
+                "It left stored files at two digits and inferred centuries with a pivot rule",
+                "It deleted all customer birth dates recorded prior to January 1970"
+              ],
+              "correct_index": 0,
+              "explanation": "Date expansion permanently fixed the ambiguity by converting two-digit `PIC 99` year fields into full four-digit `PIC 9(4)` fields across data schemas, stored records, and program logic."
+            },
+            {
+              "id": "q_076",
+              "prompt": "What was the main trade-off of choosing 'date windowing' instead of 'date expansion'?",
+              "choices": [
+                "Windowing doubled magnetic tape consumption across every financial ledger file",
+                "Windowing required shutting down every corporate mainframe after December 1999",
+                "Windowing shipped faster without schema edits, yet postponed future rollovers",
+                "Windowing forced banks to rewrite all packed decimal math in FORTRAN"
+              ],
+              "correct_index": 2,
+              "explanation": "Date windowing kept existing two-digit file schemas intact by interpreting years around a pivot cutoff, speeding up Y2K remediation at the cost of creating a future rollover limit."
+            }
+          ]
+        },
+        {
+          "id": "ch_039",
+          "title": "The Irony of a Quiet Midnight Rollover",
+          "content_markdown": "Between 1997 and 1999, enterprises launched one of the largest coordinated engineering efforts in history. Banks, airlines, hospitals, and governments pulled tens of thousands of retired COBOL veterans out of Florida and Arizona, spending hundreds of billions of dollars auditing, patching, and stress-testing billions of lines of legacy code—often with missing manuals and tangled schemas.\n\nThen midnight arrived on January 1, 2000. Planes stayed safely aloft, cash machines dispensed crisp bills, power grids hummed, and payroll ran on time. Ironically, many casual spectators shrugged and concluded Y2K must have been a media hoax! That reaction captures the timeless paradox of preventive maintenance: when engineers succeed completely, nothing dramatic happens. Far from being a false alarm, the calm arrival of the year 2000 stood as a monumental victory for disciplined enterprise software maintenance—and proved just how deeply COBOL still underpinned modern civilization.",
+          "questions": [
+            {
+              "id": "q_077",
+              "prompt": "Why did many members of the public mistakenly conclude after January 1, 2000 that Y2K had been an overblown hoax?",
+              "choices": [
+                "Because mainframes had secretly stored four-digit years since 1959",
+                "Because computer clocks skipped straight from 1999 to 2001 overnight",
+                "Because global airlines grounded all commercial flights for six months",
+                "Because massive advance repairs fixed bugs before midnight failures struck"
+              ],
+              "correct_index": 3,
+              "explanation": "The lack of widespread New Year's 2000 disasters was the direct result of years of intensive, costly remediation work by hundreds of thousands of engineers—a classic paradox of successful prevention."
+            },
+            {
+              "id": "q_078",
+              "prompt": "Why did companies recall tens of thousands of retired programmers during the late-1990s Y2K remediation push?",
+              "choices": [
+                "Retired specialists held proprietary vendor licenses needed to recompile software",
+                "Core financial systems still relied on older COBOL needing urgent patching",
+                "Universities had stopped teaching business file formats after the 1970s",
+                "Only original authors had legal clearance to alter federal tax tables"
+              ],
+              "correct_index": 1,
+              "explanation": "Because mission-critical banking, insurance, and government systems still relied heavily on decades-old COBOL legacy code, organizations urgently needed experienced COBOL specialists to audit and repair them."
+            }
+          ]
+        },
+        {
+          "id": "ch_040",
+          "title": "Beyond the Giant Mainframes: Midsize Businesses Speak Up",
+          "content_markdown": "The Y2K story brings COBOL's arc into sharp focus. A language mocked with a granite tombstone in 1960 proved so well matched to corporate priorities that its software outlived punch cards, tape reels, and entire computer generations—forcing engineers forty years later to revisit sensible 1965 byte-saving choices like `'PIC 99'`.\n\nYet giant glass-house mainframes running COBOL only tell half of enterprise computing's story! In 1959, most real businesses were not mega-banks or the Pentagon—they were midsize regional wholesalers, factories, hospitals, and distributors that could never afford a room-sized mainframe or a platoon of full-time programmers. Those firms already processed invoices and inventory on rattling electromechanical card tabulators wired by hand. How did IBM smoothly migrate tens of thousands of tabulator clerks onto stored-program computers without forcing them to learn procedural programming from scratch? The answer was a quietly massive phenomenon called RPG.",
+          "questions": [
+            {
+              "id": "q_079",
+              "prompt": "What central lesson about software engineering does the journey from 1960s `'PIC 99'` records to Y2K remediation illustrate?",
+              "choices": [
+                "Early programmers should never optimize code for physical hardware limits",
+                "Backward compatibility always causes systems to fail within five years",
+                "Durable business software can outlive original hardware constraints by decades",
+                "Two-digit numbers cannot be added accurately on decimal mainframes"
+              ],
+              "correct_index": 2,
+              "explanation": "Rational hardware optimizations like saving two bytes per date can create surprising decades-later maintenance challenges when reliable enterprise software outlives every original lifespan expectation."
+            },
+            {
+              "id": "q_080",
+              "prompt": "Which segment of the business world drove IBM to create a very different enterprise language alongside COBOL in 1959?",
+              "choices": [
+                "Midsize businesses migrating off wired card tabulators without large coding staffs",
+                "National space agencies calculating lunar rocket orbital trajectories",
+                "University mathematics departments demanding pure algebraic equations",
+                "Home hobbyists building kitchen-table video-game cartridges"
+              ],
+              "correct_index": 0,
+              "explanation": "Tens of thousands of midsize companies operated electromechanical card tabulators rather than giant mainframes and needed a practical bridge into stored-program computing—leading IBM to create RPG."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_09",
+      "title": "9. IBM's RPG: From Plugboard Tabulators to Midrange Business Systems",
+      "summary": "Shift from giant mainframes to midsize businesses running IBM's 1959 Report Program Generator (RPG) across the IBM 1401, System/3, and the AS/400 (later IBM i) lineage. See how RPG lowered the barrier for electromechanical plugboard tabulator operators through positional specification sheets, relay-like status indicators, and a compiler-generated fixed-logic read-calculate-output program cycle with automatic subtotal breaks—before shedding rigid columns and mandatory cycles to reinvent itself as modern free-format RPG IV.",
+      "introduced_terms": [
+        "Report Program Generator (RPG)",
+        "fixed-logic program cycle",
+        "positional specification sheet"
+      ],
+      "chunks": [
+        {
+          "id": "ch_041",
+          "title": "From Wired Plugboards to the IBM 1401",
+          "content_markdown": "Long before digital computers became affordable for midsize businesses, tens of thousands of regional wholesalers, factories, and hospitals processed billing and inventory on clattering electromechanical accounting machines called **tabulators** (such as IBM's 402 and 407). Tabulators did not run typed source code. Instead, skilled operators programmed them by snapping colored jumper wires into removable pegboard panels called **plugboards**, literally routing electrical pulses from card-reader brushes to adding wheels and print bars.\n\nWhen IBM introduced the compact, relatively affordable **IBM 1401** business computer in 1959—soon becoming the 'Model T' of commercial computing—it faced a huge practical hurdle. Thousands of loyal small- and midsize customers had experienced tabulator clerks on payroll, not computer scientists trained in procedural loops. IBM needed a gentle bridge that let plugboard operators run stored-program computers almost immediately.",
+          "questions": [
+            {
+              "id": "q_081",
+              "prompt": "How did midsize businesses program electromechanical tabulators like the IBM 407 before stored-program computers arrived?",
+              "choices": [
+                "By typing English sentences onto interactive desktop glass monitors",
+                "By wiring jumper cables into removable control panels called plugboards",
+                "By mailing handwritten equations to Pentagon CODASYL committees",
+                "By writing nested hierarchical level numbers on magnetic disk packs"
+              ],
+              "correct_index": 1,
+              "explanation": "Electromechanical tabulators were configured by plugging physical jumper wires into removable pegboard-like plugboards to route punch-card signals to counters and printers."
+            },
+            {
+              "id": "q_082",
+              "prompt": "What customer-migration problem did IBM face when introducing the affordable IBM 1401 business computer in 1959?",
+              "choices": [
+                "The IBM 1401 could only solve advanced scientific differential equations",
+                "Tabulator factories had run out of cardboard stock for standard cards",
+                "Federal antitrust rules banned midsize firms from owning magnetic tape",
+                "Existing customers employed plugboard tabulator operators rather than trained programmers"
+              ],
+              "correct_index": 3,
+              "explanation": "Thousands of IBM tabulator customers lacked trained software programmers, so IBM needed a familiar way to help tabulator operators transition smoothly onto stored-program computers."
+            }
+          ]
+        },
+        {
+          "id": "ch_042",
+          "title": "RPG and the Built-In Fixed-Logic Program Cycle",
+          "content_markdown": "IBM's ingenious solution, unveiled in 1959, was **Report Program Generator (RPG)**. Unlike COBOL, where a programmer explicitly wrote out the main loop (`PERFORM PROCESS-RECORD UNTIL END-OF-FILE`), RPG baked the standard accounting loop right into its compiler as a **fixed-logic program cycle**.\n\nPicture an automatic factory conveyor belt that runs the same dependable sequence for every single card or record automatically. On each turn of the cycle, the RPG-generated program reads the next record from an input file, checks whether a grouping key—such as a department number or customer ID—just changed so it can automatically print a **control-level subtotal**, executes your detail calculations, formats and prints the detail line, and loops back until the very last record arrives. Operators did not have to invent control-flow machinery at all; they simply described *what* should happen at each built-in station along the cycle.",
+          "questions": [
+            {
+              "id": "q_083",
+              "prompt": "What did RPG's built-in fixed-logic program cycle automate for midsize business operators?",
+              "choices": [
+                "The repeating read, subtotal, calculate, and print batch loop",
+                "Wiring physical jumper cables onto removable card-tabulator panels",
+                "Translating handwritten customer letters directly onto magnetic tape reels",
+                "Converting two-digit calendar years into four-digit century stamps"
+              ],
+              "correct_index": 0,
+              "explanation": "RPG's compiler automatically generated the entire repeating read-check-calculate-output batch loop—including automatic subtotal breaks when key fields changed—so users didn't write loops manually."
+            },
+            {
+              "id": "q_084",
+              "prompt": "How did classic RPG's fundamental programming model differ from COBOL's `PROCEDURE DIVISION`?",
+              "choices": [
+                "RPG forbade printing monetary totals or decimal invoices on paper",
+                "RPG ran exclusively on scientific mainframes designed for physicists",
+                "RPG supplied a standard implicit processing cycle instead of hand-written loops",
+                "RPG rejected fixed-width records in favor of unstructured free-form prose"
+              ],
+              "correct_index": 2,
+              "explanation": "While COBOL programmers explicitly coded procedural control loops with `PERFORM`, classic RPG supplied a fixed, compiler-generated read-calculate-output cycle automatically."
+            }
+          ]
+        },
+        {
+          "id": "ch_043",
+          "title": "Walkthrough: Positional Specification Sheets and Indicators",
+          "content_markdown": "To instruct RPG's generator, a programmer filled out gridded paper forms called **positional specification sheets**—where the *exact column* an entry occupied determined its meaning, echoing the numbered sockets of a physical tabulator plugboard! Each form carried a single letter code in a strict order: `F` (File) declared input and output files; `I` (Input) mapped card columns onto named fields; `C` (Calculation) placed `Factor 1`, an operation like `ADD`, `Factor 2`, and `Result` into rigid fixed columns; and `O` (Output) placed formatted fields across printed invoice columns.\n\nTying everything together were tiny two-character switches called **indicators** (`01` through `99`, `L1`–`L9` for nested subtotal levels, and `LR` for Last Record). Think of indicators as software versions of electrical tabulator relays: when a calculation turned indicator `50` on—or a new customer triggered `L1`—the output sheet knew instantly whether to print a warning message or a department subtotal!",
+          "questions": [
+            {
+              "id": "q_085",
+              "prompt": "Why were classic RPG's gridded coding forms called 'positional specification sheets'?",
+              "choices": [
+                "Operators had to stand in designated floor zones while feeding cards",
+                "The exact column position where each entry was written defined its role",
+                "Every sheet mapped physical warehouse shelf coordinates for inventory",
+                "Each page could hold only one single arithmetic operation per report"
+              ],
+              "correct_index": 1,
+              "explanation": "On RPG's F, I, C, and O specification sheets, each fixed column range had a predetermined meaning—such as Factor 1, operation code, Factor 2, or Result—mirroring plugboard wiring."
+            },
+            {
+              "id": "q_086",
+              "prompt": "What familiar tabulator concept did RPG's two-character indicators (such as `01`–`99`, `L1`, and `LR`) translate into software?",
+              "choices": [
+                "On-off electrical relays controlling conditional calculations and subtotal printing",
+                "Hierarchical English paragraph titles read aloud by corporate auditors",
+                "Binary floating-point exponents scaling astronomical rocket measurements",
+                "Sequence numbers used to re-sort dropped punch cards automatically"
+              ],
+              "correct_index": 0,
+              "explanation": "Indicators acted like software relays—switching on or off for conditions, subtotal level breaks (`L1`–`L9`), or end-of-file (`LR`) to gate calculations and output lines."
+            }
+          ]
+        },
+        {
+          "id": "ch_044",
+          "title": "From System/3 and AS/400 to Modern Free-Format RPG IV",
+          "content_markdown": "What began in 1959 as a quick tabulator-migration tool unexpectedly grew into one of computing's longest-running midrange empires. IBM carried RPG from the 1401 onto the compact **System/3** (1969, famous for its palm-sized 96-column punch cards and RPG II), then through the **System/34, System/36, and System/38**—which pioneered integrating a **relational database** (structured tables of linked business records) right inside the operating system—culminating in the legendary 1988 **AS/400** and today's **IBM i** servers powering warehouses, hospitals, and manufacturers worldwide.\n\nYet RPG also confronted its own historical dead ends. Cryptic numbered indicators (`47`, `82`), column-counting spec sheets, and a mandatory implicit cycle made complex modern apps notoriously opaque to newcomers. Rather than letting RPG fossilize, IBM reinvented it: **RPG IV** (1994) and fully **free-format RPG** (introduced in stages from 2001 onward) shed rigid columns and compulsory cycles in favor of readable indented blocks, private local variables, modular procedures, and built-in database queries!",
+          "questions": [
+            {
+              "id": "q_087",
+              "prompt": "Which iconic IBM midrange hardware lineage carried RPG from small-business punch cards into modern integrated-database servers?",
+              "choices": [
+                "Scientific laboratory computers built exclusively for university physics",
+                "UNIVAC I, RCA 501, and Burroughs large corporate mainframes",
+                "Early desktop personal computers built for home hobbyist budgets",
+                "IBM 1401, System/3, System/38, AS/400, and modern IBM i"
+              ],
+              "correct_index": 3,
+              "explanation": "RPG grew alongside IBM's remarkably durable midrange business lineage—from the IBM 1401 and System/3 through System/38 and the AS/400 into modern IBM i systems."
+            },
+            {
+              "id": "q_088",
+              "prompt": "How did modern free-format RPG IV overcome the readability dead ends of classic 1960s RPG?",
+              "choices": [
+                "By forcing midrange shops to run COBOL alongside every RPG report",
+                "By requiring programmers to wrap every line in COBOL's four divisions",
+                "By replacing fixed columns and forced cycles with free-format structured procedures",
+                "By eliminating exact decimal arithmetic in favor of binary floating-point"
+              ],
+              "correct_index": 2,
+              "explanation": "RPG IV and free-format RPG shed rigid positional columns, cryptic numeric indicators, and the compulsory implicit cycle while adopting modern structured blocks and local scope."
+            }
+          ]
+        },
+        {
+          "id": "ch_045",
+          "title": "Two Enterprise Pillars—and a Tempting Unification Dream",
+          "content_markdown": "Comparing COBOL and RPG side by side illuminates how deeply business culture and hardware fit shape programming languages. Giant banks and federal agencies running multi-vendor mainframes needed COBOL's vendor-neutral four-division architecture and readable English procedures. Midsize companies graduating from IBM plugboard tabulators wanted RPG's low-friction fixed-logic cycle, tabular spec sheets, and tight integration with midrange IBM hardware—and remarkably, both languages survived more than six decades by adapting to new realities.\n\nYet by the mid-1960s, as IBM launched its unified System/360 hardware family designed to handle both scientific math and commercial ledgers on the same machine, executives asked a tantalizing question. If one computer architecture could serve both physicists and accountants, why keep FORTRAN and COBOL split apart? Could a single new language finally unify both worlds?",
+          "questions": [
+            {
+              "id": "q_089",
+              "prompt": "What best contrasts the original target niches of COBOL and IBM's RPG in 1959?",
+              "choices": [
+                "COBOL targeted home hobbyists while RPG targeted university physics labs",
+                "COBOL targeted multi-vendor enterprise mainframes while RPG targeted midrange tabulator shops",
+                "COBOL eliminated decimal math while RPG eliminated punch-card batch runs",
+                "COBOL ran only on IBM hardware while RPG was mandated by the Pentagon"
+              ],
+              "correct_index": 1,
+              "explanation": "COBOL arose as a vendor-neutral language for large corporate and defense mainframes, whereas IBM built RPG to bridge midsize plugboard-tabulator customers onto IBM's midrange machines."
+            },
+            {
+              "id": "q_090",
+              "prompt": "What strategic question did IBM's mid-1960s unified System/360 mainframe family immediately raise for programming languages?",
+              "choices": [
+                "Whether banks should abandon exact decimal arithmetic to save tape reels",
+                "Whether plugboard tabulators could replace compilers inside federal agencies",
+                "Whether RPG's positional columns should become mandatory for physicists",
+                "Whether one unified language could replace both scientific FORTRAN and business COBOL"
+              ],
+              "correct_index": 3,
+              "explanation": "Once System/360 unified scientific and commercial hardware into one compatible architecture, IBM wondered whether a single universal language could merge FORTRAN and COBOL—leading to PL/I."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_10",
+      "title": "10. The PL/I Bridge \u0026 Enterprise Computing's Lasting Innovations",
+      "summary": "Spend one to two chunks on a brief, gentle cross-reference to IBM's mid-1960s PL/I effort to unify scientific FORTRAN and commercial COBOL on System/360—explaining why entrenched enterprise ecosystems resisted replacement while directing curious learners to the dedicated PL/I Programming Language Quest Arc for its full history. Close with a capstone synthesis separating enterprise computing's historical dead ends (fixed-column forms, mandatory implicit cycles, and global-only paragraphs) from its enduring gifts to modern software: structured composite records, exact decimal types, and clean schema-logic separation.",
+      "introduced_terms": [
+        "PL/I",
+        "universal programming language"
+      ],
+      "chunks": [
+        {
+          "id": "ch_046",
+          "title": "IBM's System/360 Gamble: The Dream of PL/I",
+          "content_markdown": "When IBM unveiled its groundbreaking **System/360** mainframe family in 1964, it healed the hardware rift between science and business: one unified machine architecture could run both aerospace simulations and overnight bank payrolls. Naturally, IBM's leaders wondered if they could heal the software rift too by designing a single **universal programming language**—one versatile tool capable of replacing scientific FORTRAN, commercial COBOL, and even low-level operating-system code.\n\nThat mid-1960s ambition produced **PL/I** (*Programming Language One*). On paper, PL/I looked dazzling: it combined FORTRAN's mathematical formulas with COBOL's hierarchical composite records and exact decimal arithmetic, while shattering the 80-column punch-card cage with clean free-form syntax and private local variables. For a thrilling moment in 1966, it looked as though the great divide between scientific and enterprise programming languages might finally disappear.",
+          "questions": [
+            {
+              "id": "q_091",
+              "prompt": "What motivated IBM to create PL/I alongside its System/360 mainframe family in the mid-1960s?",
+              "choices": [
+                "The Pentagon had revoked CODASYL's permission to use English words",
+                "System/360 hardware refused to run either FORTRAN or COBOL compilers",
+                "IBM hoped one universal language could unify scientific FORTRAN and business COBOL",
+                "Midsize tabulator operators demanded a return to physical jumper wires"
+              ],
+              "correct_index": 2,
+              "explanation": "Because System/360 unified scientific and commercial hardware, IBM designed PL/I as a universal programming language merging FORTRAN's math with COBOL's records and decimal arithmetic."
+            },
+            {
+              "id": "q_092",
+              "prompt": "Which combination of capabilities did PL/I aim to blend inside one single language?",
+              "choices": [
+                "FORTRAN's math formulas alongside COBOL's structured records and exact decimal math",
+                "Punch-card column margins alongside physical plugboard control panels",
+                "Global-only paragraphs alongside self-modifying `ALTER` jump commands",
+                "Two-digit calendar limits alongside exclusively binary floating-point ledgers"
+              ],
+              "correct_index": 0,
+              "explanation": "PL/I attempted to bridge the two computing worlds by combining scientific algebraic formulas, COBOL-style composite records and decimal arithmetic, and modern free-form block structure."
+            }
+          ]
+        },
+        {
+          "id": "ch_047",
+          "title": "Why COBOL Survived PL/I—and Where to Explore PL/I Next",
+          "content_markdown": "Despite PL/I's impressive technical pedigree, history delivered a classic enterprise reality check: PL/I never displaced COBOL (or FORTRAN!). By the late 1960s, COBOL already enjoyed massive momentum—Pentagon procurement rules, vendor-neutral CODASYL governance, hundreds of thousands of trained business coders, and millions of lines of battle-tested payroll and banking software. Switching a bank from COBOL to an IBM-championed newcomer meant huge retraining bills, compiler complexity, and migration risk for uncertain business payoff.\n\nStill, PL/I's bold attempt to build a universal language makes for a fascinating story in its own right—spanning free-form syntax, early compiler battles, error handling, and operating-system design. Rather than retelling that full saga here, curious learners can explore the entire rise and legacy of PL/I in our dedicated **PL/I Programming Language** Quest Arc! For our enterprise journey, PL/I's rivalry highlights just how powerfully ecosystems and backward compatibility anchor corporate languages.",
+          "questions": [
+            {
+              "id": "q_093",
+              "prompt": "Why did corporate IT shops largely stick with COBOL instead of migrating wholesale to IBM's PL/I?",
+              "choices": [
+                "PL/I lacked support for printing commas or alphabetical text strings",
+                "IBM refused to sell PL/I compilers to banks or insurance companies",
+                "COBOL executed mathematical simulations faster than any scientific tool",
+                "COBOL already had multi-vendor backing, trained staffs, and huge legacy codebases"
+              ],
+              "correct_index": 3,
+              "explanation": "Entrenched enterprise ecosystems—backed by vendor-neutral CODASYL standards, federal mandates, trained teams, and massive existing codebases—made replacing COBOL economically unattractive."
+            },
+            {
+              "id": "q_094",
+              "prompt": "What broader lesson does COBOL's survival against the technically ambitious PL/I illustrate?",
+              "choices": [
+                "Universal languages always run slower than single-purpose hardware switches",
+                "Ecosystem momentum, vendor neutrality, and switching costs often outweigh cleaner syntax",
+                "Free-form syntax prevented PL/I from compiling on System/360 mainframes",
+                "Banks preferred languages with no private local variables or error handling"
+              ],
+              "correct_index": 1,
+              "explanation": "Even when a newer language cleans up older flaws, existing libraries, multi-vendor portability, staff expertise, and migration risks create powerful staying power in enterprise computing."
+            }
+          ]
+        },
+        {
+          "id": "ch_048",
+          "title": "Weighing Enterprise Computing's Historical Dead Ends",
+          "content_markdown": "Now step back across our entire journey through COBOL and IBM's RPG and sort the evolutionary dead ends from the timeless breakthroughs. Several famous traits of 1950s and 1960s enterprise languages genuinely belonged to a bygone physical era and were rightly left behind.\n\nRigid 80-column punch-card zones (`Area A` and `Area B`), positional grid-column RPG spec sheets, cryptic two-character relay indicators (`47`, `LR`), and compulsory fixed-logic report cycles all reflected cardboard cards, tiny memories, and plugboard-era training rather than permanent software ideals. Likewise, early COBOL's global-only `DATA DIVISION` paragraphs, self-modifying `ALTER` jumps, and the optimistic dream that chatty pseudo-English would let non-technical executives write programs themselves proved to be dead ends. Even COBOL and RPG eventually modernized to shed most of those early constraints as interactive terminals and structured design matured.",
+          "questions": [
+            {
+              "id": "q_095",
+              "prompt": "Which group of early enterprise features best represents historical dead ends tied to 1950s–1960s hardware and training limits?",
+              "choices": [
+                "Fixed punch-card column zones, cryptic numeric indicators, and global-only paragraphs",
+                "Composite record structures, exact decimal arithmetic, and schema-logic separation",
+                "Software portability, backward compatibility, and automated batch processing",
+                "Structured subprograms, private local variables, and native decimal hardware"
+              ],
+              "correct_index": 0,
+              "explanation": "Strict 80-column card margins, positional spec-sheet columns, numbered indicators, and global-only paragraphs stemmed from early physical and compiler limits and were superseded over time."
+            },
+            {
+              "id": "q_096",
+              "prompt": "What happened to the early hope that English-like syntax would let business executives write software without programmers?",
+              "choices": [
+                "Executives wrote most corporate banking systems directly throughout the 1970s",
+                "Federal regulators banned managers from reading any COBOL source decks",
+                "Readability aided auditing, yet software engineering remained a specialist profession",
+                "English verbs vanished completely from all programming languages after 1965"
+              ],
+              "correct_index": 2,
+              "explanation": "While descriptive COBOL code genuinely helped auditors and teams read business rules, managing large-scale systems remained complex engineering work handled by professional developers."
+            }
+          ]
+        },
+        {
+          "id": "ch_049",
+          "title": "Three Quiet Winners Hiding Inside Every Modern Stack",
+          "content_markdown": "Here is the delightful twist for anyone who still assumes COBOL and RPG are dusty museum fossils: three of enterprise computing's signature innovations quietly conquered the entire software world and live inside modern code you use every day!\n\nFirst, **structured composite records**—born in COBOL's hierarchical `DATA DIVISION`—became the blueprint for grouped records like C's `struct`, relational database table rows, and nested web data formats. Second, **exact decimal data types**—forged so financial ledgers would never suffer binary $$0.1 + 0.2$$ rounding drift—survive directly in database `DECIMAL` and `NUMERIC` columns (in query languages such as SQL), Java's `BigDecimal`, Python's `Decimal`, and modern banking software. Third, **clean schema-logic-environment separation**—pioneered by COBOL's four-division architecture—anchors modern internet-hosted software, where server configurations, database schemas, and application logic live in cleanly decoupled layers so systems can outlast any single machine.",
+          "questions": [
+            {
+              "id": "q_097",
+              "prompt": "Why do modern languages and databases still provide specialized `DECIMAL` or `BigDecimal` data types?",
+              "choices": [
+                "Modern processors have phased out hardware support for binary floating-point",
+                "Financial math still needs exact base-10 arithmetic without $$0.1 + 0.2$$ drift",
+                "Decimal types automatically compress eighty-column punch cards into half space",
+                "Modern web browsers refuse to render numbers containing fractional cents"
+              ],
+              "correct_index": 1,
+              "explanation": "Just as in 1959, base-2 floating-point cannot store simple decimal fractions like $$0.1$$ cleanly, so modern financial software relies on exact decimal types descended from enterprise computing."
+            },
+            {
+              "id": "q_098",
+              "prompt": "Which trio captures enterprise computing's most enduring architectural gifts to modern software engineering?",
+              "choices": [
+                "Eighty-column margins, self-modifying `ALTER` jumps, and two-digit year fields",
+                "Wired plugboards, overnight tape mounting, and mandatory implicit report cycles",
+                "Verbose English paragraphs, shared global chalkboards, and numbered indicators",
+                "Structured composite records, exact decimal data types, and schema-logic separation"
+              ],
+              "correct_index": 3,
+              "explanation": "Structured composite records, exact decimal arithmetic, and separating environment config, data schemas, and business logic all originated in enterprise computing and remain pillars of modern software."
+            }
+          ]
+        },
+        {
+          "id": "ch_050",
+          "title": "Two Computing Cultures, One Shared Heritage",
+          "content_markdown": "Stepping back over this module, you can now see why early computing forked cleanly into two complementary traditions. Scientific computing taught machines how to race through dense mathematical arrays and optimize numerical equations. Enterprise data processing—through CODASYL's COBOL and IBM's RPG—solved an equally vital human challenge: modeling messy real-world records, guarding every penny with exact decimal math, empowering non-mathematicians and tabulator clerks, and engineering dependable software durable enough to run banks, hospitals, and governments for half a century.\n\nFrom Grace Hopper's FLOW-MATIC and Bromberg's ironic granite tombstone to packed BCD, glass-house discipline, Y2K remediation, and RPG's reinvention on IBM i, enterprise computing proved that great language design is never just abstract elegance—it is a living bridge between hardware realities, compiler craft, and human institutions. Together, the scientific and business pioneers laid the foundation for every modern language still to come.",
+          "questions": [
+            {
+              "id": "q_099",
+              "prompt": "How did early enterprise computing complement early scientific computing in shaping modern programming languages?",
+              "choices": [
+                "Enterprise languages replaced algebraic arrays with hand-wired mechanical tabulators",
+                "Enterprise languages phased out compilers in favor of manual plugboards",
+                "Enterprise languages contributed structured records, exact decimals, and long-term portability",
+                "Enterprise languages proved that business software rarely outlives one hardware line"
+              ],
+              "correct_index": 2,
+              "explanation": "While scientific computing advanced algebraic optimization and numerical arrays, enterprise languages pioneered composite records, exact decimal types, schema-logic separation, and multi-decade portability."
+            },
+            {
+              "id": "q_100",
+              "prompt": "What overarching principle best explains why COBOL and RPG evolved so differently from academic ideals yet thrived for over sixty years?",
+              "choices": [
+                "Languages endure when their design and hardware fit institutional priorities",
+                "Verbose syntax and rigid card columns always outperform structured code",
+                "Hardware manufacturers prevented universities from designing alternative programming languages",
+                "Corporate software never requires maintenance once compiled onto magnetic tape"
+              ],
+              "correct_index": 0,
+              "explanation": "Both COBOL and RPG endured for decades because their semantics, compilers, and hardware fit aligned deeply with real-world institutional priorities—exactness, throughput, auditability, and continuity."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

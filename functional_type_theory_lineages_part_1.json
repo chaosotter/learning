@@ -1,0 +1,1687 @@
+{
+  "id": "functional_type_theory_lineages_part_1",
+  "title": "Functional \u0026 Type-Theory Lineages I: Scheme, Lexical Closures, Tail Calls, Continuations \u0026 Racket (1975–Present)",
+  "summary": "Part 1 of the 'Functional \u0026 Type-Theory Lineages' Quest Arc traces how Gerald Sussman and Guy Steele's 1975 Scheme distilled Lisp into a razor-sharp lambda core that reshaped modern programming languages and compilers. Building smoothly on 'Before Compilers IV' at a relaxed, generalist-friendly pace with short 3-to-6-line code contrasts, learners progress from early Lisp's dynamic-scoping bugs and the FUNARG problem through first-class closures, Lisp-1 versus Lisp-2, mandatory tail-call optimization, hygienic macros, first-class continuations, Rabbit's CPS compiler, MIT's SICP culture, and Racket's Language-Oriented Programming before weighing Scheme's dead ends against the lasting ideas powering JavaScript, Python, Rust, and modern compilers.",
+  "topic_prompt": "Part 1 of the 'Functional \u0026 Type-Theory Lineages' Quest Arc, written at a relaxed, generalist-friendly conversational pace (10 sections, 50 chunks, 100 questions) building smoothly on 'Before Compilers IV' (McCarthy's Lisp, cons cells, homoiconicity, REPLs, AST macros, and ANSI Common Lisp) while explaining every new concept from first principles with short, readable 3-to-6-line code contrasts. Cover: (1) early Lisp's dynamic scoping bugs and the FUNARG problem, contrasted directly with lexical (static) scoping; (2) Gerald Sussman and Guy Steele's 1975 MIT AI Lab experiments with Carl Hewitt's Actor model, birthing Scheme and the 'Lambda: The Ultimate...' papers to prove a tiny lambda core could unify control flow, data, and objects; (3) first-class closures as portable code-plus-environment bundles, plus Lisp-1 (Scheme's single namespace) versus Lisp-2 (Common Lisp's separate function/value namespaces); (4) tail calls, stack growth, and mandatory Tail-Call Optimization (TCO / proper tail recursion) turning recursion into constant-space loops; (5) hygienic macros ('syntax-rules') preventing accidental variable capture versus unhygienic Lisp 'defmacro'; (6) first-class continuations ('call/cc') explained intuitively as bookmarking the rest of a computation to build exceptions, coroutines, and backtracking—and why unrestricted 'call/cc' became a cautionary dead end compared with delimited continuations and 'async'/'await'; (7) compiler foundations via Steele's Rabbit compiler and Continuation-Passing Style (CPS) intermediate representations that influenced modern SSA and ANF compilers; (8) MIT's 6.001 course and 'Structure and Interpretation of Computer Programs' (SICP / the Wizard Book) teaching culture alongside Scheme's R5RS-to-R6RS/R7RS standardization split; (9) PLT Scheme's evolution into Racket and Language-Oriented Programming ('#lang'), using hygienic macros to build custom domain-specific languages; and (10) a clear verdict weighing Scheme's dead ends (parenthesized-syntax friction, committee fragmentation, unrestricted 'call/cc') against the lasting ideas that reshaped JavaScript, Python, Rust, and modern compilers.",
+  "tag_path": [
+    "History",
+    "History of Technology",
+    "Programming Language History"
+  ],
+  "prerequisite_ids": [
+    "before_compilers_part_4"
+  ],
+  "vetting_summary": "Completed sequential college-freshman generalist vetting across all 10 sections (50 chunks, 100 questions), verifying prerequisite alignment with 'Before Compilers IV', balanced four-choice options, conversational 120-200 word pacing, and clean JSON/Markdown escaping. Refined 22 chunks and 20 questions across all 10 sections to eliminate unexplained domain jargon, fix one forward reference to heap memory, lighten an overdense compiler chunk, and remove length or absolute-wording giveaways in multiple-choice options.",
+  "created_at": "2026-11-23T21:45:32Z",
+  "sections": [
+    {
+      "id": "sec_01",
+      "title": "1. Dynamic Scoping Bugs, the FUNARG Problem \u0026 Lexical Scope",
+      "summary": "Revisit early Lisp's variable-lookup rules using short 3-to-6-line code contrasts to see how dynamic scoping—resolving unbound names from the runtime caller chain—causes accidental name collisions when passing functions into helpers (the downward FUNARG problem) or returning freshly built functions after their creator exits (the upward FUNARG problem). Contrast this directly with lexical (static) scoping, which locks each free variable to its surrounding source-code lexical environment so functions behave predictably no matter where they are called.",
+      "introduced_terms": [
+        "free variable",
+        "FUNARG problem",
+        "lexical environment"
+      ],
+      "chunks": [
+        {
+          "id": "ch_001",
+          "title": "When a Caller Hijacks Your Variable",
+          "content_markdown": "In the earliest Lisp interpreters of the late 1950s and 1960s, dynamic scoping felt like an irresistible shortcut. Because an `eval/apply` interpreter already tracked active variables in a single shared lookup list, whenever a function needed a variable it had not defined itself, the interpreter simply walked backward through whoever had called it and grabbed the first matching name.\n\nFor tiny classroom programs, that shortcut worked fine. Once programmers began sharing helper functions across larger projects, however, eerie bugs crept in. Imagine writing a clean utility that multiplies an input by a program-wide `rate`. Weeks later, a colleague calls your utility from inside another function that happens to use a private local variable also named `rate`. Suddenly your untouched helper starts producing wildly wrong answers. Why should an internal variable name inside a caller silently sabotage a completely separate function?",
+          "questions": [
+            {
+              "id": "q_001",
+              "prompt": "Why did the earliest Lisp interpreters commonly adopt dynamic scoping in the first place?",
+              "choices": [
+                "It guaranteed faster compiled machine code on early mainframes.",
+                "It prevented callers from ever reusing common variable names.",
+                "It was simple to implement using one shared runtime lookup list.",
+                "It was mathematically required by Alonzo Church's lambda calculus."
+              ],
+              "correct_index": 2,
+              "explanation": "Early Lisp interpreters tracked active bindings in a single running list, making dynamic lookup by walking backward through callers quick and easy to implement."
+            },
+            {
+              "id": "q_002",
+              "prompt": "What bug appeared when early Lisp programmers shared helper functions under dynamic scoping?",
+              "choices": [
+                "A caller's local variable could accidentally override a name used inside a helper.",
+                "Garbage collection routinely erased shared helpers before callers finished running.",
+                "S-expressions failed to parse whenever two files shared identical symbols.",
+                "The REPL refused to evaluate functions that took more than one input."
+              ],
+              "correct_index": 0,
+              "explanation": "Under dynamic scoping, a caller's temporary variable name sits higher in the active call chain and can silently hijack an identically named variable referenced by a helper."
+            }
+          ]
+        },
+        {
+          "id": "ch_002",
+          "title": "Free Variables and the Kitchen-Counter Analogy",
+          "content_markdown": "To diagnose that bug cleanly, we need two simple concepts. First, a **free variable** is a variable used inside a function that is neither one of its own parameters nor defined locally inside its body—it has to be looked up outside the function. Second, a **lexical environment** is the nested set of surrounding variable definitions visible at the exact spot where the function is written in the source code.\n\nPicture a handwritten family recipe that calls for 'a pinch of the house spice.' Dynamic scoping behaves like a cook who grabs whichever jar happens to sit on the nearest caller's kitchen counter at dinner time—so the dish tastes different depending on who asked for it. Lexical (static) scoping instead always reaches back to the spice jar in the chef's own home kitchen where the recipe was originally written. You can predict a function's behavior just by reading the code on the page, without auditing every future caller.",
+          "questions": [
+            {
+              "id": "q_003",
+              "prompt": "In a function definition, what makes a variable a 'free variable'?",
+              "choices": [
+                "It is automatically erased by mark-and-sweep garbage collection.",
+                "It can be reassigned to any data type without raising an error.",
+                "It is left unquoted inside a Lisp list so the evaluator skips it.",
+                "It is used inside the function without being a parameter or local binding."
+              ],
+              "correct_index": 3,
+              "explanation": "A free variable appears in a function's body but is not introduced as one of that function's own parameters or local definitions, so its value must come from an enclosing scope."
+            },
+            {
+              "id": "q_004",
+              "prompt": "How does a lexical environment determine the value of a free variable?",
+              "choices": [
+                "By searching the chain of functions currently waiting for a result.",
+                "By checking the surrounding definitions where the function was written.",
+                "By prompting the programmer interactively inside the Lisp REPL.",
+                "By scanning the program alphabetically for the most recent symbol."
+              ],
+              "correct_index": 1,
+              "explanation": "A lexical environment captures the enclosing bindings visible in the source text where the function is defined, rather than depending on runtime call order."
+            }
+          ]
+        },
+        {
+          "id": "ch_003",
+          "title": "Four Lines That Split Dynamic from Lexical Scope",
+          "content_markdown": "A four-line contrast makes the difference unmistakable. Suppose we define a helper `scale` that relies on a free variable `rate`, and a second function `run` that happens to pick `rate` as its own parameter name:\n\n```scheme\n(define rate 10)\n(define (scale x) (* x rate))\n(define (run rate) (scale 3))\n(run 100)\n```\n\nTrace `(run 100)` step by step. First, `run` binds its local parameter `rate` to `100`, then calls `(scale 3)`. Inside `scale`, `x` is `3`, while `rate` is a free variable. Under dynamic scoping, the interpreter checks the active caller (`run`), spots `rate` bound to `100`, and returns `300`—even though `scale` never meant to read `run`'s private input! Under lexical scoping, `scale` ignores `run`'s parameter, consults the lexical environment where `scale` was written (`rate` equals `10`), and returns `30`. Renaming `run`'s parameter can never silently alter `scale`.",
+          "questions": [
+            {
+              "id": "q_005",
+              "prompt": "In the four-line `scale` and `run` example, why does dynamic scoping return `300` for `(run 100)`?",
+              "choices": [
+                "`scale` resolves its free variable `rate` using its caller `run`'s binding of `100`.",
+                "The top-level `(define rate 10)` is permanently overwritten by `run`.",
+                "Dynamic scoping multiplies all active bindings of `rate` together at runtime.",
+                "`scale` treats `100` as the value of `x` whenever `rate` is undefined."
+              ],
+              "correct_index": 0,
+              "explanation": "When `run` calls `(scale 3)`, dynamic scoping walks up the call chain and encounters `run`'s active parameter `rate = 100` before reaching the top-level `rate = 10`."
+            },
+            {
+              "id": "q_006",
+              "prompt": "Under lexical scoping, what happens if a programmer renames `run`'s parameter from `rate` to `limit`?",
+              "choices": [
+                "`scale` stops working because it can no longer find `rate` in `run`.",
+                "The result of `(run 100)` changes from `300` down to `30`.",
+                "The result stays `30` because `scale` ignores `run`'s local parameter name.",
+                "The evaluator flags a syntax error because `scale` still mentions `rate`."
+              ],
+              "correct_index": 2,
+              "explanation": "Under lexical scoping, `scale` always resolves `rate` to the surrounding top-level definition (`10`), so renaming `run`'s local parameter has zero effect on `scale`."
+            }
+          ]
+        },
+        {
+          "id": "ch_004",
+          "title": "The Two Faces of the FUNARG Problem",
+          "content_markdown": "Early Lisp researchers knew dynamic lookup broke down badly whenever functions were passed around as data—a dilemma MIT computer scientist Joel Moses famously cataloged in 1970 as the **FUNARG problem** (short for 'functional argument'). It came in two distinct flavors.\n\nThe *downward* FUNARG problem happened when you passed a function *down* into a helper like `map` (a function that takes another function as input and applies it to every item in a list). If your passed-in function used a free variable named `fn` or `lst`, and `map` used those same internal parameter names, dynamic scoping silently collided them!\n\nThe *upward* FUNARG problem was even trickier: what if a factory function built and returned a fresh anonymous function *upward* to its caller? Normally, once the factory finished, its local variables disappeared. Unless the runtime preserved the factory's lexical environment in long-lived garbage-collected memory, the returned function's free variables vanished into thin air.",
+          "questions": [
+            {
+              "id": "q_007",
+              "prompt": "What characterizes the 'downward' form of the FUNARG problem in early Lisp?",
+              "choices": [
+                "A returned function loses access to its creator's discarded local variables.",
+                "A passed-in function's free variables get hijacked by the helper's local names.",
+                "A deeply nested function overflows memory by allocating too many cons cells.",
+                "A global variable becomes unreadable inside any anonymous lambda expression."
+              ],
+              "correct_index": 1,
+              "explanation": "In the downward FUNARG problem, passing a function down into a helper like `map` exposes its free variables to accidental shadowing by the helper's internal parameter names."
+            },
+            {
+              "id": "q_008",
+              "prompt": "Why was the 'upward' FUNARG problem especially challenging for early Lisp runtimes to solve?",
+              "choices": [
+                "Early hardware lacked instructions for returning symbols from subroutines.",
+                "S-expressions could not represent nested anonymous functions in source text.",
+                "Dynamic lookup tables were stored in read-only memory during execution.",
+                "Returned functions still needed their creator's local variables after exit."
+              ],
+              "correct_index": 3,
+              "explanation": "When a function is returned upward out of its creator, the creator's local bindings would normally disappear unless the runtime preserves that lexical environment in memory."
+            }
+          ]
+        },
+        {
+          "id": "ch_005",
+          "title": "Closing the Trap and Opening the Door to Scheme",
+          "content_markdown": "Early Lisp's dynamic scoping was never a carefully chosen master plan—it was an accidental byproduct of a straightforward 1958 interpreter. Programmers did occasionally exploit it to temporarily override global settings like a printing format, which is why Emacs Lisp kept dynamic scoping for decades and Common Lisp later preserved it as an explicit opt-in feature ('special variables').\n\nYet for everyday software engineering, the downward and upward FUNARG problems proved that dynamic scoping made functions too fragile to trust as reusable building blocks. Making lexical scoping the default—and pairing every function with its preserved lexical environment inside a closure—transformed functions from brittle routines into self-contained, predictable components. In late 1975 at MIT's AI Lab, two researchers exploring a very different puzzle about artificial intelligence built a tiny lexically scoped Lisp interpreter—and accidentally sparked the birth of Scheme.",
+          "questions": [
+            {
+              "id": "q_009",
+              "prompt": "How did Common Lisp ultimately handle the tension between dynamic and lexical scoping?",
+              "choices": [
+                "It kept dynamic scoping everywhere and banned returning functions from factories.",
+                "It forbade free variables altogether so functions could only read arguments.",
+                "It defaulted to lexical scoping while keeping dynamic scoping opt-in.",
+                "It switched automatically between dynamic and lexical lookup based on list length."
+              ],
+              "correct_index": 2,
+              "explanation": "Common Lisp adopted lexical scoping by default to eliminate FUNARG bugs, while retaining dynamic scoping only for explicitly declared special variables."
+            },
+            {
+              "id": "q_010",
+              "prompt": "Why was solving both the downward and upward FUNARG problems essential for modular programming?",
+              "choices": [
+                "It removed the need for garbage collection in interactive Lisp runtimes.",
+                "It ensured functions kept predictable meanings when passed in or returned out.",
+                "It allowed Lisp programs to run without parentheses or S-expressions.",
+                "It eliminated the eval/apply cycle from meta-circular interpreters."
+              ],
+              "correct_index": 1,
+              "explanation": "By preserving each function's lexical environment, lexical closures guaranteed that functions carried their intended bindings safely whether passed downward or returned upward."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_02",
+      "title": "2. MIT AI Lab 1975: Actors, Scheme \u0026 'Lambda: The Ultimate...'",
+      "summary": "Step into the 1975 MIT AI Lab, where Gerald Sussman and Guy Steele built a tiny experimental interpreter to study Carl Hewitt's message-passing Actor model—only to discover that Actors and lexically scoped lambda functions were identical underneath. Explore how this insight birthed Scheme and the famous 'Lambda: The Ultimate...' papers, using short code contrasts to show how a tiny lambda core plus simple syntactic sugar can unify control flow, data structures, and message-passing objects.",
+      "introduced_terms": [
+        "Actor model",
+        "message passing",
+        "syntactic sugar"
+      ],
+      "chunks": [
+        {
+          "id": "ch_006",
+          "title": "A Six-Letter Filename and an MIT Mystery",
+          "content_markdown": "In late 1975, the corridors of MIT's Artificial Intelligence Lab hummed with debate over Carl Hewitt's **Actor model**—a bold theory that pictured software not as one rigid top-to-bottom recipe, but as a society of independent computational agents ('actors') cooperating strictly by sending messages to one another.\n\nProfessor Gerald Sussman and graduate student Guy Steele wanted to understand Hewitt's Actors deeply enough to see what made them tick. Rather than arguing in the abstract, they wrote a tiny experimental Lisp interpreter on MIT's time-sharing computer to try Actors out firsthand. Following the naming trend of MIT AI languages like Planner and Conniver, they called their project 'Schemer.' Because the lab's operating system enforced a strict six-character limit on filenames, 'Schemer' was abruptly trimmed to 'Scheme'—and inside that tiny experiment lay a startling revelation.",
+          "questions": [
+            {
+              "id": "q_011",
+              "prompt": "What motivated Gerald Sussman and Guy Steele to build their 1975 experimental interpreter at MIT?",
+              "choices": [
+                "They wanted a faster Fortran replacement for numerical physics simulations.",
+                "They wanted to understand how Carl Hewitt's Actor model actually worked.",
+                "They needed a commercial word-processing language for MIT secretaries.",
+                "They were hired to standardize ANSI Common Lisp across hardware vendors."
+              ],
+              "correct_index": 1,
+              "explanation": "Sussman and Steele wrote their small interpreter specifically to experiment with and demystify Carl Hewitt's Actor model."
+            },
+            {
+              "id": "q_012",
+              "prompt": "Why was Sussman and Steele's new language named 'Scheme' instead of 'Schemer'?",
+              "choices": [
+                "MIT administrators rejected 'Schemer' as sounding too mischievous.",
+                "Another lab had already trademarked 'Schemer' for a graphics compiler.",
+                "Guy Steele wanted the name to share exactly six letters with 'Lambda.'",
+                "MIT's operating system truncated filenames to a strict six-character limit."
+              ],
+              "correct_index": 3,
+              "explanation": "The ITS operating system at MIT's AI Lab allowed at most six characters per filename, shortening 'Schemer' directly to 'Scheme.'"
+            }
+          ]
+        },
+        {
+          "id": "ch_007",
+          "title": "Actors and Lambdas Turn Out to Be Twins",
+          "content_markdown": "To keep their experiment clean, Sussman and Steele built two features into Scheme: lexically scoped `lambda` functions and Hewitt's Actors communicating via **message passing**—a style where you trigger behavior by sending an entity a named request rather than poking directly at its hidden internal data.\n\nThen came the shock. When they examined their own interpreter code, the machinery implementing an Actor and the machinery implementing a lexically scoped `lambda` closure were line-for-line identical! Sending a message to an Actor was literally just calling a closure with a message name as its argument. Think of a bank teller behind a glass window: you never reach into the cash drawer yourself—you hand over a slip saying 'balance' or 'withdraw,' and the teller consults their private ledger. Realizing one clean mechanism could unify both ideas sparked Scheme's signature commitment to radical minimalism.",
+          "questions": [
+            {
+              "id": "q_013",
+              "prompt": "What surprising discovery did Sussman and Steele make when inspecting their Scheme interpreter?",
+              "choices": [
+                "Actors and lexically scoped lambda closures had identical underlying mechanics.",
+                "Actors required dynamic scoping in order to send messages between agents.",
+                "Lambda functions ran ten times slower than Actors on MIT's hardware.",
+                "Message passing could only work inside a hardware-tagged Lisp Machine."
+              ],
+              "correct_index": 0,
+              "explanation": "In their interpreter, implementing Hewitt's message-passing Actors produced the exact same code as implementing lexically scoped closures."
+            },
+            {
+              "id": "q_014",
+              "prompt": "In the teller-window analogy for message passing, how does a caller interact with a software entity?",
+              "choices": [
+                "By directly overwriting variables inside the entity's memory cells.",
+                "By rewriting the entity's source code through the interactive REPL.",
+                "By sending a named request and letting the entity handle its private state.",
+                "By copying the entity's entire ledger into a global lookup table."
+              ],
+              "correct_index": 2,
+              "explanation": "Message passing hides internal state behind an interface: callers send a named request, and the receiving entity decides how to answer using its private bindings."
+            }
+          ]
+        },
+        {
+          "id": "ch_008",
+          "title": "Building a Data Structure Out of Pure Lambda",
+          "content_markdown": "Could a tiny lexically scoped `lambda` core really stand in for data structures and message-passing objects? Look at this five-line Scheme contrast—it invents a two-value pair without using `cons`, data records, or any object keyword (where `eq?` tests whether two symbols match):\n\n```scheme\n(define (make-pair a b)\n  (lambda (msg)\n    (if (eq? msg 'first) a b)))\n(define p (make-pair 10 20))\n(p 'first) ; returns 10\n```\n\nTrace how this works. Calling `(make-pair 10 20)` traps `10` and `20` inside a fresh lexical environment and hands back an anonymous function waiting for a symbol `msg`. Later, evaluating `(p 'first)` sends the message `'first` to `p`; the `if` expression matches `'first` and returns `10`, whereas `(p 'second)` returns `20`. There are no special object tables or record layouts anywhere—just one closure holding private data and responding to messages!",
+          "questions": [
+            {
+              "id": "q_015",
+              "prompt": "In the five-line `make-pair` example, where are the values `10` and `20` stored after `(make-pair 10 20)` returns?",
+              "choices": [
+                "Inside a built-in hardware cons cell allocated by `CAR` and `CDR`.",
+                "Inside two global variables named `a` and `b` at the top level.",
+                "Inside the quoted symbol `'first` passed into the `eq?` test.",
+                "Inside the returned lambda closure's captured lexical environment."
+              ],
+              "correct_index": 3,
+              "explanation": "`make-pair` returns an anonymous function whose lexical environment preserves the local bindings `a = 10` and `b = 20`."
+            },
+            {
+              "id": "q_016",
+              "prompt": "What does evaluating `(p 'second)` return in the `make-pair` walkthrough?",
+              "choices": [
+                "It raises an error because `'second` is never mentioned in the code.",
+                "It returns `20` because `(eq? msg 'first)` is false and selects `b`.",
+                "It returns `'second` because quoted symbols always evaluate to themselves.",
+                "It returns `10` because `a` is the first variable in the lexical environment."
+              ],
+              "correct_index": 1,
+              "explanation": "Since `(eq? 'second 'first)` evaluates to false, the `if` expression takes its alternate branch and returns `b`, which is `20`."
+            }
+          ]
+        },
+        {
+          "id": "ch_009",
+          "title": "'Lambda: The Ultimate...' and Syntactic Sugar",
+          "content_markdown": "Excited by their discovery, Steele and Sussman published a legendary series of MIT memos between 1975 and 1978—*'Lambda: The Ultimate Imperative,' 'Lambda: The Ultimate Declarative,'* and *'Lambda: The Ultimate Opcode.'* Their twist defied conventional wisdom: critics assumed a minimalist lambda language would force humans to write unreadable academic puzzles. Instead, Steele and Sussman showed how **syntactic sugar**—readable convenience syntax that translates straight down into a tiny core—gave programmers comfort without bloating the language's rules.\n\nConsider Scheme's `let` form for declaring a local variable:\n\n```scheme\n(let ((x 5)) (+ x 1))\n;; translates directly into:\n((lambda (x) (+ x 1)) 5)\n```\n\nBoth lines mean the exact same thing! Rather than inventing separate runtime machinery for local blocks, loops, and jumps, Scheme showed that convenient human syntax could translate ('desugar') cleanly onto one unified `lambda` engine.",
+          "questions": [
+            {
+              "id": "q_017",
+              "prompt": "What is 'syntactic sugar' in programming language design?",
+              "choices": [
+                "Runtime optimizations that delete unused functions before execution.",
+                "Special machine instructions added to a CPU to speed up Lisp lists.",
+                "Friendly surface syntax that translates cleanly into simpler core constructs.",
+                "Extra punctuation marks required to separate parameters in lambda calculus."
+              ],
+              "correct_index": 2,
+              "explanation": "Syntactic sugar makes code easier for humans to read and write while desugaring directly into the language's smaller core primitives."
+            },
+            {
+              "id": "q_018",
+              "prompt": "How does `(let ((x 5)) (+ x 1))` illustrate the thesis of the 'Lambda: The Ultimate...' papers?",
+              "choices": [
+                "It shows local bindings need no engine beyond calling a lambda.",
+                "It proves `let` avoids creating any lexical environment during evaluation.",
+                "It demonstrates why Scheme had to reintroduce dynamic scoping for arithmetic.",
+                "It reveals that anonymous functions cannot accept numeric inputs directly."
+              ],
+              "correct_index": 0,
+              "explanation": "Because `(let ((x 5)) (+ x 1))` translates directly to `((lambda (x) (+ x 1)) 5)`, local bindings emerge naturally from the core lambda mechanism."
+            }
+          ]
+        },
+        {
+          "id": "ch_010",
+          "title": "A Minimalist Laboratory for Language Design",
+          "content_markdown": "By the late 1970s, Scheme stood in sharp contrast to sprawling dialects like MacLisp. While big industrial Lisps piled on separate special-purpose constructs for every programming style, Scheme asked a disciplined question: how *little* do you need in the core before everything else becomes simple library code or syntactic sugar?\n\nThat radical minimalism turned Scheme into computer science's favorite laboratory bench. Because its core rules fit onto a few dozen pages, researchers could mathematically analyze it, teach it to beginners, and build entire paradigms—control flow, data abstraction, and object-style message passing—on top of lexically scoped `lambda`. Yet elevating closures into the Swiss Army knife of programming immediately sharpened two practical design questions: how exactly do closures travel around as everyday values, and should functions share the exact same naming table as numbers? Next, we examine first-class closures and the famous Lisp-1 versus Lisp-2 divide.",
+          "questions": [
+            {
+              "id": "q_019",
+              "prompt": "How did Scheme's design philosophy differ most sharply from sprawling 1970s dialects like MacLisp?",
+              "choices": [
+                "Scheme abandoned homoiconicity and S-expressions in favor of English prose.",
+                "Scheme built a tiny, composable core rather than piling on special features.",
+                "Scheme rejected garbage collection so programmers could tune raw memory.",
+                "Scheme eliminated interactive REPLs in favor of batch punch-card decks."
+              ],
+              "correct_index": 1,
+              "explanation": "Scheme championed minimalism—keeping a tiny set of orthogonal primitives so higher-level constructs could be expressed cleanly in terms of `lambda`."
+            },
+            {
+              "id": "q_020",
+              "prompt": "Why did Scheme's small core make it especially valuable as a research laboratory?",
+              "choices": [
+                "It guaranteed compatibility with IBM 704 assembly routines from 1958.",
+                "It prevented programmers from writing reusable libraries or abstractions.",
+                "It eliminated any need to translate syntactic sugar before running code.",
+                "Its concise specification was small enough to analyze formally and extend cleanly."
+              ],
+              "correct_index": 3,
+              "explanation": "A compact, uniform core let language designers study semantics rigorously while testing new control and data abstractions without fighting bloated rules."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_03",
+      "title": "3. First-Class Closures \u0026 the Lisp-1 vs. Lisp-2 Divide",
+      "summary": "Unpack how Scheme turned closures into portable, heap-backed code-plus-environment bundles that solve the upward FUNARG problem and let functions act as ordinary first-class values—storing private state, building function factories, and composing higher-order pipelines in just a few lines. Then contrast Scheme's unified single namespace (Lisp-1) directly against Common Lisp's separate variable and function namespaces (Lisp-2), weighing clean higher-order call syntax against parameter-shadowing trade-offs and 'funcall' ceremony.",
+      "introduced_terms": [
+        "first-class function",
+        "Lisp-1",
+        "Lisp-2"
+      ],
+      "chunks": [
+        {
+          "id": "ch_011",
+          "title": "Unbolting Functions from the Floor",
+          "content_markdown": "In many early programming languages, numbers and text enjoyed total freedom—you could store them in variables, pack them into lists, hand them to helpers, and return them as answers—while functions remained second-class citizens bolted firmly to fixed top-level names. You could call a subroutine, but you could rarely manufacture a customized function on the fly and hand it across your program like a parcel.\n\nScheme tore down that barrier by making every procedure a **first-class function**: a full-fledged runtime value enjoying the exact same rights as an integer or symbol. You can bind a function to a variable, tuck several functions into a list, pass one into a transformer, or return a freshly minted function from a factory. That freedom raises an immediate engineering question: when a newly built function leaves its birthplace behind, how does it carry its private local variables safely along for the ride?",
+          "questions": [
+            {
+              "id": "q_021",
+              "prompt": "What defines a 'first-class function' in a programming language like Scheme?",
+              "choices": [
+                "A function that executes faster than built-in arithmetic operators.",
+                "A function declared at the top level before any variables are defined.",
+                "A function that automatically prints its result inside the REPL.",
+                "A function treated like any value: stored, passed, and returned."
+              ],
+              "correct_index": 3,
+              "explanation": "First-class functions possess the same runtime rights as numbers or lists: they can be assigned to variables, stored in data structures, passed as arguments, and returned from other functions."
+            },
+            {
+              "id": "q_022",
+              "prompt": "What practical question arises as soon as a language lets factories return first-class functions?",
+              "choices": [
+                "How the parser can still recognize balanced S-expression parentheses.",
+                "How a returned function keeps access to its birthplace's local variables.",
+                "How dynamic scoping can walk backward across compiled machine code.",
+                "How the REPL avoids printing anonymous functions as memory addresses."
+              ],
+              "correct_index": 1,
+              "explanation": "If a returned function refers to free variables from its creator, the runtime must keep those local bindings alive after the creator finishes."
+            }
+          ]
+        },
+        {
+          "id": "ch_012",
+          "title": "Inside a Closure's Two-Pocket Bundle",
+          "content_markdown": "Scheme answers that question by giving every closure a remarkably tidy runtime anatomy. Whenever Scheme evaluates a `lambda` expression, it allocates a portable two-pocket bundle in garbage-collected heap memory (the long-lived memory pool cleaned up automatically once nothing refers to it). The first pocket stores a pointer (memory reference) to the function's executable code; the second stores a pointer to the captured lexical environment active when the `lambda` was created.\n\nPicture a traveling pastry chef carrying both a laminated recipe card and a sealed spice box packed at home. No matter which kitchen the chef visits later, the recipe always draws from that personal spice box rather than borrowing strangers' ingredients. Because the captured lexical environment survives on the heap as long as the closure exists, the upward FUNARG problem disappears—and calling the same factory twice creates two closures holding completely independent spice boxes.",
+          "questions": [
+            {
+              "id": "q_023",
+              "prompt": "What two components are bundled together inside a Scheme closure at runtime?",
+              "choices": [
+                "Its executable code reference and its captured lexical environment.",
+                "A global symbol table copy and the caller's latest arguments.",
+                "An S-expression source string and an unexpanded macro definition.",
+                "A REPL prompt reference and a counter of active cons cells."
+              ],
+              "correct_index": 0,
+              "explanation": "Every closure pairs the function's code with a live reference to the lexical environment captured when that closure was created."
+            },
+            {
+              "id": "q_024",
+              "prompt": "Why does placing a closure's captured lexical environment in garbage-collected heap memory solve the upward FUNARG problem?",
+              "choices": [
+                "Heap memory forces every free variable to resolve dynamically at call time.",
+                "Heap memory forbids callers from creating local variables with matching names.",
+                "Captured bindings stay alive after the creating function exits until unused.",
+                "The garbage collector rewrites closures into top-level functions before returning."
+              ],
+              "correct_index": 2,
+              "explanation": "Because the captured environment lives in heap memory rather than disappearing when the factory returns, the returned closure safely retains its bindings for as long as it remains reachable."
+            }
+          ]
+        },
+        {
+          "id": "ch_013",
+          "title": "Private State Without a Class System",
+          "content_markdown": "Watch how cleanly first-class closures encapsulate private state in five lines of Scheme (where `set!` updates an existing local binding):\n\n```scheme\n(define (make-counter start)\n  (lambda () (set! start (+ start 1)) start))\n(define a (make-counter 0))\n(define b (make-counter 100))\n(a) ; returns 1, while (b) returns 101\n```\n\nTrace what happens step by step. Evaluating `(make-counter 0)` creates a brand-new lexical environment where `start` is `0`, then returns closure `a` pointing to it. Next, `(make-counter 100)` creates a completely separate lexical environment where `start` is `100` for closure `b`. Calling `(a)` increments only `a`'s private `start` to `1` (and `2` on the next call), while `(b)` independently steps from `100` to `101`. Outside code cannot accidentally overwrite `start` directly—the closure itself acts as a tiny, self-contained vault!",
+          "questions": [
+            {
+              "id": "q_025",
+              "prompt": "In the `make-counter` example, what does calling `(a)` a second time followed by `(b)` return?",
+              "choices": [
+                "`(a)` returns `102` and `(b)` returns `103`, because both share one `start`.",
+                "`(a)` returns `2` and `(b)` returns `101`, because each closure keeps its own `start`.",
+                "`(a)` returns `1` and `(b)` returns `100`, because `set!` resets after each call.",
+                "`(a)` raises an error because `make-counter` already exited and erased `start`."
+              ],
+              "correct_index": 1,
+              "explanation": "Each call to `make-counter` creates an independent lexical environment, so `a` counts up from `0` (`1`, `2`, ...) completely separately from `b` (`101`, `102`, ...)."
+            },
+            {
+              "id": "q_026",
+              "prompt": "Why can outside code not directly overwrite `a`'s internal `start` variable in the `make-counter` example?",
+              "choices": [
+                "Scheme prohibits using `set!` on numeric variables inside any function.",
+                "Garbage collection encrypts every variable captured inside a closure.",
+                "The symbol `start` is automatically quoted whenever a lambda is returned.",
+                "Only the returned closure holds access to that private lexical environment."
+              ],
+              "correct_index": 3,
+              "explanation": "Because `start` is a local parameter scoped inside `make-counter`, no external code can see or touch it except by invoking the closure that captured it."
+            }
+          ]
+        },
+        {
+          "id": "ch_014",
+          "title": "Lisp-1 vs. Lisp-2: The Great Namespace Split",
+          "content_markdown": "Once functions became everyday first-class values, Lisp designers faced a fascinating fork in the road. Scheme chose **Lisp-1**: a single unified namespace where each symbol holds just one value, whether that value is a number or a function. Common Lisp chose **Lisp-2**: two separate namespaces per symbol—one slot for ordinary variable values and another slot for function definitions.\n\nCompare writing `twice`, a helper that applies any passed-in function `f` to `x` twice:\n\n```scheme\n;; Scheme (Lisp-1):\n(define (twice f x) (f (f x)))\n;; Common Lisp (Lisp-2):\n(defun twice (f x) (funcall f (funcall f x)))\n```\n\nNotice the trade-off! Scheme's Lisp-1 lets you call `(f x)` directly with zero fuss, keeping function-passing ('higher-order') code clean—but if you casually name a parameter `list`, you accidentally hide ('shadow') Scheme's built-in `list` function inside that body. Common Lisp's Lisp-2 lets you safely name a parameter `list` while still calling `(list 1 2)`, at the cost of extra `funcall` (to call a variable) and `#'` (to fetch a named function) ceremony.",
+          "questions": [
+            {
+              "id": "q_027",
+              "prompt": "Why does Common Lisp require `(funcall f x)` inside `twice` where Scheme simply writes `(f x)`?",
+              "choices": [
+                "Common Lisp lacks first-class closures and must simulate them via macros.",
+                "Common Lisp resolves all function arguments using dynamic scoping rules.",
+                "Common Lisp stores parameter `f` in the value namespace, separate from functions.",
+                "Common Lisp reserves single-letter symbols exclusively for numeric counters."
+              ],
+              "correct_index": 2,
+              "explanation": "As a Lisp-2, Common Lisp looks up the first position of `(f x)` in the function namespace, so calling a function held in parameter `f`'s value slot requires `funcall`."
+            },
+            {
+              "id": "q_028",
+              "prompt": "What subtle hazard can occur in a Lisp-1 like Scheme that Common Lisp's Lisp-2 design avoids?",
+              "choices": [
+                "A local variable named `list` hides the built-in `list` function.",
+                "Passing a closure into a helper erases its captured lexical environment.",
+                "Defining two separate functions with different parameters causes a syntax crash.",
+                "Using `lambda` inside a helper triggers the downward FUNARG problem automatically."
+              ],
+              "correct_index": 0,
+              "explanation": "Because a Lisp-1 shares one namespace for both variables and functions, binding a local variable to a name like `list` hides ('shadows') the standard `list` procedure within that lexical scope."
+            }
+          ]
+        },
+        {
+          "id": "ch_015",
+          "title": "Higher-Order Freedom Meets the Stack Wall",
+          "content_markdown": "Together, heap-backed closures and Lisp-1's unified namespace gave Scheme an effortless fluidity that later echoed straight into JavaScript and Python. Functions were no longer rigid blocks of instructions waiting to be invoked by name; they were lightweight, portable building blocks that could hold private state, wrap other behaviors, and flow cleanly through pipelines without `funcall` clutter.\n\nYet Scheme's radical minimalism created one huge engineering challenge. Remember that Scheme trimmed away traditional step-by-step ('imperative') loop keywords like `for` and `while`, encouraging programmers to repeat steps by having functions call themselves or pass work along to other functions. If a program needs to inspect a million items by making a million consecutive function calls, won't all those unfinished calls pile up in memory until the computer crashes? To see how Scheme turned recursion into rock-solid iteration, we next explore the call stack and mandatory tail-call optimization.",
+          "questions": [
+            {
+              "id": "q_029",
+              "prompt": "How do first-class closures and Lisp-1 namespaces complement each other in Scheme?",
+              "choices": [
+                "Functions can carry private state and be invoked cleanly like any ordinary value.",
+                "Closures automatically share one global namespace so local variables never exist.",
+                "Lisp-1 eliminates heap allocation by keeping all closures inside fixed registers.",
+                "Functions automatically bypass lexical scoping whenever passed to `twice`."
+              ],
+              "correct_index": 0,
+              "explanation": "Heap-backed closures make functions portable state-carrying values, while Lisp-1's single namespace lets programmers pass and invoke them without `funcall` or `#'` ceremony."
+            },
+            {
+              "id": "q_030",
+              "prompt": "What major practical challenge arises when a minimalist language relies on function calls instead of built-in loops?",
+              "choices": [
+                "First-class functions cannot read numeric variables inside S-expressions.",
+                "Lisp-1 namespaces prevent a function from calling itself by its own name.",
+                "Long chains of repeated calls risk exhausting memory if unfinished calls pile up.",
+                "Garbage collection pauses permanently whenever a closure invokes another closure."
+              ],
+              "correct_index": 2,
+              "explanation": "Using recursive function calls to repeat work thousands or millions of times would rapidly exhaust call memory unless the runtime can reuse space cleanly."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_04",
+      "title": "4. Tail Calls, Stack Growth \u0026 Mandatory Tail-Call Optimization",
+      "summary": "Build an intuitive, first-principles picture of the runtime call stack as a pile of pending return reminders, and use crisp 3-to-6-line code contrasts to compare naive recursion (which grows the stack linearly until it overflows) against accumulator-based calls in tail position. Discover why Scheme mandates proper tail-call optimization (TCO)—reusing the active stack frame so both self-recursive and mutually recursive functions run as constant-space loops—and why languages like Python and Java chose debug stack traces over mandatory TCO.",
+      "introduced_terms": [
+        "call stack",
+        "tail position",
+        "tail-call optimization (TCO)"
+      ],
+      "chunks": [
+        {
+          "id": "ch_016",
+          "title": "The Million-Step Crash",
+          "content_markdown": "Suppose you write a clean, self-calling (recursive) function to count down from `1,000,000` to `0`, or to add up a million numbers from a sensor log. In most mainstream programming languages, running that innocent-looking function triggers an abrupt crash—a 'stack overflow' error—long before the count ever reaches zero!\n\nWhy does a simple `for` loop breeze through a million repetitions using almost no memory, while a straightforward recursive function blows up after a few thousand steps? That puzzle stood squarely in Scheme's path. If Gerald Sussman and Guy Steele truly meant what they wrote in *'Lambda: The Ultimate Imperative'*—that function calls could replace built-in loops without sacrificing speed or memory—then Scheme needed a principled way to stop deep chains of calls from piling up endlessly in memory.",
+          "questions": [
+            {
+              "id": "q_031",
+              "prompt": "Why did ordinary recursion pose a serious obstacle to Scheme's minimalist goal of replacing built-in loops?",
+              "choices": [
+                "Deep chains of ordinary function calls can rapidly exhaust memory and crash.",
+                "Recursive functions cannot access free variables inside lexical environments.",
+                "Scheme's S-expression syntax forbids writing a function name inside its own body.",
+                "Garbage collection automatically terminates any function called over 1,000 times."
+              ],
+              "correct_index": 0,
+              "explanation": "If every recursive call consumes additional memory until the chain finishes, repeating work millions of times causes a stack overflow instead of running like a loop."
+            },
+            {
+              "id": "q_032",
+              "prompt": "What happens in most conventional languages when a standard recursive function nests a million calls deep?",
+              "choices": [
+                "The runtime quietly converts the recursion into a Lisp-2 namespace table.",
+                "The program finishes slowly while using the exact same memory as a `for` loop.",
+                "The program aborts with a stack overflow error after exhausting call memory.",
+                "The evaluator switches automatically from lexical scoping to dynamic scoping."
+              ],
+              "correct_index": 2,
+              "explanation": "Without reusing call memory, nesting a million active function calls exceeds the fixed call-memory limit and halts with a stack overflow."
+            }
+          ]
+        },
+        {
+          "id": "ch_017",
+          "title": "Sticky Notes on the Call Stack and Tail Position",
+          "content_markdown": "To see why memory piles up, picture a desk clerk handling nested favors. Whenever function A pauses to call function B, the runtime sets a sticky note—a frame recording where to return and what unfinished work A still owes—onto a growing pile called the **call stack**. If A plans to multiply B's answer by `5` once B returns, A's sticky note *must* stay on the call stack until B finishes. Nest a million pending multiplications, and your desk vanishes under a million sticky notes.\n\nNow imagine a much simpler favor: calling B is the *very last thing* A does, and A simply hands B's exact answer straight back to A's own caller with zero leftover math. That final return slot is called **tail position**. Once A passes the baton from tail position, A has nothing left to remember—so why leave A's sticky note on the pile at all?",
+          "questions": [
+            {
+              "id": "q_033",
+              "prompt": "What role does the 'call stack' play while a program executes nested function calls?",
+              "choices": [
+                "It stores permanent heap-allocated closures for the lifetime of the program.",
+                "It holds a pile of frames tracking return spots and unfinished work per call.",
+                "It translates syntactic sugar into raw lambda expressions before running.",
+                "It holds separate slots for Lisp-2 variable values and function definitions."
+              ],
+              "correct_index": 1,
+              "explanation": "The call stack tracks active calls as stacked frames so each caller remembers where to resume and what pending operations remain once its callee returns."
+            },
+            {
+              "id": "q_034",
+              "prompt": "When is a function call considered to be in 'tail position'?",
+              "choices": [
+                "When it appears inside the very first branch of an `if` expression.",
+                "When it takes zero arguments and reads only top-level global variables.",
+                "When it invokes an anonymous closure stored in garbage-collected memory.",
+                "When it is the caller's final action and its result is returned directly unchanged."
+              ],
+              "correct_index": 3,
+              "explanation": "A call is in tail position when the enclosing function performs no additional work on the callee's return value and simply passes that result straight back."
+            }
+          ]
+        },
+        {
+          "id": "ch_018",
+          "title": "Rewriting Factorial into Tail Position",
+          "content_markdown": "Look at how a tiny six-line Scheme contrast separates stack-growing recursion from tail-position recursion when computing a factorial (multiplying `n` down to `1`):\n\n```scheme\n;; Non-tail: multiplication waits on the call stack\n(define (fact n)\n  (if (= n 0) 1 (* n (fact (- n 1)))))\n;; Tail position: accumulator carries the running product\n(define (fact-t n acc)\n  (if (= n 0) acc (fact-t (- n 1) (* n acc))))\n```\n\nCompare tracing `(fact 4)` against `(fact-t 4 1)`. In `fact`, the recursive call `(fact (- n 1))` is *not* in tail position because `*` is still waiting outside it—piling up four pending multiplications (`4`, `3`, `2`, `1`) on the call stack before any multiplying even starts! In `fact-t`, we add an extra running-total parameter `acc` (an accumulator) that multiplies `(* n acc)` *before* making the next call. Now `(fact-t (- n 1) (* n acc))` sits squarely in tail position with zero pending work left behind.",
+          "questions": [
+            {
+              "id": "q_035",
+              "prompt": "Why is the recursive call `(fact (- n 1))` inside `fact` NOT in tail position?",
+              "choices": [
+                "Because `fact` uses an `if` expression rather than a `let` block.",
+                "Because `(- n 1)` must be computed before calling `fact` again.",
+                "Because the caller must still multiply the returned result by `n` afterward.",
+                "Because `fact` accepts only a single parameter instead of two parameters."
+              ],
+              "correct_index": 2,
+              "explanation": "After `(fact (- n 1))` returns, `fact` still has a pending multiplication by `n`, so its frame must remain on the call stack."
+            },
+            {
+              "id": "q_036",
+              "prompt": "How does adding the accumulator parameter `acc` in `fact-t` move the recursive call into tail position?",
+              "choices": [
+                "It performs the multiplication beforehand so nothing remains after the recursive call.",
+                "It moves the call stack onto the heap so frames grow without ever crashing.",
+                "It forces Scheme to evaluate `(* n acc)` only after `n` reaches zero.",
+                "It replaces all function calls with a hidden hardware `for` loop keyword."
+              ],
+              "correct_index": 0,
+              "explanation": "Computing `(* n acc)` before calling `fact-t` eliminates deferred work, making the recursive call itself the final action whose result is returned directly."
+            }
+          ]
+        },
+        {
+          "id": "ch_019",
+          "title": "Mandatory TCO, Mutual Recursion \u0026 the Debugging Trade-Off",
+          "content_markdown": "When a runtime automatically discards and reuses the current call-stack frame for any call in tail position, it performs **tail-call optimization (TCO)**. Instead of stacking a new sticky note, the processor overwrites the current frame and jumps straight to the callee—running `(fact-t 1000000 1)` in constant stack space, using no more stack memory than a traditional loop!\n\nHere are two surprising twists. First, many people assume TCO only optimizes a function calling *itself*. Scheme's specification mandates full proper tail recursion across *every* tail call—even mutually recursive functions bouncing endlessly back and forth (like `even?` tail-calling `odd?`, or step-by-step state machines handing control from one mode to another). Second, popular languages like Python and Java deliberately refuse to mandate TCO! Their designers argue that reusing frames erases the breadcrumb trail of callers ('stack traces') that makes tracking down crashes far easier for everyday developers.",
+          "questions": [
+            {
+              "id": "q_037",
+              "prompt": "Which statement accurately describes the scope of Scheme's mandatory tail-call optimization (TCO)?",
+              "choices": [
+                "It applies only when a numeric accumulator is named `acc`.",
+                "It is an optional hint compilers may skip whenever closures are present.",
+                "It optimizes only a function calling itself, never calls to other functions.",
+                "It reuses stack space for any tail call, including mutually recursive functions."
+              ],
+              "correct_index": 3,
+              "explanation": "Scheme mandates proper tail recursion for all calls in tail position—self-calls, mutual recursion, and state-machine jumps alike—guaranteeing constant stack space."
+            },
+            {
+              "id": "q_038",
+              "prompt": "Why have language designers behind Python and Java generally declined to mandate TCO?",
+              "choices": [
+                "Their languages do not support lexical scoping or nested closures.",
+                "Reusing stack frames discards intermediate call history helpful for debugging.",
+                "Tail-call optimization prevents garbage collection from freeing unused objects.",
+                "Stack frames cannot be reused on modern 64-bit hardware architectures."
+              ],
+              "correct_index": 1,
+              "explanation": "Overwriting frames in place removes prior callers from the call stack, sacrificing detailed stack traces when an error occurs—a trade-off Python and Java chose not to make."
+            }
+          ]
+        },
+        {
+          "id": "ch_020",
+          "title": "From Constant-Space Loops to Safer Macros",
+          "content_markdown": "Making tail-call optimization a non-negotiable language guarantee—rather than a quiet compiler bonus—was one of Scheme's boldest architectural bets. It meant Scheme programmers could write loops, interactive command dispatchers, and complex state machines using pure functions with total confidence that memory would never silently leak onto the call stack. In practice, TCO proved that recursion and iteration were not rival paradigms, just two views of the exact same constant-space execution.\n\nNotice a unifying theme emerging across our journey so far: Scheme kept spotting sloppy, accidental shortcuts in early Lisp and replacing them with rock-solid lexical discipline. First it tamed dynamic variable lookup; next it made closures first-class and tail calls constant-space. Yet Lisp's most famous superpower—macros that rewrite S-expression code before it runs—still harbored a sneaky variable-collision bug of its own. Next, we meet Scheme's hygienic macros.",
+          "questions": [
+            {
+              "id": "q_039",
+              "prompt": "Why did Scheme make proper tail recursion a mandatory language rule instead of an optional compiler optimization?",
+              "choices": [
+                "So programmers could stop writing base cases in recursive definitions.",
+                "So code relying on tail calls for iteration stays portable and never overflows.",
+                "So interpreters could skip building lexical environments during function calls.",
+                "So Scheme programs could share binary stack frames with Python routines."
+              ],
+              "correct_index": 1,
+              "explanation": "Because Scheme expresses loops and state machines through tail calls, making TCO mandatory guarantees that constant-space code runs safely in every compliant implementation."
+            },
+            {
+              "id": "q_040",
+              "prompt": "What deeper equivalence did Scheme's mandatory TCO demonstrate about programming constructs?",
+              "choices": [
+                "Dynamic scoping and lexical scoping always produce identical stack layouts.",
+                "Lisp-1 single namespaces always execute faster than Lisp-2 dual namespaces.",
+                "Tail-position recursion and traditional imperative loops use the same constant stack space.",
+                "Heap-allocated closures completely eliminate the need for any call stack."
+              ],
+              "correct_index": 2,
+              "explanation": "With TCO reusing the active frame on every tail jump, tail recursion executes in constant stack space just like an imperative loop."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_05",
+      "title": "5. Hygienic Macros ('syntax-rules') vs. Unhygienic 'defmacro'",
+      "summary": "Build on Lisp's homoiconic AST macros to expose the hidden compile-time twin of dynamic scoping: accidental variable capture in unhygienic 'defmacro' expansions, illustrated with short before-and-after swap macros and Common Lisp's manual 'gensym' workaround. Then examine Scheme's hygienic 'syntax-rules' pattern-and-template system, which automatically preserves lexical scope across macro expansion so custom syntax extensions stay safe without defensive symbol-renaming rituals.",
+      "introduced_terms": [
+        "variable capture",
+        "gensym",
+        "hygienic macro"
+      ],
+      "chunks": [
+        {
+          "id": "ch_021",
+          "title": "When a Harmless Swap Macro Breaks",
+          "content_markdown": "Remember from earlier Lisp how homoiconicity lets macros act as compile-time code writers—taking raw S-expression lists and transforming them into fresh code before evaluation begins. In Common Lisp, programmers write these transformations using `defmacro`, which splices argument expressions straight into a code template.\n\nImagine writing a clean `swap!` macro with `defmacro` to exchange the values of two variables, `x` and `y`. Naturally, you introduce one tiny internal helper variable named `tmp` to hold `x` while overwriting `x` with `y`. Your tests on `(swap! a b)` pass effortlessly. Weeks later, a teammate writes `(swap! tmp score)`—and suddenly both variables come out corrupted! Even in a lexically scoped language, why did a macro's private helper variable collide catastrophically with a caller's variable name?",
+          "questions": [
+            {
+              "id": "q_041",
+              "prompt": "When does a Lisp macro like `defmacro` perform its S-expression code transformation?",
+              "choices": [
+                "Only after mark-and-sweep garbage collection frees unused symbols.",
+                "Every time a closure executes a tail call at runtime.",
+                "Before evaluation runs, by rewriting raw syntax trees into new code.",
+                "Inside the CPU's call stack whenever a function raises an error."
+              ],
+              "correct_index": 2,
+              "explanation": "Lisp macros operate at compile or expansion time, rewriting input S-expressions into expanded expressions before the evaluator runs them."
+            },
+            {
+              "id": "q_042",
+              "prompt": "What triggered the unexpected bug when a teammate called `(swap! tmp score)` on the `defmacro` swap?",
+              "choices": [
+                "The caller's `tmp` shared the exact name of the macro's helper.",
+                "Common Lisp's Lisp-2 namespace forbids passing two variables into a macro.",
+                "Lexical scoping automatically converted `tmp` into a read-only constant.",
+                "The `swap!` macro lacked a tail-position recursive call to finish swapping."
+              ],
+              "correct_index": 0,
+              "explanation": "Because `defmacro` spliced raw symbols directly into the output tree, the macro's internal `tmp` collided with the caller's variable `tmp`."
+            }
+          ]
+        },
+        {
+          "id": "ch_022",
+          "title": "Variable Capture and Hygienic Expansion",
+          "content_markdown": "That silent collision is called **variable capture**—the sneaky compile-time twin of dynamic scoping! When an unhygienic macro pastes raw symbols directly into a caller's code, a temporary binding introduced by the macro can accidentally hijack a caller's identically named variable. Worse, capture works in reverse too: if a caller defines a local variable named `set!` or `if`, an unhygienic macro expanding to `set!` suddenly calls the caller's local variable instead of the built-in operator.\n\nPicture a fill-in-the-blank form letter reading, 'Ask [blank] to meet Sam at noon'—if you plug 'Sam' into the blank, the note orders Sam to meet themselves! A **hygienic macro** (pioneered by Eugene Kohlbecker and colleagues in 1986 and adopted by Scheme) solves both halves automatically: the macro expander stamps every identifier with its lexical origin so macro-introduced names and caller-supplied names stay invisibly separated.",
+          "questions": [
+            {
+              "id": "q_043",
+              "prompt": "Why is 'variable capture' described as the compile-time twin of dynamic scoping?",
+              "choices": [
+                "Both slow down execution by copying the entire call stack on every call.",
+                "Both allow unrelated names from caller and definition sites to collide silently.",
+                "Both require programmers to separate functions and values into two tables.",
+                "Both prevent garbage collection from reclaiming unused anonymous lambdas."
+              ],
+              "correct_index": 1,
+              "explanation": "Just as dynamic scoping lets a caller's variable hijack a function's free variable at runtime, unhygienic macro expansion lets macro and caller names hijack each other at expansion time."
+            },
+            {
+              "id": "q_044",
+              "prompt": "How does a 'hygienic macro' prevent accidental collisions between macro names and caller names?",
+              "choices": [
+                "It forbids callers from passing variable names shorter than five characters.",
+                "It converts all macro arguments into quoted strings before running code.",
+                "It forces every macro to expand only at the top level outside any function.",
+                "It tracks each identifier's lexical origin automatically during macro expansion."
+              ],
+              "correct_index": 3,
+              "explanation": "A hygienic macro expander records lexical scope metadata on identifiers so internal macro variables never capture caller variables and callers cannot shadow macro operators."
+            }
+          ]
+        },
+        {
+          "id": "ch_023",
+          "title": "'defmacro' vs. 'syntax-rules' Side by Side",
+          "content_markdown": "Contrast an unhygienic Common Lisp `defmacro` against Scheme's hygienic `syntax-rules` on the exact same `swap!` helper (in `defmacro`, backtick builds a template, comma inserts arguments, and `setf` is Common Lisp's version of `set!`):\n\n```scheme\n;; Unhygienic defmacro: breaks on (swap! tmp score)\n(defmacro swap! (x y)\n  `(let ((tmp ,x)) (setf ,x ,y) (setf ,y tmp)))\n;; Hygienic Scheme syntax-rules: safe on any names\n(define-syntax swap!\n  (syntax-rules () ((swap! x y) (let ((tmp x)) (set! x y) (set! y tmp)))))\n```\n\nTrace expanding `(swap! tmp score)`. In `defmacro`, raw substitution yields `(let ((tmp tmp)) (setf tmp score) (setf score tmp))`—the freshly created inner `tmp` immediately shadows the caller's `tmp`! Thus `(setf tmp score)` overwrites the *inner* temporary instead of the caller's `tmp`, wrecking the swap. In Scheme's `syntax-rules`, the expander automatically renames the macro's internal `tmp` behind the scenes (as though writing `tmp#1`), so `(swap! tmp score)` swaps both variables cleanly every time.",
+          "questions": [
+            {
+              "id": "q_045",
+              "prompt": "What goes wrong when the unhygienic `defmacro` version expands `(swap! tmp score)`?",
+              "choices": [
+                "The macro's inner `let` binding for `tmp` shadows the caller's `tmp` variable.",
+                "The backtick template strips out `setf` and leaves an empty list behind.",
+                "The caller's `score` variable is evaluated before `let` can bind `tmp`.",
+                "Common Lisp rejects `(swap! tmp score)` as an invalid S-expression."
+              ],
+              "correct_index": 0,
+              "explanation": "Expanding `(let ((tmp tmp)) (setf tmp score) (setf score tmp))` causes the inner `tmp` to capture the caller's `tmp`, corrupting both assignments."
+            },
+            {
+              "id": "q_046",
+              "prompt": "Why does Scheme's `syntax-rules` version of `swap!` succeed on `(swap! tmp score)` without extra defensive code?",
+              "choices": [
+                "Scheme automatically blocks users from ever naming a variable `tmp`.",
+                "Scheme evaluates `swap!` as an ordinary runtime function instead of a macro.",
+                "The hygienic expander transparently keeps the macro's `tmp` distinct from the caller's.",
+                "Scheme's Lisp-1 namespace places `tmp` and `score` into separate symbol tables."
+              ],
+              "correct_index": 2,
+              "explanation": "`syntax-rules` automatically preserves lexical scope, keeping the macro's internal `tmp` separate from any caller variable sharing that spelling."
+            }
+          ]
+        },
+        {
+          "id": "ch_024",
+          "title": "Common Lisp's 'gensym' and the Escape-Hatch Twist",
+          "content_markdown": "How did Common Lisp programmers write reliable macros using unhygienic `defmacro`? Their trusty shield was **`gensym`**—a built-in function that fabricates a brand-new, unrepeatable symbol (such as `#:G4821`) each time a macro expands. By binding the macro's temporary variable to a freshly minted `gensym` instead of `tmp`, you dodge accidental collisions with any human-written variable name.\n\nYet `gensym` carries two subtle limitations. First, hygiene stays strictly manual: forget one `gensym` in a complex macro and a ticking bug hides until a caller picks the unlucky name. Second, `gensym` still cannot protect a macro's own references to standard operators like `let` if a caller shadows them! Here is the surprising flip side, though: occasionally a programmer *intentionally* wants a macro to expose a magic variable name to its caller (such as binding `it` to a test result). Pure `syntax-rules` forbade deliberate capture completely, motivating later Schemes to add controlled hygiene escape hatches.",
+          "questions": [
+            {
+              "id": "q_047",
+              "prompt": "What does Common Lisp's `gensym` function do to defend `defmacro` definitions against variable capture?",
+              "choices": [
+                "It automatically rewrites every `defmacro` into a Scheme `syntax-rules` pattern.",
+                "It disables lexical scoping inside the caller until the macro finishes expanding.",
+                "It scans the entire program's source files to ban conflicting variable names.",
+                "It generates a guaranteed-unique temporary symbol that cannot match user names."
+              ],
+              "correct_index": 3,
+              "explanation": "`gensym` creates an uninterned, fresh symbol during macro expansion so the macro's internal temporary variable will not collide with any caller variable."
+            },
+            {
+              "id": "q_048",
+              "prompt": "What surprising trade-off emerged from strict `syntax-rules` hygiene compared with `defmacro`?",
+              "choices": [
+                "`syntax-rules` could only rewrite expressions containing fewer than three parentheses.",
+                "`syntax-rules` also blocked intentional capture when programmers wanted a shared magic name.",
+                "`syntax-rules` forced programmers to call `gensym` twice for every pattern variable.",
+                "`syntax-rules` prevented macros from ever expanding into `let` or `set!` expressions."
+              ],
+              "correct_index": 1,
+              "explanation": "Strict hygiene prevents *all* accidental capture, which also disallowed deliberate 'anaphoric' macros (like automatically binding `it`), leading later Schemes to add controlled escape hatches."
+            }
+          ]
+        },
+        {
+          "id": "ch_025",
+          "title": "Lexical Discipline at Compile Time — and Beyond",
+          "content_markdown": "By standardizing hygienic `syntax-rules` macros, Scheme finished extending lexical scoping from runtime code all the way into compile-time metaprogramming. Just as lexical closures shielded running functions from a caller's accidental variable names, hygienic macros shielded custom syntax extensions from variable capture—turning syntactic sugar from a fragile expert's trick into a trustworthy everyday tool. That pattern-and-template blueprint proved so durable that decades later, Rust modeled its own hygienic `macro_rules!` system directly on Scheme's design.\n\nSo far, Scheme has cleaned up variable lookup, closures, loops, and macros with remarkable elegance. Next, however, Scheme ventures into its boldest—and most controversial—runtime experiment. What if a language let you freeze 'everything left to do' on the call stack, hand it to your code as a first-class function, and teleport back to that bookmark whenever you wished? Next, we meet first-class continuations and `call/cc`.",
+          "questions": [
+            {
+              "id": "q_049",
+              "prompt": "How did Scheme's hygienic `syntax-rules` extend the core design principle introduced in Section 1?",
+              "choices": [
+                "It revived dynamic scoping so macros could inherit caller variables seamlessly.",
+                "It replaced S-expressions with traditional curly-brace blocks for macro templates.",
+                "It brought lexical-scoping safety into compile-time macro expansion as well as runtime.",
+                "It eliminated homoiconicity by hiding syntax trees inside compiled binaries."
+              ],
+              "correct_index": 2,
+              "explanation": "Hygienic macros applied the exact same lexical-scoping discipline that fixed runtime FUNARG bugs to compile-time code transformation."
+            },
+            {
+              "id": "q_050",
+              "prompt": "Which modern language modeled its `macro_rules!` syntax-extension system directly on Scheme's hygienic `syntax-rules`?",
+              "choices": [
+                "Rust, which adopted pattern-based hygienic macro expansion.",
+                "Python, which added `macro_rules!` alongside dynamic indentation.",
+                "Java, which replaced class methods with S-expression templates.",
+                "Go, which required `macro_rules!` for all variable declarations."
+              ],
+              "correct_index": 0,
+              "explanation": "Rust's pattern-and-template `macro_rules!` system directly inherited Scheme's `syntax-rules` approach to hygienic syntax extension."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_06",
+      "title": "6. First-Class Continuations ('call/cc') \u0026 Why Unrestricted Jumps Faded",
+      "summary": "Understand a continuation intuitively as a saved bookmark of 'the rest of the computation' waiting for a value, and use short code contrasts to see how Scheme's 'call/cc' captures that bookmark to build early returns, exceptions, cooperative coroutines, and backtracking search without dedicated keywords. Then diagnose why unrestricted global 'call/cc' became a cautionary dead end—breaking resource cleanup, confusing readers, and fighting optimizers—while bounded delimited continuations and structured 'async'/'await' carried its practical power forward.",
+      "introduced_terms": [
+        "continuation",
+        "call/cc",
+        "delimited continuation"
+      ],
+      "chunks": [
+        {
+          "id": "ch_026",
+          "title": "Saving Your Game Mid-Computation",
+          "content_markdown": "Imagine playing a maze game, dropping a magic save-point right outside a tricky locked door, exploring three corridors deeper, and then—whenever you hit a dead end—instantly teleporting straight back to that exact door carrying a clue you just discovered.\n\nMost programming languages bake special control-flow jumps directly into their syntax as separate keywords: `return` to bail out of a function early, `try`/`catch` exceptions to leap straight to an error handler, or special pause-and-resume routines when two tasks need to take turns. True to its minimalist spirit, Scheme wondered whether a single tiny primitive could replace all of them at once. If a program could save a bookmark of 'everything still waiting to happen next' and jump back to it whenever it pleased, could everyday library functions synthesize exceptions, task-switching, and time-traveling search from scratch?",
+          "questions": [
+            {
+              "id": "q_051",
+              "prompt": "Why did Scheme's designers look for a single control-flow primitive instead of adding separate keywords like `return` and `try`/`catch`?",
+              "choices": [
+                "S-expressions are syntactically unable to parse multi-word keywords.",
+                "Scheme aimed to express diverse control jumps using one minimalist mechanism.",
+                "Early Lisp interpreters prohibited jumping out of nested arithmetic expressions.",
+                "Tail-call optimization made normal function returns impossible to execute."
+              ],
+              "correct_index": 1,
+              "explanation": "Consistent with Scheme's minimalist philosophy, designers sought one general control primitive capable of expressing exceptions, early returns, and task switching as ordinary library code."
+            },
+            {
+              "id": "q_052",
+              "prompt": "In the maze-game analogy, what does dropping a 'magic save-point' represent inside a running program?",
+              "choices": [
+                "Writing a variable's current numeric value to a permanent text file.",
+                "Asking mark-and-sweep garbage collection to freeze all heap closures.",
+                "Renaming local variables safely before expanding a hygienic macro.",
+                "Capturing a reusable bookmark of the program's remaining pending work."
+              ],
+              "correct_index": 3,
+              "explanation": "A save-point captures where execution stands and what remains to be done, allowing the program to return to that exact execution state later."
+            }
+          ]
+        },
+        {
+          "id": "ch_027",
+          "title": "Continuations and 'call/cc' in Plain English",
+          "content_markdown": "At any instant while a program runs, there is a waiting 'rest of the computation' eager for the current expression's answer. Look at `(+ 1 (* 2 [?]))`, where `[?]` is the sub-expression currently being computed. The waiting remainder—'take that answer, multiply it by `2`, add `1`, and hand the result to whoever called us'—is called a **continuation**. It is simply a live snapshot of the entire remaining call stack!\n\nNormally, continuations stay hidden behind the scenes. Scheme's **`call/cc`** (short for `call-with-current-continuation`) drags the current continuation out into the light, packages it as an ordinary first-class function (say, `escape`), and hands it to a lambda you supply. If your lambda finishes normally without touching `escape`, nothing unusual happens. If your lambda ever calls `(escape 42)`, Scheme instantly abandons whatever else it was doing and teleports `42` straight into that bookmarked slot!",
+          "questions": [
+            {
+              "id": "q_053",
+              "prompt": "In the expression `(+ 1 (* 2 [?]))`, what is the 'continuation' waiting at `[?]`?",
+              "choices": [
+                "The value stored inside the nearest top-level global variable.",
+                "The lexical environment captured before the expression was parsed.",
+                "The remaining steps: multiply the incoming value by `2` and add `1`.",
+                "A temporary `gensym` symbol generated during macro expansion."
+              ],
+              "correct_index": 2,
+              "explanation": "A continuation represents 'the rest of the computation' awaiting the current sub-expression's value—here, multiplying by `2` and adding `1`."
+            },
+            {
+              "id": "q_054",
+              "prompt": "What happens immediately when a program invokes a continuation function captured by `call/cc` with the value `42`?",
+              "choices": [
+                "Current pending work is abandoned and `42` is delivered straight to the saved bookmark.",
+                "The program prints `42` to the REPL and continues running the next line normally.",
+                "The runtime pauses garbage collection until the lambda returns a second value.",
+                "The value `42` is added to the current call stack without changing control flow."
+              ],
+              "correct_index": 0,
+              "explanation": "Invoking a captured continuation discards the intervening computation and jumps straight back to the bookmarked continuation with `42` as its result."
+            }
+          ]
+        },
+        {
+          "id": "ch_028",
+          "title": "Early Escapes, Coroutines \u0026 Time-Traveling Search",
+          "content_markdown": "Watch `call/cc` conjure an instant early return out of thin air in five short lines:\n\n```scheme\n(+ 10\n   (call/cc\n     (lambda (escape)\n       (+ 1 (escape 5) 999))))\n;; evaluates directly to 15 (skipping + 1 and 999!)\n```\n\nTrace it step by step. Entering `call/cc`, the waiting continuation is `(+ 10 [?])`, which Scheme hands to our lambda as `escape`. Inside, Scheme begins evaluating `(+ 1 (escape 5) 999)`, hits `(escape 5)`, immediately discards `+ 1` and `999`, and drops `5` directly into `(+ 10 [?])`—yielding `15`! That single trick builds `return` and `try`/`catch` error handling as tiny library helpers.\n\nEven wilder: because `escape` is a first-class function, you can store it in a variable and call it *repeatedly*! Two tasks can save their bookmarks and swap control back and forth (cooperative coroutines), or a puzzle solver can save a bookmark at every fork and 'rewind time' to explore another branch (backtracking).",
+          "questions": [
+            {
+              "id": "q_055",
+              "prompt": "In the five-line `call/cc` walkthrough, why is `999` never added to the final answer?",
+              "choices": [
+                "Scheme's `call/cc` ignores any numeric literal larger than `100`.",
+                "The outer `(+ 10 ...)` expression executes before entering `call/cc`.",
+                "Hygienic macro expansion strips unused constants from arithmetic calls.",
+                "Calling `(escape 5)` jumps out to `(+ 10 [?])`, aborting the inner `+`."
+              ],
+              "correct_index": 3,
+              "explanation": "Invoking `(escape 5)` immediately discards the unfinished inner addition (`+ 1 ... 999`) and delivers `5` straight into the outer continuation `(+ 10 [?])`, giving `15`."
+            },
+            {
+              "id": "q_056",
+              "prompt": "What capability lets `call/cc` implement cooperative coroutines and backtracking search, not just one-way error escapes?",
+              "choices": [
+                "Early Scheme hardware had dedicated registers for maze-solving algorithms.",
+                "Captured continuations are first-class functions that can be stored and invoked repeatedly.",
+                "`call/cc` automatically duplicates every global variable into a second namespace.",
+                "Dynamic scoping rewinds every `set!` assignment whenever a function returns."
+              ],
+              "correct_index": 1,
+              "explanation": "Because a captured continuation can be saved and called more than once, programs can pause and resume tasks (coroutines) or revisit earlier decision points (backtracking)."
+            }
+          ]
+        },
+        {
+          "id": "ch_029",
+          "title": "Why Unrestricted 'call/cc' Became a Cautionary Dead End",
+          "content_markdown": "If `call/cc` is so magical, why don't JavaScript, Python, or Rust hand developers unrestricted `call/cc`? Because capturing the *entire* rest of the call stack proved too wild for real-world software! Jumping arbitrarily across the whole program can leap right past cleanup code that closes files or releases database locks—or worse, jump *back* into a finished function a second time, running a payment step twice! Even Scheme's cleanup-hook patch (`dynamic-wind`) became notoriously hard to reason about, while compilers had to pay heavy costs copying stacks just in case a global jump occurred.\n\nLanguage researchers eventually discovered a tamer, far better alternative: a **delimited continuation**, which bookmarks only a *bounded slice* of the call stack up to an explicit stop-marker rather than the whole program. Delimited continuations compose cleanly, respect resource boundaries, and directly inspired modern structured features like `async`/`await`—letting a single task pause cleanly for network data without hijacking the rest of the application.",
+          "questions": [
+            {
+              "id": "q_057",
+              "prompt": "Why did unrestricted global `call/cc` prove hazardous in large real-world programs?",
+              "choices": [
+                "Global stack jumps can bypass cleanup code or re-enter finished blocks.",
+                "Unrestricted `call/cc` only works inside programs written without lexical closures.",
+                "Calling a continuation automatically disables tail-call optimization across the runtime.",
+                "Global continuations cannot jump out of arithmetic expressions like `(+ 1 ...)`."
+              ],
+              "correct_index": 0,
+              "explanation": "Because an unrestricted continuation captures the entire program stack, jumping into it can skip vital resource cleanup or re-execute code meant to run only once."
+            },
+            {
+              "id": "q_058",
+              "prompt": "How does a 'delimited continuation' improve on unrestricted `call/cc`?",
+              "choices": [
+                "It bans first-class functions from being stored inside variables or lists.",
+                "It removes the call stack entirely by forcing dynamic variable lookup.",
+                "It captures only a bounded slice of the call stack up to an explicit marker.",
+                "It restricts control jumps exclusively to self-recursive factorial loops."
+              ],
+              "correct_index": 2,
+              "explanation": "Delimited continuations fence off only a specific bounded segment of the stack, making them composable, safer around resource cleanup, and closer to modern `async`/`await`."
+            }
+          ]
+        },
+        {
+          "id": "ch_030",
+          "title": "From Wild Application Jumps to Compiler Gold",
+          "content_markdown": "Scheme's `call/cc` experiment leaves us with a classic engineering lesson. As a research probe, it was brilliant—proving that exceptions, coroutines, and backtracking all share one deep mathematical ancestor. Yet as an everyday programmer tool, unrestricted global continuations behaved like a supercharged unconditional jump (`goto`), which is why modern ecosystems chose bounded, structured descendants—exceptions, pausable sequence generators, delimited continuations, and `async`/`await`—instead.\n\nStill, the mental model of a continuation as an explicit 'what to do next' function was about to score an unexpected triumph in a completely different arena: compiler engineering. Critics in the late 1970s insisted that minimalist Scheme—full of closures and lexical scopes—was fine for toy interpreters, never for fast compiled binaries. In 1978, Guy Steele proved them wrong by building the Rabbit compiler around explicit continuations. Next, we discover how Rabbit's Continuation-Passing Style helped shape modern compilers.",
+          "questions": [
+            {
+              "id": "q_059",
+              "prompt": "Which modern mainstream control-flow pattern captures the practical pausing benefit of continuations without `call/cc`'s global hazards?",
+              "choices": [
+                "Dynamic scoping paired with `defmacro` symbol splicing.",
+                "Structured `async`/`await` and bounded delimited continuations.",
+                "Lisp-2 `funcall` dispatch across separate symbol tables.",
+                "Unrestricted global stack copying on every function return."
+              ],
+              "correct_index": 1,
+              "explanation": "Modern languages adopted structured, bounded pause-and-resume mechanisms like `async`/`await` (conceptually akin to delimited continuations) instead of global `call/cc`."
+            },
+            {
+              "id": "q_060",
+              "prompt": "Where did Scheme's concept of making continuations explicit achieve one of its most enduring successes?",
+              "choices": [
+                "Replacing S-expressions with punch-card column rules in 1980s mainframes.",
+                "Eliminating garbage collection from interactive Lisp REPL environments.",
+                "Forcing all programmers to write `call/cc` instead of `if` expressions.",
+                "Powering compiler intermediate representations starting with Steele's Rabbit compiler."
+              ],
+              "correct_index": 3,
+              "explanation": "Even as global `call/cc` faded from user code, representing 'what happens next' explicitly became a foundational breakthrough in optimizing compilers starting with Rabbit."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_07",
+      "title": "7. Compiler Foundations: Steele's Rabbit, CPS, ANF \u0026 Modern SSA",
+      "summary": "Follow Guy Steele's 1978 Rabbit compiler, which silenced skeptics who dismissed Scheme as a slow toy by compiling lambda-heavy code via Continuation-Passing Style (CPS)—making evaluation order explicit and turning every control transfer into a uniform tail call. Trace with short 3-to-6-line transformations how CPS evolved into closure-lean A-Normal Form (ANF) and revealed deep structural kinship with Static Single Assignment (SSA), the backbone intermediate representation inside modern optimizing compilers like LLVM, GCC, and V8.",
+      "introduced_terms": [
+        "Continuation-Passing Style (CPS)",
+        "A-Normal Form (ANF)",
+        "Static Single Assignment (SSA)"
+      ],
+      "chunks": [
+        {
+          "id": "ch_031",
+          "title": "Can a Tiny Lambda Language Run Fast?",
+          "content_markdown": "In 1977, Scheme looked breathtaking on an MIT chalkboard, yet hardened systems engineers remained deeply skeptical. 'Sure,' critics argued, 'building loops, local blocks, and objects out of lexically scoped lambdas is charming inside a slow classroom interpreter—but you could never compile that minimalist core into fast machine code!' Traditional optimizing compilers expected rigid `for` loops, fixed subroutine layouts, and predictable memory slots, not waves of heap-allocated closures passing functions around.\n\nFor his 1978 MIT master's thesis, Guy Steele answered those skeptics head-on by writing **Rabbit**, the first optimizing compiler for Scheme. Rather than fighting Scheme's minimalism, Steele leaned directly into it—discovering that turning every hidden 'what happens next' step into an explicit continuation made optimizing Scheme dramatically simpler than compiling sprawling conventional languages!",
+          "questions": [
+            {
+              "id": "q_061",
+              "prompt": "Why were late-1970s systems engineers skeptical that Scheme could be compiled into fast machine code?",
+              "choices": [
+                "Scheme forbade numeric arithmetic in favor of symbolic list processing.",
+                "S-expressions required a hardware Lisp Machine simply to parse parentheses.",
+                "Hygienic macros prevented compilers from reading function definitions early.",
+                "A closure-heavy lambda core seemed poorly suited to traditional compiler loops."
+              ],
+              "correct_index": 3,
+              "explanation": "Critics assumed Scheme's reliance on first-class closures and minimalist lambda calls would incur heavy runtime overhead compared with rigid imperative loops."
+            },
+            {
+              "id": "q_062",
+              "prompt": "What did Guy Steele's 1978 Rabbit compiler prove about Scheme's minimalist design?",
+              "choices": [
+                "A tiny lexically scoped core could compile cleanly and efficiently to fast code.",
+                "Scheme programs had to add dynamic scoping before compilation could begin.",
+                "Replacing all lambdas with Lisp-2 namespaces doubled compilation speed.",
+                "Only interpreted Scheme could execute mandatory tail-call optimization."
+              ],
+              "correct_index": 0,
+              "explanation": "Rabbit demonstrated that Scheme's uniform lambda core actually simplified compiler analysis and optimization, enabling fast compiled machine code."
+            }
+          ]
+        },
+        {
+          "id": "ch_032",
+          "title": "Relay-Race Computing: Continuation-Passing Style (CPS)",
+          "content_markdown": "Before emitting raw machine instructions, a compiler first translates human source code into a simplified internal blueprint called an intermediate representation. Rabbit's breakthrough blueprint was **Continuation-Passing Style (CPS)**—a form of code in which *no function ever returns normally*. Instead, every function accepts one extra parameter `k` (its explicit continuation, 'where to send the answer next') and finishes by invoking `k` in tail position with its result!\n\nPicture a relay race where runners never jog back to the starting line to report their time. Each runner sprints forward, hands the baton straight to the next teammate waiting down the track, and steps off the lane forever. By rewriting an entire Scheme program into CPS, Rabbit turned ordinary calls, returns, conditional branches, loops, and even `call/cc` into one uniform operation: a tail jump carrying values forward—proving Steele's slogan that `lambda` truly was the ultimate machine jump.",
+          "questions": [
+            {
+              "id": "q_063",
+              "prompt": "How does a function deliver its final answer in Continuation-Passing Style (CPS)?",
+              "choices": [
+                "By storing the result in a global variable before popping the call stack.",
+                "By pausing execution until an interactive REPL inspects its return slot.",
+                "By tail-calling an explicit continuation parameter `k` with the computed value.",
+                "By rewriting its own source S-expression using a hygienic `syntax-rules` macro."
+              ],
+              "correct_index": 2,
+              "explanation": "In CPS, functions never return through the implicit call stack; each function passes its result forward by invoking its explicit continuation `k` in tail position."
+            },
+            {
+              "id": "q_064",
+              "prompt": "Why did converting Scheme programs into CPS make Guy Steele's Rabbit compiler much cleaner to build?",
+              "choices": [
+                "It removed all local variables so every function took zero parameters.",
+                "It unified calls, returns, loops, and branches into a single tail-jump mechanism.",
+                "It eliminated lexical environments by switching to dynamic caller lookup.",
+                "It skipped parsing parentheses by compiling raw ASCII characters directly."
+              ],
+              "correct_index": 1,
+              "explanation": "Once translated to CPS, every control transfer—returns, branches, loops, and `call/cc`—becomes a uniform tail call with arguments, streamlining optimization and code generation."
+            }
+          ]
+        },
+        {
+          "id": "ch_033",
+          "title": "Translating Direct Code into CPS Step by Step",
+          "content_markdown": "Watch a short four-line contrast convert an ordinary multiply-and-add function into Continuation-Passing Style (where `*-cps` and `+-cps` are continuation-passing versions of `*` and `+`):\n\n```scheme\n;; Direct style: hidden temporary result from (* a b)\n(define (mad a b c) (+ (* a b) c))\n;; CPS style: explicit intermediate name t and continuation k\n(define (mad-cps a b c k)\n  (*-cps a b (lambda (t) (+-cps t c k))))\n```\n\nTrace the transformation carefully! In direct style, `(* a b)` creates an unnamed temporary number waiting silently inside the call stack while `+` gets ready to run. In `mad-cps`, nothing stays hidden. First, `mad-cps` tail-calls `*-cps` on `a` and `b`, handing it a tiny continuation `(lambda (t) ...)` that explicitly names that intermediate product `t`. As soon as `*-cps` finishes, it tail-calls that continuation with `t`, which immediately tail-calls `+-cps` on `t`, `c`, and the caller's waiting continuation `k`. Every temporary value now wears an explicit name, execution order is locked down unambiguously, and *every* step is a clean tail jump!",
+          "questions": [
+            {
+              "id": "q_065",
+              "prompt": "What two compiler details become completely explicit when `(define (mad a b c) (+ (* a b) c))` is rewritten into `mad-cps`?",
+              "choices": [
+                "Garbage-collection pause times and heap memory addresses.",
+                "The exact evaluation order and the name of every intermediate result.",
+                "The difference between Lisp-1 and Lisp-2 symbol-table layouts.",
+                "Whether `a`, `b`, and `c` came from dynamic or lexical callers."
+              ],
+              "correct_index": 1,
+              "explanation": "CPS names every temporary computation explicitly (such as `t` for `a * b`) and locks down the exact sequence of steps via nested continuation calls."
+            },
+            {
+              "id": "q_066",
+              "prompt": "In `mad-cps`, what role does the parameter `k` play inside `(+-cps t c k)`?",
+              "choices": [
+                "It counts how many stack frames remain before a stack overflow occurs.",
+                "It stores the numeric constant added to `t` and `c` during multiplication.",
+                "It triggers a `gensym` rename so `t` cannot capture the caller's variables.",
+                "It receives the final sum via a tail call instead of returning normally."
+              ],
+              "correct_index": 3,
+              "explanation": "`k` is the caller's explicit continuation: `+-cps` adds `t` and `c` and passes the sum straight into `k` in tail position."
+            }
+          ]
+        },
+        {
+          "id": "ch_034",
+          "title": "From CPS to A-Normal Form (ANF) and Modern SSA",
+          "content_markdown": "Rabbit inspired a wave of functional compilers—yet researchers soon spotted a subtle twist. Full CPS wraps every tiny arithmetic step inside extra continuation lambdas that the compiler later has to simplify back into sequential code! In 1993, Cormac Flanagan and colleagues distilled CPS down to **A-Normal Form (ANF)**: a streamlined blueprint keeping CPS's best gifts—naming every temporary result and fixing evaluation order with flat `let` bindings—without creating piles of continuation closures.\n\nThen came an even bigger bridge. In the 1990s, researchers Richard Kelsey and Andrew Appel showed that CPS and ANF mirror **Static Single Assignment (SSA)**—the imperative compiler blueprint where every internal variable is assigned *exactly once* and branching paths pass values explicitly where they merge back together! Today, SSA sits at the beating heart of major optimizing compilers powering C, Rust, and JavaScript browsers: LLVM, GCC, and V8.",
+          "questions": [
+            {
+              "id": "q_067",
+              "prompt": "What overhead of full CPS did A-Normal Form (ANF) eliminate while keeping CPS's main benefits?",
+              "choices": [
+                "Wrapping every intermediate step in extra continuation lambdas.",
+                "Giving temporary sub-expression results explicit variable names.",
+                "Fixing the evaluation order of nested arithmetic expressions.",
+                "Allowing compilers to perform tail-call optimization on loops."
+              ],
+              "correct_index": 0,
+              "explanation": "ANF preserves explicit intermediate names and strict evaluation order via flat `let` steps, avoiding the clutter of allocating or simplifying tiny continuation closures for every step."
+            },
+            {
+              "id": "q_068",
+              "prompt": "What core rule defines Static Single Assignment (SSA), the modern compiler representation closely related to CPS?",
+              "choices": [
+                "Every function in a program may be called at most once during execution.",
+                "Every macro must use `gensym` before expanding into machine instructions.",
+                "Every internal compiler variable is assigned a value exactly once.",
+                "Every variable lookup dynamically walks backward through active callers."
+              ],
+              "correct_index": 2,
+              "explanation": "In SSA, each internal variable receives exactly one assignment, mirroring immutable lexical bindings in CPS/ANF and simplifying dataflow optimization inside compilers like LLVM and V8."
+            }
+          ]
+        },
+        {
+          "id": "ch_035",
+          "title": "From Compiler Breakthrough to Classroom Revolution",
+          "content_markdown": "Tracing the straight line from Guy Steele's 1978 Rabbit thesis through CPS and ANF into modern SSA reveals a quiet irony of computing history. Many programmers who have never written a single line of Scheme still benefit from Scheme's compiler theory every second—whenever LLVM optimizes a Rust binary, GCC compiles Linux, or V8 accelerates a web page in your browser. Scheme's minimalist core forced compiler writers to strip control flow down to its mathematical bones, and those bones turned out to fit modern processors brilliantly.\n\nYet Scheme's cultural impact did not stay confined to compiler labs. In the 1980s, Scheme walked straight into an MIT freshman lecture hall and starred in one of the most celebrated computer science textbooks ever written—even as Scheme's own community began wrestling painfully over how big its official standard ought to grow. Next, we visit MIT 6.001, the Wizard Book, and the R5RS–R6RS–R7RS split.",
+          "questions": [
+            {
+              "id": "q_069",
+              "prompt": "Which group of modern compilers relies on SSA intermediate representations structurally linked to Scheme's CPS and ANF lineage?",
+              "choices": [
+                "Interactive Lisp REPLs running uncompiled S-expressions directly.",
+                "Dynamic macro expanders translating `defmacro` trees before runtime.",
+                "Legacy Lisp Machine loaders executing tagged cons-cell instructions.",
+                "Mainstream optimizing compilers including LLVM, GCC, Rust, and V8."
+              ],
+              "correct_index": 3,
+              "explanation": "Because SSA shares deep structural equivalence with CPS/ANF, Rabbit's insights helped shape the intermediate representations powering LLVM, GCC, Rust, and V8 today."
+            },
+            {
+              "id": "q_070",
+              "prompt": "Why did Scheme's minimalist core prove unexpectedly fertile for compiler research?",
+              "choices": [
+                "It forbade programmers from writing nested expressions longer than two lines.",
+                "Stripping control flow to clean lambda primitives revealed general compiler laws.",
+                "It required programmers to hand-write machine registers inside every closure.",
+                "It ignored lexical scoping so compilers could store all variables globally."
+              ],
+              "correct_index": 1,
+              "explanation": "Reducing a language to a tiny set of orthogonal primitives forced compiler designers to uncover clean, general representations like CPS and ANF that applied far beyond Scheme."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_08",
+      "title": "8. MIT 6.001, the Wizard Book (SICP) \u0026 the R5RS–R6RS–R7RS Split",
+      "summary": "Explore how MIT's landmark 6.001 curriculum and 'Structure and Interpretation of Computer Programs' (the Wizard Book) used Scheme's minimal syntax to teach abstraction barriers, stream pipelines, and metalinguistic abstraction—and why MIT eventually pivoted to Python as software engineering shifted toward assembling large libraries. Pair that teaching legacy with Scheme's standardization drama, tracing how the beloved 50-page R5RS consensus fractured over R6RS's industrial ambitions before settling into R7RS's small-versus-large compromise.",
+      "introduced_terms": [
+        "abstraction barrier",
+        "metalinguistic abstraction",
+        "Revised Report (RnRS)"
+      ],
+      "chunks": [
+        {
+          "id": "ch_036",
+          "title": "Inside MIT's 'Wizard Book' Classroom",
+          "content_markdown": "Imagine walking into MIT's legendary introductory computer science class—Course 6.001—in 1985. Instead of spending six weeks memorizing quirky punctuation rules, semicolons, and data-type declarations, freshmen learned Scheme's entire basic syntax in a single afternoon! Their textbook was Harold Abelson, Gerald Sussman, and Julie Sussman's *Structure and Interpretation of Computer Programs* (SICP)—affectionately nicknamed the 'Wizard Book' for the purple-robed sorcerer gripping a `lambda` scroll on its cover.\n\nSICP treated programming not as vocational tool-training, but as a crisp mathematical medium for expressing ideas, famously declaring that 'programs must be written for people to read, and only incidentally for machines to execute.' How did a tiny MIT research dialect reshape computer science education worldwide—and why did MIT itself eventually retire 6.001 in favor of Python?",
+          "questions": [
+            {
+              "id": "q_071",
+              "prompt": "Why did MIT's Course 6.001 choose Scheme as its introductory teaching language?",
+              "choices": [
+                "Its minimal syntax let beginners focus immediately on big computational ideas.",
+                "Scheme already dominated commercial corporate payroll systems in 1985.",
+                "MIT's computers could only execute Scheme and rejected all other languages.",
+                "Scheme forced freshmen to manage raw hardware memory pointers by hand."
+              ],
+              "correct_index": 0,
+              "explanation": "Because students could pick up Scheme's tiny syntax in an afternoon, 6.001 jumped straight into deep software-design principles instead of syntax trivia."
+            },
+            {
+              "id": "q_072",
+              "prompt": "What famous guiding philosophy did the 'Wizard Book' (SICP) emphasize about writing software?",
+              "choices": [
+                "Code should prioritize raw assembly speed even if humans cannot read it.",
+                "Good programmers should avoid macros and closures in introductory courses.",
+                "Programs should be written primarily for humans to read, and incidentally for machines.",
+                "Every classroom problem requires a brand-new hardware architecture to solve."
+              ],
+              "correct_index": 2,
+              "explanation": "SICP framed programming as clear human communication of computational processes, with machine execution as a secondary consequence."
+            }
+          ]
+        },
+        {
+          "id": "ch_037",
+          "title": "Abstraction Barriers and Metalinguistic Abstraction",
+          "content_markdown": "SICP organized software thinking around two unforgettable principles. The first is the **abstraction barrier**—a clean dividing wall separating *how* higher-level code uses a concept from *how* that concept is built underneath. Picture driving a car: the steering wheel, gas pedal, and brake form an abstraction barrier. Whether an automaker swaps a gasoline engine for an electric battery pack beneath the hood, your driving habits never change! In SICP, students even swapped `cons` pairs out for pure `lambda` closures behind an abstraction barrier without breaking a single line of caller code.\n\nClimbing higher, SICP reached its breathtaking summit: **metalinguistic abstraction**—solving a thorny problem not merely by writing bigger functions, but by inventing a fresh, custom mini-language (and its evaluator) tailored to the problem itself. When a language fits your domain like a glove, impossible puzzles suddenly look simple.",
+          "questions": [
+            {
+              "id": "q_073",
+              "prompt": "What is the purpose of an 'abstraction barrier' in SICP's design methodology?",
+              "choices": [
+                "To prevent functions from calling themselves recursively in tail position.",
+                "To block garbage collection from inspecting heap-allocated lexical closures.",
+                "To force callers to know the exact memory layout of every data structure.",
+                "To separate how data is used from how it is implemented underneath."
+              ],
+              "correct_index": 3,
+              "explanation": "An abstraction barrier shields callers behind clean operations so underlying data representations (such as `cons` cells versus closures) can change without breaking caller code."
+            },
+            {
+              "id": "q_074",
+              "prompt": "What does 'metalinguistic abstraction' encourage engineers to do when facing a complex problem domain?",
+              "choices": [
+                "Translate the entire application manually into raw numeric machine opcodes.",
+                "Design a specialized mini-language and evaluator tailored to the domain.",
+                "Replace all lexical environments with a single flat global variable table.",
+                "Disable syntactic sugar so every line uses unformatted S-expressions."
+              ],
+              "correct_index": 1,
+              "explanation": "Metalinguistic abstraction elevates problem solving by crafting a custom language whose vocabulary and rules express the domain directly."
+            }
+          ]
+        },
+        {
+          "id": "ch_038",
+          "title": "Inside 6.001 — and Why MIT Pivoted to Python",
+          "content_markdown": "Across one whirlwind semester, 6.001 carried undergraduates from simple arithmetic and higher-order functions through 'streams' (clever lazy sequences that behave like infinite lists by computing each next element only when asked) all the way to writing their own meta-circular Scheme evaluator and a tiny simulated hardware processor ('register machine'). By finals week, 'computer magic' had evaporated completely—students understood how interpreters, compilers, and abstractions fit together from top to bottom.\n\nSo why did MIT retire 6.001 in 2007–2008 and switch to Course 6.01 using Python and robots? Gerald Sussman himself explained the shift candidly: 1980s engineering meant building small, crystalline systems from scratch, where Scheme shone brightest. Twenty-first-century engineering increasingly meant exploring, probing, and wiring together gigantic, imperfectly documented third-party libraries for hardware sensors, networking, and data science—a world where Python's massive 'batteries-included' library ecosystem better matched daily engineering reality.",
+          "questions": [
+            {
+              "id": "q_075",
+              "prompt": "How did SICP's 'streams' let Scheme programs work cleanly with conceptually infinite sequences?",
+              "choices": [
+                "By pre-allocating infinite memory inside tagged Lisp Machine hardware.",
+                "By converting infinite sequences into finite global arrays at compile time.",
+                "By delaying computation so each next item is calculated only when demanded.",
+                "By using dynamic scoping to overwrite earlier sequence items automatically."
+              ],
+              "correct_index": 2,
+              "explanation": "Streams defer evaluating the rest of a sequence until needed, letting programmers compose pipelines over arbitrarily long or infinite data flows."
+            },
+            {
+              "id": "q_076",
+              "prompt": "According to Gerald Sussman, what shift in real-world engineering led MIT to replace Scheme-based 6.001 with Python-based 6.01?",
+              "choices": [
+                "Modern engineering shifted from building from scratch to wiring big libraries.",
+                "Python became the first mainstream language to mandate Scheme-style tail-call optimization.",
+                "MIT concluded that abstraction barriers and lexical closures were mathematically flawed.",
+                "Scheme interpreters stopped running on 64-bit personal computers after 2007."
+              ],
+              "correct_index": 0,
+              "explanation": "Sussman noted that modern work revolves around probing and assembling huge existing library ecosystems—an area where Python's rich libraries beat minimalist Scheme."
+            }
+          ]
+        },
+        {
+          "id": "ch_039",
+          "title": "The 'Revised Report' Split: R5RS, R6RS \u0026 R7RS",
+          "content_markdown": "That exact tension—minimalist jewel versus practical batteries-included ecosystem—also tore Scheme's own standardization community apart! Scheme's official specification lives in a famous series of documents called the **Revised Report (RnRS)**, where `n` marks the edition number. Published in 1998, **R5RS** became Scheme's golden high-water mark: a lucid, roughly fifty-page document famous for opening with the line that languages should remove restrictions rather than pile on weak features.\n\nHere was the painful twist: R5RS was *too* small for practical teams! It left out a standard way to split code into reusable modules, file helpers, structured error handling, and key-value lookup tables ('hash tables')—forcing major Scheme implementations (Chez, Guile, Chicken, Gambit) to invent incompatible extensions. When **R6RS** (2007) tried to fix that by growing into a full industrial language with libraries and modules, purists staged a fierce revolt! To restore peace, **R7RS** (2013) literally split Scheme in two: a lean 'R7RS-small' preserving R5RS's fifty-page soul alongside a separate, slowly evolving 'R7RS-large' library layer.",
+          "questions": [
+            {
+              "id": "q_077",
+              "prompt": "What major practical limitation did Scheme's beloved 1998 R5RS standard leave unresolved?",
+              "choices": [
+                "It removed lexical scoping and closures from the core language rules.",
+                "It omitted standard modules, exceptions, and everyday libraries, fragmenting implementations.",
+                "It banned hygienic `syntax-rules` macros in favor of Common Lisp's `defmacro`.",
+                "It stretched past two thousand pages, making it impossible for humans to read."
+              ],
+              "correct_index": 1,
+              "explanation": "While celebrated for its concise 50-page clarity, R5RS omitted modules and standard libraries, leading different Scheme implementations to diverge incompatibly."
+            },
+            {
+              "id": "q_078",
+              "prompt": "How did the 2013 R7RS standard attempt to resolve the community backlash sparked by R6RS?",
+              "choices": [
+                "By merging Scheme back into ANSI Common Lisp as a Lisp-2 dialect.",
+                "By abandoning S-expressions in favor of Python's indented block syntax.",
+                "By outlawing all Scheme implementations that supported hygienic macros.",
+                "By splitting Scheme into a tiny core and larger library tier."
+              ],
+              "correct_index": 3,
+              "explanation": "R7RS brokered a two-language truce: R7RS-small preserved R5RS's minimalist teaching and embedding spirit while R7RS-large targeted full-scale library ecosystems."
+            }
+          ]
+        },
+        {
+          "id": "ch_040",
+          "title": "From Committee Gridlock to a Programmable Language",
+          "content_markdown": "Looking back at MIT 6.001 and the RnRS debates, we see why Scheme inspires both fierce devotion and deep frustration. On one hand, SICP gave computer science a timeless vocabulary—abstraction barriers, streams, and metalinguistic abstraction—that still shapes how senior engineers design clean systems in any language. On the other hand, the R5RS–R6RS–R7RS civil war showed how hard it is to keep a language tiny enough for a fifty-page textbook while also shipping the modules, error tools, and libraries real projects demand.\n\nOne ambitious research team—led by Matthias Felleisen and the PLT Scheme group—decided they were done waiting for Scheme committees to settle the argument. Taking SICP's metalinguistic abstraction more seriously than anyone before, they broke out of the committee stalemate and reinvented their platform as **Racket**—a language explicitly built for building new languages. Next, we explore Racket and Language-Oriented Programming.",
+          "questions": [
+            {
+              "id": "q_079",
+              "prompt": "What fundamental design tension lay at the heart of Scheme's R5RS–R6RS–R7RS debates?",
+              "choices": [
+                "Balancing a tiny minimalist core against rich modules and standard libraries.",
+                "Choosing between Continuation-Passing Style and dynamic scoping inside the REPL.",
+                "Deciding whether `call/cc` should replace `define` as the only variable-binding keyword.",
+                "Debating whether Scheme should drop garbage collection to imitate early FORTRAN."
+              ],
+              "correct_index": 0,
+              "explanation": "Scheme's standardization split pitted minimalists who prized a concise, portable specification against practitioners who wanted a unified, batteries-included industrial standard."
+            },
+            {
+              "id": "q_080",
+              "prompt": "Which SICP concept did the PLT Scheme / Racket team push to its fullest practical realization after breaking from committee gridlock?",
+              "choices": [
+                "Dynamic variable lookup across global caller chains.",
+                "Lisp-2 separation of function slots and value slots.",
+                "Metalinguistic abstraction—creating tailored languages for specific problems.",
+                "Eliminating macros entirely so every file uses raw machine opcodes."
+              ],
+              "correct_index": 2,
+              "explanation": "Racket turned SICP's metalinguistic abstraction into a full-fledged software engineering platform designed specifically for crafting new custom languages."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_09",
+      "title": "9. PLT Scheme, Racket \u0026 Language-Oriented Programming ('#lang')",
+      "summary": "Follow Matthias Felleisen's PLT group from educational DrScheme tooling and frustration with Scheme committee gridlock to Racket's 2010 reinvention as a batteries-included 'programmable programming language.' Use short code contrasts to see how Racket's '#lang' directive, scope-aware syntax objects, and composable hygienic macros turn Language-Oriented Programming into everyday practice—letting developers build custom domain-specific languages for publishing, presentations, teaching, and gradually typed modules.",
+      "introduced_terms": [
+        "Language-Oriented Programming (LOP)",
+        "domain-specific language (DSL)",
+        "syntax object"
+      ],
+      "chunks": [
+        {
+          "id": "ch_041",
+          "title": "Outgrowing the Committee: From PLT Scheme to Racket",
+          "content_markdown": "In the mid-1990s at Rice University (and later Northeastern and the University of Utah), professor Matthias Felleisen and his PLT Scheme group noticed an overlooked flaw in classic Scheme classrooms: drop a first-week beginner into a raw Scheme REPL, and one misplaced parenthesis unleashed baffling errors from advanced language features they had not learned yet! In response, PLT created DrScheme (later DrRacket) alongside the textbook *How to Design Programs*, offering staged teaching levels from 'Beginning Student' up to full Scheme.\n\nBy 2010, however, their batteries-included ecosystem—rich with modules, graphics, web servers, and powerful macro tooling—had outgrown Scheme's stalled RnRS committee debates. Renaming their platform **Racket**, the team declared a bold new identity: not merely another Scheme dialect, but a 'programmable programming language' purpose-built for crafting *entirely new languages*!",
+          "questions": [
+            {
+              "id": "q_081",
+              "prompt": "What classroom problem originally motivated Matthias Felleisen's PLT group to build DrScheme's staged teaching languages?",
+              "choices": [
+                "Standard Scheme lacked support for lexical scoping and first-class closures.",
+                "MIT refused to let outside universities use S-expressions in coursework.",
+                "Beginners in raw Scheme hit confusing errors triggered by advanced features.",
+                "Early personal computers could not execute tail-call optimization reliably."
+              ],
+              "correct_index": 2,
+              "explanation": "DrScheme introduced graded teaching levels like 'Beginning Student' so small beginner mistakes produced clear, level-appropriate error messages instead of cryptic advanced diagnostics."
+            },
+            {
+              "id": "q_082",
+              "prompt": "Why did PLT Scheme officially rename itself 'Racket' in 2010?",
+              "choices": [
+                "Its rich libraries and language-building platform had outgrown Scheme's stalled RnRS standards.",
+                "The team decided to replace hygienic macros with Common Lisp's `defmacro` and `gensym`.",
+                "R7RS committee members voted to ban educational environments from using the Scheme name.",
+                "Racket dropped support for garbage collection in favor of manual memory management."
+              ],
+              "correct_index": 0,
+              "explanation": "Frustrated by RnRS committee fragmentation and tiny standard libraries, PLT embraced its own identity as a batteries-included platform for building new languages."
+            }
+          ]
+        },
+        {
+          "id": "ch_042",
+          "title": "Language-Oriented Programming and Custom DSLs",
+          "content_markdown": "Most software stacks treat programming languages as giant fixed monoliths: if you want a clean notation tailored to typesetting documentation, describing slide decks, or encoding business rules, you have to build an external text-reading program ('parser') and compiler from scratch. A **domain-specific language (DSL)** is a focused mini-language built around the vocabulary and rules of one problem area rather than general-purpose coding.\n\nRacket elevated DSL creation into an everyday workflow called **Language-Oriented Programming (LOP)**: solving complex problems by designing small, composable custom languages as ordinary reusable modules. Picture a universal power workbench where the very first line of every file snaps on a specialized tabletop attachment! In Racket, writing `#lang \u003clanguage-name\u003e` on line 1 selects a language module that controls both how source text is read *and* how its expressions compile—turning SICP's metalinguistic abstraction into daily practice.",
+          "questions": [
+            {
+              "id": "q_083",
+              "prompt": "What distinguishes a 'domain-specific language (DSL)' from a general-purpose programming language?",
+              "choices": [
+                "A DSL can only run inside an interactive REPL without ever being saved to a file.",
+                "A DSL provides vocabulary and rules tailored specifically to one narrow problem area.",
+                "A DSL requires programmers to write Continuation-Passing Style manually.",
+                "A DSL prohibits abstraction barriers so all users inspect raw memory cells."
+              ],
+              "correct_index": 1,
+              "explanation": "Unlike general-purpose languages designed for everything, a DSL focuses its notation and semantics directly on one specific domain, such as documentation or queries."
+            },
+            {
+              "id": "q_084",
+              "prompt": "In Racket's Language-Oriented Programming (LOP), what does placing `#lang \u003cname\u003e` at the top of a file accomplish?",
+              "choices": [
+                "It adds a harmless comment reminding teammates which editor font to install.",
+                "It forces Racket to compile the file using an older 1998 R5RS interpreter.",
+                "It disables lexical scoping so modules can share global dynamic variables.",
+                "It selects a language module governing how that file is parsed and compiled."
+              ],
+              "correct_index": 3,
+              "explanation": "A `#lang` line specifies the module that defines the file's reader, syntax rules, and compile-time semantics, letting different languages live side by side."
+            }
+          ]
+        },
+        {
+          "id": "ch_043",
+          "title": "One Platform, Many '#lang' Worlds",
+          "content_markdown": "See how a single `#lang` line transforms a file's behavior across two five-line Racket modules—the first checking data types only while running ('dynamically typed'), the second verifying types ahead of time ('statically typed'):\n\n```scheme\n;; File 1: standard dynamic Racket\n#lang racket\n(define (double x) (* 2 x))\n;; File 2: statically type-checked Typed Racket\n#lang typed/racket\n(: double (-\u003e Integer Integer))\n(define (double x) (* 2 x))\n```\n\nNotice what is remarkable! `#lang typed/racket` is *not* a separate compiler rewritten from scratch. It is a Racket language module built with Racket's own hygienic macros that checks type signatures (`-\u003e Integer Integer`, meaning `double` takes and returns an integer) before running—catching mistakes like `(double 'hello)` at compile time! Better still, File 1 and File 2 can import each other directly, with automatic boundary checks stopping untyped callers from smuggling invalid data into typed code.",
+          "questions": [
+            {
+              "id": "q_085",
+              "prompt": "How is `#lang typed/racket` implemented inside the Racket platform?",
+              "choices": [
+                "As a completely separate binary compiler that cannot call dynamic Racket files.",
+                "As a thin wrapper that translates Racket source text into Java source code.",
+                "As a Racket language module built with Racket's own macro system.",
+                "As a runtime flag that disables closures whenever integers are multiplied."
+              ],
+              "correct_index": 2,
+              "explanation": "Typed Racket showcases Language-Oriented Programming by implementing a full static type checker directly as a `#lang` module atop Racket's macro infrastructure."
+            },
+            {
+              "id": "q_086",
+              "prompt": "What happens when a dynamic `#lang racket` module imports a function defined in `#lang typed/racket`?",
+              "choices": [
+                "Racket forces the dynamic file to add type annotations to every single line.",
+                "Both modules interoperate cleanly, protected by automatic boundary checks.",
+                "The typed module silently abandons type checking across its entire body.",
+                "Racket rejects cross-language imports whenever two `#lang` headers differ."
+              ],
+              "correct_index": 1,
+              "explanation": "Racket allows dynamic and statically typed modules to interoperate seamlessly, inserting runtime contract checks at module boundaries to protect typed invariants."
+            }
+          ]
+        },
+        {
+          "id": "ch_044",
+          "title": "Syntax Objects \u0026 Breaking Free of Parentheses",
+          "content_markdown": "How does Racket build entire new languages out of hygienic macros when classic `syntax-rules` only matched tiny patterns? Instead of passing bare S-expression lists into macros—which strips away file locations and scope information—Racket upgrades code into **syntax objects**: enriched syntax trees carrying invisible tags for exact lexical scope, source filename, and line-and-column numbers! With syntax objects and expressive macro tools like `syntax-parse`, a custom language can catch syntax errors cleanly and highlight the exact offending token inside DrRacket.\n\nMacros can even override core language hooks—like redefining what function application or an entire module body means. And here is the jaw-dropping twist: because `#lang` also controls the file's *reader* (turning raw characters into syntax objects), Racket DSLs do not even have to use Lisp parentheses! `#lang scribble/manual` looks like clean document markup, Pollen builds digital books, and Rhombus explores familiar math-style ('infix') syntax like `2 + 3`—all powered by Racket's macro engine underneath.",
+          "questions": [
+            {
+              "id": "q_087",
+              "prompt": "What extra information does a Racket 'syntax object' carry compared with a bare Lisp S-expression list?",
+              "choices": [
+                "Lexical-scope metadata plus source file, line, and column location details.",
+                "Precomputed machine opcodes generated directly by an SSA backend.",
+                "Runtime values of every global variable active during REPL evaluation.",
+                "Manual `gensym` counters required to repair unhygienic `defmacro` calls."
+              ],
+              "correct_index": 0,
+              "explanation": "Syntax objects wrap S-expression structure together with lexical-context and source-location metadata, enabling rich hygienic macros and pinpoint error reporting."
+            },
+            {
+              "id": "q_088",
+              "prompt": "Why can Racket languages like `#lang scribble/manual` or Rhombus dispense with traditional Lisp parentheses?",
+              "choices": [
+                "Racket removes its macro expander whenever non-Scheme files are loaded.",
+                "Parentheses are automatically banned in all modules created after 2010.",
+                "A `#lang` module controls only runtime functions, leaving parsing to Python.",
+                "Each `#lang` module can supply a custom text reader for syntax."
+              ],
+              "correct_index": 3,
+              "explanation": "Because `#lang` specifies a custom character reader alongside its macros, a Racket DSL can use document markup or infix notation while compiling through the same macro pipeline."
+            }
+          ]
+        },
+        {
+          "id": "ch_045",
+          "title": "Completing Scheme's Metalinguistic Arc",
+          "content_markdown": "Racket proved that SICP's dream of metalinguistic abstraction wasn't merely an inspiring classroom slogan—it could become a practical software engineering methodology. Where classic Scheme fractured over trying to cram everyone's wishes into one minimalist RnRS report, Racket stepped sideways and asked a smarter question: why force one fixed language onto every task when `#lang`, syntax objects, and composable hygienic macros let programmers spin up tailored DSLs for teaching, publishing, slides, logic queries (`#lang datalog`), and typed modules that all talk seamlessly to one another?\n\nWith our journey stretching from early Lisp's 1960s dynamic-scoping headaches through 1975 Scheme, Rabbit's compiler, SICP, and Racket's language workshop, we can now zoom all the way out. In our final section, we render a clear verdict separating Scheme's dead ends from the lasting breakthroughs that quietly conquered mainstream programming.",
+          "questions": [
+            {
+              "id": "q_089",
+              "prompt": "How did Racket sidestep the standardization deadlock that had divided R5RS, R6RS, and R7RS Scheme?",
+              "choices": [
+                "By shrinking Racket to fewer than twenty pages and removing its module system.",
+                "By turning the language itself into a modular, extensible platform for `#lang` DSLs.",
+                "By forbidding programmers from writing custom macros or domain-specific languages.",
+                "By switching exclusively to Common Lisp's ANSI specification for compatibility."
+              ],
+              "correct_index": 1,
+              "explanation": "Rather than fighting over one frozen core size, Racket shipped a rich batteries-included runtime where specialized languages compose cleanly as `#lang` modules."
+            },
+            {
+              "id": "q_090",
+              "prompt": "Which real-world tasks illustrate Racket's `#lang` Language-Oriented Programming in practice?",
+              "choices": [
+                "Writing raw assembly drivers directly for vintage IBM 704 mainframes.",
+                "Replacing ordinary arithmetic with unrestricted global `call/cc` stack jumps.",
+                "Rewriting dynamic scoping rules inside Emacs Lisp and AutoLISP editors.",
+                "Authoring docs in Scribble, queries in Datalog, and typed code in Typed Racket."
+              ],
+              "correct_index": 3,
+              "explanation": "Racket's ecosystem demonstrates LOP daily across documentation (`scribble`), logic programming (`datalog`), publishing (`Pollen`), presentations (`slideshow`), and gradual typing (`typed/racket`)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_10",
+      "title": "10. The Verdict: Scheme's Dead Ends vs. the Ideas That Reshaped Modern Code",
+      "summary": "Deliver a clear-eyed historical verdict weighing Scheme's dead ends—parenthesized-syntax friction, the 'Lisp Curse' of committee and library fragmentation, and unrestricted 'call/cc'—against the breakthroughs that conquered mainstream computing. Trace Scheme's fingerprints inside JavaScript's lexical closures and Lisp-1 design, Python's nested scopes, Rust's expression-oriented blocks and hygienic 'macro_rules!', and modern SSA compilers before looking ahead to how static type systems joined functional programming in Part 2.",
+      "introduced_terms": [
+        "Lisp Curse",
+        "expression-oriented design"
+      ],
+      "chunks": [
+        {
+          "id": "ch_046",
+          "title": "Scheme in Disguise: The 1995 Browser Story",
+          "content_markdown": "Step back for a moment and appreciate one of computing history's funniest ironies. In May 1995, Netscape recruited programmer Brendan Eich for a dream assignment: 'put Scheme in the browser!' Eich eagerly designed a scripting language powered by Scheme's lexical closures, first-class functions, and unified Lisp-1 namespace. Then came the corporate twist: Netscape executives insisted the new language had to *look* like Java, dressed up in curly braces and schoolbook math (`a + b`) rather than Scheme's prefix parentheses `(+ a b)`.\n\nCreated in a frantic ten-day sprint, that disguised cousin became **JavaScript**—eventually running on billions of web browsers worldwide! The story captures Scheme's ultimate paradox in a single frame: almost nobody adopted Scheme's parenthesized surface packaging at mass scale, yet almost every modern language eagerly borrowed the engine humming underneath.",
+          "questions": [
+            {
+              "id": "q_091",
+              "prompt": "What was Netscape's original 1995 assignment to Brendan Eich before management demanded Java-like syntax?",
+              "choices": [
+                "To port MIT's 1978 Rabbit compiler onto IBM mainframes.",
+                "To embed Scheme inside the Netscape web browser.",
+                "To standardize R6RS modules across all Lisp implementations.",
+                "To replace garbage collection with manual C-style stack frames."
+              ],
+              "correct_index": 1,
+              "explanation": "Netscape initially hired Brendan Eich to put Scheme in the browser; management's request for Java-like surface syntax produced JavaScript carrying Scheme's semantic DNA."
+            },
+            {
+              "id": "q_092",
+              "prompt": "Which core Scheme ideas survived inside JavaScript despite its curly-brace, Java-inspired surface syntax?",
+              "choices": [
+                "Unrestricted global `call/cc` jumps and Lisp-2 `funcall` dispatch.",
+                "Dynamic scoping by default and unhygienic `defmacro` templates.",
+                "Mandatory proper tail recursion across every browser engine.",
+                "Lexical closures, first-class functions, and a unified Lisp-1 namespace."
+              ],
+              "correct_index": 3,
+              "explanation": "Beneath its C/Java-style braces, JavaScript inherited Scheme's first-class functions, lexical closures, and single Lisp-1 namespace."
+            }
+          ]
+        },
+        {
+          "id": "ch_047",
+          "title": "Three Dead Ends and the 'Lisp Curse'",
+          "content_markdown": "To judge Scheme fairly, we must first name its three real dead ends without romanticizing them. First came *parenthesized-syntax friction*: uniform prefix S-expressions made parsing trivial and macros magical, yet generations raised on infix arithmetic (`2 + 3`) and C-style blocks found nested parentheses an immediate social hurdle.\n\nSecond came *committee and library fragmentation*, famously diagnosed by essayist Rudolf Winestock as the **Lisp Curse**: because Lisp and Scheme make it so easy for one clever developer to whip up a personal 80%-finished library or custom dialect, communities fracture across incompatible camps (R5RS, R6RS, R7RS, Chez, Guile, Chicken) instead of rallying behind one polished, batteries-included ecosystem like Python's. Third came *unrestricted `call/cc`*, whose global stack jumps broke file-cleanup discipline, baffled teammates, and lost decisively to structured exceptions, generators, and `async`/`await`.",
+          "questions": [
+            {
+              "id": "q_093",
+              "prompt": "What social and ecosystem problem does the 'Lisp Curse' describe?",
+              "choices": [
+                "Solo customization feels so easy that communities splinter instead of collaborating.",
+                "Requiring expensive tagged Lisp Machine hardware just to run basic REPL sessions.",
+                "Forcing every Lisp dialect to drop lexical scoping in favor of dynamic variable lookup.",
+                "Preventing compilers from converting recursive loops into constant-space tail jumps."
+              ],
+              "correct_index": 0,
+              "explanation": "The 'Lisp Curse' observes that effortless DIY expressiveness tempts individuals to write incompatible partial libraries rather than collaborating on one shared standard ecosystem."
+            },
+            {
+              "id": "q_094",
+              "prompt": "Which trio accurately lists Scheme's three primary historical dead ends in mainstream adoption?",
+              "choices": [
+                "Lexical scoping, heap-allocated closures, and hygienic pattern macros.",
+                "First-class functions, Continuation-Passing Style, and abstraction barriers.",
+                "Parenthesized-syntax friction, committee fragmentation, and unrestricted `call/cc`.",
+                "Unified Lisp-1 namespaces, expression-oriented blocks, and domain-specific languages."
+              ],
+              "correct_index": 2,
+              "explanation": "Mainstream developers resisted S-expression syntax friction, fragmented RnRS/dialect libraries, and the hazards of unrestricted global `call/cc`."
+            }
+          ]
+        },
+        {
+          "id": "ch_048",
+          "title": "Scheme's Fingerprints Across JavaScript, Python \u0026 Rust",
+          "content_markdown": "Now flip the ledger and trace how thoroughly Scheme's lasting ideas conquered modern programming! Look at a four-line cross-language snapshot showing Scheme's DNA thriving inside today's mainstream code:\n\n```rust\n// JavaScript (Lisp-1 lexical closure):\nconst makeAdder = (n) =\u003e (x) =\u003e x + n;\n// Rust (expression-oriented block returning a value):\nlet badge = if score \u003e 90 { \"gold\" } else { \"silver\" };\n```\n\nEvery corner of modern software bears Scheme's imprint. JavaScript normalized first-class closures and Lisp-1 naming for millions of web developers. Python—which famously *lacked* nested lexical scoping in its earliest releases—adopted full lexical closures in Python 2.1–2.2 alongside anonymous `lambda` functions. And Rust went even further, adopting lexical closures, hygienic `macro_rules!` inspired directly by Scheme's `syntax-rules`, and **expression-oriented design**—the Scheme-descended style where `if` branches and code blocks evaluate directly to values (`\"gold\"` or `\"silver\"`) rather than merely running commands ('statements') that change variables without returning a value!",
+          "questions": [
+            {
+              "id": "q_095",
+              "prompt": "What defines 'expression-oriented design' in Scheme and modern descendants like Rust?",
+              "choices": [
+                "Every line of code must be enclosed inside prefix Lisp parentheses.",
+                "All variables must remain uninitialized until assigned dynamically by callers.",
+                "Macros are prohibited from generating conditional `if` or `else` branches.",
+                "Constructs like `if` and code blocks evaluate directly to return values."
+              ],
+              "correct_index": 3,
+              "explanation": "In expression-oriented design, control structures such as `if` blocks produce values directly—just like Scheme's `(if ...)`—making code concise and composable."
+            },
+            {
+              "id": "q_096",
+              "prompt": "Which pair of Rust features directly reflects Scheme's enduring design legacy?",
+              "choices": [
+                "Hygienic pattern-based `macro_rules!` and expression-oriented code blocks.",
+                "Unrestricted global `call/cc` jumps and Lisp-2 `funcall` namespaces.",
+                "Dynamic scoping by default and interactive image-based REPL snapshots.",
+                "Manual `gensym` templates and fifty-page RnRS committee reports."
+              ],
+              "correct_index": 0,
+              "explanation": "Rust combined Scheme-inspired lexical closures, expression-oriented blocks, and hygienic declarative macros (`macro_rules!`) modeled directly on `syntax-rules`."
+            }
+          ]
+        },
+        {
+          "id": "ch_049",
+          "title": "Winning the Compiler and Runtime War from Inside",
+          "content_markdown": "Here is the subtle twist that historians often miss: even where mainstream languages declined to copy Scheme's user-facing rules verbatim, Scheme's core insights still quietly won underneath the hood! Most popular runtimes (like Python and Java's runtime) still skip mandatory tail-call optimization so developers keep detailed crash stack traces, and virtually no mainstream application language exposes raw `call/cc`.\n\nYet peer inside the engines powering modern software, and Scheme's ghost is everywhere. Guy Steele's 1978 Rabbit compiler proved that stripping control flow down to Continuation-Passing Style unlocked clean, general optimizations—a direct intellectual bridge to A-Normal Form and the Static Single Assignment (SSA) backbone inside LLVM, GCC, Rust, and V8. Meanwhile, bounded delimited continuations continue shaping modern `async`/`await` engines and structured error-and-event handlers ('effect systems'), and Racket's `#lang` workshop remains the gold standard for building custom domain-specific languages. Scheme seldom won the popularity contest—it won the *architecture* war.",
+          "questions": [
+            {
+              "id": "q_097",
+              "prompt": "How did Scheme's compiler research end up influencing millions of developers who never write Scheme?",
+              "choices": [
+                "Modern operating systems silently translate all C and Python files into S-expressions.",
+                "Every mainstream browser now ships an interactive MIT 6.001 Scheme REPL.",
+                "Rabbit's CPS insights shaped ANF and SSA inside LLVM, GCC, and V8.",
+                "Modern CPUs added hardware `call/cc` opcodes modeled directly on 1975 MIT machines."
+              ],
+              "correct_index": 2,
+              "explanation": "The structural lineage from Rabbit's CPS through ANF to Static Single Assignment (SSA) lives inside the optimizing compilers powering Rust, C/C++, and JavaScript today."
+            },
+            {
+              "id": "q_098",
+              "prompt": "Why do historians say Scheme 'lost the popularity contest yet won the architecture war'?",
+              "choices": [
+                "Scheme became the single best-selling commercial language on desktop PCs after 2007.",
+                "Few write Scheme daily, yet its closures, hygiene, and compiler designs prevail.",
+                "Scheme eliminated all imperative languages by proving loops were slower than recursion.",
+                "Every major language eventually replaced curly braces with prefix S-expressions."
+              ],
+              "correct_index": 1,
+              "explanation": "While Scheme itself stayed niche due to syntax friction and fragmentation, its core concepts—closures, Lisp-1 ergonomics, hygienic macros, delimited control, and CPS/SSA—became mainstream foundations."
+            }
+          ]
+        },
+        {
+          "id": "ch_050",
+          "title": "The Unfinished Question: What Happens When We Add Static Types?",
+          "content_markdown": "Look back across the remarkable arc we just traveled. Starting from early Lisp's dynamic-scoping FUNARG bugs, we watched Sussman and Steele unify Actors and `lambda` into Scheme, elevate closures into portable first-class values, turn tail calls into constant-space loops, tame macros with lexical hygiene, probe the outer limits of `call/cc`, compile lambdas via Rabbit's CPS, inspire generations through SICP, and evolve into Racket's `#lang` workshop. Scheme demonstrated just how far a tiny, dynamically typed lambda core could stretch.\n\nYet remember `#lang typed/racket` from Section 9—a hint of one enormous question that classic untyped Scheme left wide open! What happens if you keep Scheme's beloved gifts—first-class functions, lexical closures, and expression-oriented design—but fuse them with mathematically rigorous static type systems that catch entire families of bugs *before* a single line ever runs? That leap carries us straight into the ML language family, automatic type deduction ('type inference'), and Part 2 of our Quest Arc!",
+          "questions": [
+            {
+              "id": "q_099",
+              "prompt": "Which unifying thread connected Scheme's major breakthroughs from Section 1 through Section 9?",
+              "choices": [
+                "Applying clean lexical discipline and minimalist lambdas across runtime, macros, and compilers.",
+                "Adding as many hardware-specific keywords and separate namespaces as possible to every standard.",
+                "Replacing garbage collection and closures with fixed punch-card layouts for maximum mainframe speed.",
+                "Keeping dynamic scoping alive so macros and functions could share global variables invisibly."
+              ],
+              "correct_index": 0,
+              "explanation": "From lexical closures and Lisp-1 to mandatory TCO, hygienic macros, CPS compilation, and Racket's `#lang` modules, Scheme's lineage systematically applied minimalist lexical discipline."
+            },
+            {
+              "id": "q_100",
+              "prompt": "What central design question bridges Scheme's untyped lambda legacy cleanly into Part 2 of this Quest Arc?",
+              "choices": [
+                "Whether dynamic scoping can be revived without causing downward FUNARG bugs.",
+                "How to remove closures and first-class functions from modern web browsers.",
+                "How to combine first-class functional programming with rigorous compile-time static type systems.",
+                "Why MIT 6.001 should abandon abstraction barriers in favor of assembly opcodes."
+              ],
+              "correct_index": 2,
+              "explanation": "Having explored how far untyped functional programming goes in Scheme and Racket, Part 2 explores uniting functional abstractions with formal static type systems and type inference."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

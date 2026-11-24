@@ -1,0 +1,1678 @@
+{
+  "id": "mavericks_forgotten_paradigms_part_1",
+  "title": "Mavericks, Forgotten Paradigms \u0026 Alternative Worlds I: COMIT, SNOBOL4, Icon \u0026 Goal-Directed Evaluation (1957–Present)",
+  "summary": "Part 1 of the 'Mavericks, Forgotten Paradigms \u0026 Alternative Worlds' Quest Arc explores how pioneering language designers reimagined computing when human text—rather than arithmetic—took center stage, explained from first principles for an educated generalist with no prior domain jargon. Building smoothly on 'Before Compilers IV,' learners travel from MIT's 1957 COMIT and Bell Labs' SNOBOL4—with its first-class patterns, success/failure branching, SIL virtual machine, and blazing SPITBOL compiler—to Ralph Griswold's 1977 Icon, whose generators, goal-directed evaluation, and suspended frames directly inspired Python's 'yield' while SNOBOL4's composable patterns echoed in modern parser combinators and Raku grammars.",
+  "topic_prompt": "Part 1 of the 'Mavericks, Forgotten Paradigms \u0026 Alternative Worlds' Quest Arc, building smoothly on 'before_compilers_part_4' for an educated generalist with no prior domain jargon (10 sections, 50 conversational chunks, ~15 concepts). Explore how programmers invented radically expressive languages when human text—not numbers—took center stage: (1) Why early numeric mainframes struggled with text, and Victor Yngve's COMIT (MIT, 1957) built for mechanical translation using a workspace, shelves, and rule-based string rewriting; (2) Bell Labs text-processing culture and Ralph Griswold, David Farber, and Ivan Polonsky's evolution from SNOBOL to SNOBOL4 (1967); (3) First-class patterns in SNOBOL4—treating patterns as composable runtime values via concatenation, alternation, and conditional or immediate substring capture—illustrated with short, concrete code contrasts against verbose imperative character loops; (4) SNOBOL4's unconventional control flow where every statement either succeeds or fails and branches via explicit success/failure goto labels (':S(label) F(label)'), alongside dynamic strings and associative tables; (5) Compiler and runtime insights: Griswold's portable macro-assembly virtual machine (SIL) that carried SNOBOL4 across incompatible mainframes versus Robert Dewar and Ken Belcher's blazing native-code SPITBOL compiler; (6) Vibrant early communities in humanities computing, lexicography, and computational linguistics, and why SNOBOL4's split between a pattern sub-language and ordinary statements created friction; (7) Ralph Griswold's reinvention at the University of Arizona with Icon (1977), replacing booleans with expressions that either produce a value or fail silently and unifying text work through string scanning; (8) Icon's breakthrough invention of generators and goal-directed evaluation—where expressions stream multiple candidate values on demand and backtrack automatically to satisfy enclosing conditions—shown through short side-by-side contrasts of an imperative loop, a SNOBOL4 pattern, and a one-line Icon generator; (9) Under the hood of Icon's runtime: how suspended generator frames keep local state alive on the stack and resume on demand (including co-expressions); (10) The enduring legacy: why Unix regular expressions and scripting languages won the mainstream while Icon's generators directly inspired Python's 'yield' (PEP 255) and SNOBOL4's composable patterns echoed in modern parser combinators and Raku grammars.",
+  "tag_path": [
+    "History",
+    "History of Technology",
+    "Programming Language History"
+  ],
+  "prerequisite_ids": [
+    "before_compilers_part_4"
+  ],
+  "vetting_summary": "Conducted a full sequential college-freshman generalist review across all 10 sections (50 chunks and 100 questions), verifying prerequisite grounding against 'before_compilers_part_4' and zero math/JSON escaping defects. Refined 17 chunks and 18 questions to eliminate unexplained jargon and premature forward references, trim overdense acronym clusters, replace weak distractors with plausible misconceptions, and tighten multiple-choice length balance.",
+  "created_at": "2026-11-23T22:38:58Z",
+  "sections": [
+    {
+      "id": "sec_01",
+      "title": "1. When Mainframes Met Human Text: Numeric Bottlenecks \u0026 COMIT (1957)",
+      "summary": "Bridging from Lisp's symbolic lists on the IBM 704, explore why 1950s numeric mainframes—built around fixed-width binary words and rigid arrays—made editing variable-length human text agonizing. Meet MIT linguist Victor Yngve's 1957 COMIT, created for mechanical translation, and trace how its single active workspace, temporary holding shelves, and rule-based string rewriting launched text-first programming while revealing the limits of workspace-bound design.",
+      "introduced_terms": [
+        "character string",
+        "string rewriting"
+      ],
+      "chunks": [
+        {
+          "id": "ch_001",
+          "title": "Why Early Numeric Mainframes Hated Human Text",
+          "content_markdown": "Remember the 36-bit IBM 704 where John McCarthy launched Lisp's symbolic computation? Almost every other early mainframe of the 1950s was wired for arithmetic first and human language last. Languages like FORTRAN stored numbers in fixed-size tables, while business systems packed customer records into rigid, pre-measured card columns.\n\nText refuses to stay fixed in size. On an IBM 704, engineers crammed six letter codes into a single 36-bit numeric word. Imagine typing a German sentence for an early Cold War translation experiment and wanting to insert one extra word near the front. Because letters sat tightly packed inside fixed slots, inserting five letters meant manually unpacking words, sliding every remaining letter down the line, and repacking everything back into memory.\n\nBefore programmers could teach computers to read, edit, or translate prose, they needed a fresh way to represent text without fighting calculator hardware at every step.",
+          "questions": [
+            {
+              "id": "q_001",
+              "prompt": "Why did inserting a word near the start of a sentence cause so much trouble on a 1950s mainframe like the IBM 704?",
+              "choices": [
+                "Mainframe printers could only display numeric digits instead of alphabet letters",
+                "Characters were tightly packed into fixed-width words that required shifting all following text",
+                "Early computer memory could only store sentences written in English spelling",
+                "Hardware designers banned text editing programs to conserve scarce vacuum tubes"
+              ],
+              "correct_index": 1,
+              "explanation": "Packing six characters into each fixed 36-bit word meant any mid-sentence insertion forced programmers to unpack, shift every subsequent character, and repack memory."
+            },
+            {
+              "id": "q_002",
+              "prompt": "How did human prose clash with the core assumptions of early numeric languages like FORTRAN?",
+              "choices": [
+                "Prose demanded exact decimal fractions that binary mainframes could not approximate",
+                "Prose required interactive graphics screens that had not yet been invented",
+                "Prose could only be processed after compiling it into Lisp linked lists",
+                "Prose naturally grows and shrinks in length instead of fitting fixed-size numeric slots"
+              ],
+              "correct_index": 3,
+              "explanation": "Early numeric languages expected rigid, pre-sized storage slots, whereas human text constantly expands, contracts, and rearranges."
+            }
+          ]
+        },
+        {
+          "id": "ch_002",
+          "title": "Character Strings, String Rewriting \u0026 Victor Yngve's COMIT",
+          "content_markdown": "In 1957, a year before Lisp appeared down the hall, MIT linguist **Victor Yngve** tackled that bottleneck head-on. Working on mechanical translation of German scientific articles into English, Yngve wanted linguists to express grammar transformations directly rather than juggling raw bit positions on the IBM 704.\n\nHis language, **COMIT**, treated text as a flexible **character string**—a sequence of letters, spaces, and punctuation handled as a single expandable unit instead of rigid numeric boxes. Even more radically, COMIT organized programs around **string rewriting**: you write rules stating that whenever a specific sequence of words or symbols appears, the computer should automatically replace or rearrange it into a new sequence.\n\nThink of an editor marking up a draft with sticky notes: 'whenever you see this phrase structure, swap these two words.' Rather than commanding the machine slot by slot, COMIT let linguists describe the text transformations they actually cared about.",
+          "questions": [
+            {
+              "id": "q_003",
+              "prompt": "What is a character string in text-oriented programming?",
+              "choices": [
+                "A flexible sequence of letters, spaces, and punctuation treated as one expandable unit",
+                "A fixed-width block of 36 bits reserved strictly for storing decimal integers",
+                "A printed strip of punch-card paper tape fed sequentially into a mainframe reader",
+                "A hardware cable linking a typewriter keyboard directly to magnetic core memory"
+              ],
+              "correct_index": 0,
+              "explanation": "A character string represents text as a single ordered, resizable sequence of characters rather than fixed-width numeric cells."
+            },
+            {
+              "id": "q_004",
+              "prompt": "Why did Victor Yngve design COMIT around string rewriting at MIT in 1957?",
+              "choices": [
+                "To speed up matrix multiplication for Cold War ballistic trajectory simulations",
+                "To replace assembly language across all commercial banking payroll systems",
+                "To let linguists express mechanical translation rules directly without bit-level shuffling",
+                "To prove that Lisp's garbage collector could run without cons cells"
+              ],
+              "correct_index": 2,
+              "explanation": "Yngve built COMIT for mechanical translation so linguists could describe phrase rearrangements cleanly as rewrite rules instead of low-level memory manipulation."
+            }
+          ]
+        },
+        {
+          "id": "ch_003",
+          "title": "Inside COMIT: One Workspace, Holding Shelves \u0026 Rewrite Rules",
+          "content_markdown": "To keep insertions painless, COMIT avoided rigid numbered arrays under the hood and chained text pieces together using linked storage—a close cousin of the linked lists you met in Lisp. Every COMIT program revolved around two mental fixtures: a single active **workspace** holding the sentence currently being edited, and numbered **shelves** acting like temporary pantry bins where chunks of text could be stashed and fetched back later.\n\nEach COMIT rule had three parts: a left side describing what to look for in the workspace, a right side describing how to rewrite or move those pieces onto shelves, and a label naming which rule to try next. Suppose the workspace holds a German clause meaning 'he has read the book' with the verb stuck at the end: `ER + HAT + DAS + BUCH + GELESEN`. One rule spots the final verb, moves it onto shelf 1, and jumps to a second rule that pulls shelf 1 right after `HAT`, turning the order smoothly toward English.",
+          "questions": [
+            {
+              "id": "q_005",
+              "prompt": "What role did numbered shelves play in a COMIT program?",
+              "choices": [
+                "They stored compiled numeric libraries borrowed from FORTRAN subroutines",
+                "They served as temporary holding bins where text pieces could be stashed and retrieved",
+                "They controlled which physical magnetic tape drive received translated sentences",
+                "They locked characters into fixed 36-bit columns so words could not shift"
+              ],
+              "correct_index": 1,
+              "explanation": "Because COMIT only provided one active workspace, programmers moved pieces of text onto numbered shelves and pulled them back when rearranging phrases."
+            },
+            {
+              "id": "q_006",
+              "prompt": "How did COMIT avoid sliding every remaining letter whenever a rule inserted text into the workspace?",
+              "choices": [
+                "It chained text pieces in linked storage so new items could splice in cleanly",
+                "It forced every sentence to stay under exactly six characters in length",
+                "It copied the entire workspace onto a fresh deck of punch cards on each edit",
+                "It prohibited insertions and only allowed overwriting characters of equal width"
+              ],
+              "correct_index": 0,
+              "explanation": "Using linked storage internally meant COMIT could insert, delete, or reorder pieces by relinking connections rather than shifting whole blocks of memory."
+            }
+          ]
+        },
+        {
+          "id": "ch_004",
+          "title": "Grammatical Tags and the Single-Cutting-Board Trap",
+          "content_markdown": "COMIT was remarkably clever for linguistics. Each word or piece sitting in the workspace could carry hidden **subscripts**—extra grammatical labels marking whether a word was a noun, verb, singular, or past tense. A rewrite rule could therefore match 'any singular noun followed by any verb' rather than listing thousands of individual dictionary words one by one.\n\nYet COMIT carried a frustrating structural twist: a program only ever had *one* workspace. Imagine preparing a multi-course dinner on a single tiny cutting board. Want to compare two sentences, keep a glossary handy, or track three separate phrases at once? You had to pack one sentence away onto a numbered shelf, drag the other onto the workspace, edit it, stash it on another shelf, and constantly remember what lived on shelf 14 versus shelf 27. For short grammar experiments this worked nicely, but for general software engineering it quickly turned dizzying.",
+          "questions": [
+            {
+              "id": "q_007",
+              "prompt": "Why were grammatical subscripts so useful on words inside COMIT's workspace?",
+              "choices": [
+                "They compressed English letters so twelve characters fit inside one machine word",
+                "They automatically translated German vocabulary without needing any dictionary",
+                "They allowed COMIT programs to perform floating-point scientific calculations",
+                "They let rewrite rules match general word categories like singular nouns or verbs"
+              ],
+              "correct_index": 3,
+              "explanation": "Attaching grammatical labels let linguists write general structural rules matching categories like 'singular noun' instead of enumerating every individual word."
+            },
+            {
+              "id": "q_008",
+              "prompt": "What major ergonomic limitation frustrated programmers trying to build larger tools in COMIT?",
+              "choices": [
+                "COMIT lacked any mechanism to jump from one rewrite rule to another",
+                "COMIT could only store numbers and refused to handle punctuation marks",
+                "Having only one workspace forced awkward juggling of multiple texts across numbered shelves",
+                "COMIT erased its entire dictionary after translating each individual word"
+              ],
+              "correct_index": 2,
+              "explanation": "Because every edit had to pass through a single workspace, handling multiple independent strings required constant manual shuffling onto and off numbered shelves."
+            }
+          ]
+        },
+        {
+          "id": "ch_005",
+          "title": "A New Paradigm Is Born—And Ready to Outgrow the Workspace",
+          "content_markdown": "Step back and appreciate what Victor Yngve achieved in 1957. Alongside Lisp's symbolic lists, COMIT proved that computers did not have to view the world solely through numeric arrays or ledger cards. By uniting flexible character strings, linked internal memory, and rule-based string rewriting, COMIT founded the entire family of string-processing languages.\n\nEven its limitations taught a priceless design lesson. Programmers who loved the power of rewriting text soon realized what was missing: instead of squeezing every piece of text onto one shared cutting board and juggling anonymous numbered shelves, why couldn't you store dozens of character strings in ordinary, human-readable named variables—just like numbers in algebra?\n\nIn the early 1960s, a trio of researchers at Bell Labs tried COMIT, felt that exact pinch, and decided to build something far freer. Their answer would become one of the most inventive languages of the twentieth century: SNOBOL.",
+          "questions": [
+            {
+              "id": "q_009",
+              "prompt": "Which lasting insight did COMIT contribute to programming language history?",
+              "choices": [
+                "Text could be treated as flexible strings transformed by rule-based string rewriting",
+                "Every programming language works best when restricted to a single global workspace",
+                "Mechanical translation requires abandoning linked storage in favor of fixed arrays",
+                "Linguists can only program computers effectively by writing raw numeric opcodes"
+              ],
+              "correct_index": 0,
+              "explanation": "COMIT pioneered string-processing languages by showing that flexible character strings and rule-based rewriting could make text a first-class computing domain."
+            },
+            {
+              "id": "q_010",
+              "prompt": "What key capability did programmers outside linguistics want after running into COMIT's single-workspace limit?",
+              "choices": [
+                "Hard-coded punch-card columns that kept every sentence the same width",
+                "Ordinary named variables capable of holding many separate character strings at once",
+                "Additional numbered shelves so a single workspace could hold longer lists",
+                "Direct access to mainframe arithmetic registers for faster matrix algebra"
+              ],
+              "correct_index": 1,
+              "explanation": "Engineers wanted the freedom to store, name, and manipulate many separate strings simultaneously instead of routing everything through one workspace and numbered shelves."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_02",
+      "title": "2. Bell Labs Text Culture \u0026 the Road from SNOBOL to SNOBOL4 (1962–1967)",
+      "summary": "Step inside early-1960s Bell Labs, where researchers manipulating algebraic formulas, circuit graphs, and language translators outgrew COMIT's single workspace. Follow David Farber, Ralph Griswold, and Ivan Polonsky as they created SNOBOL with ordinary named string variables and pattern matching, then evolved it rapidly through SNOBOL2 and SNOBOL3 into the landmark 1967 redesign, SNOBOL4.",
+      "introduced_terms": [
+        "pattern matching"
+      ],
+      "chunks": [
+        {
+          "id": "ch_006",
+          "title": "Bell Labs: Where Engineers Worked in Symbols, Not Just Numbers",
+          "content_markdown": "Walk into Bell Telephone Laboratories in Holmdel, New Jersey, in 1962, and you would find a computer culture unlike either MIT's artificial-intelligence lab or Wall Street's accounting rooms. Bell Labs ran the world's largest telephone network, and its researchers constantly wrote software to simplify messy symbolic problems: factoring huge algebraic formulas, analyzing telephone switching networks as graphs (diagrams of connected nodes and lines), and prototyping translators for experimental programming languages.\n\nThree researchers—**David Farber**, **Ralph Griswold**, and **Ivan Polonsky**—needed a tool built for tearing apart and reassembling symbolic text. Naturally, they tried COMIT. While they admired its string-rewriting spirit, they quickly grew exasperated. Manipulating algebraic expressions meant juggling dozens of separate pieces at once, and COMIT's single workspace, numbered shelves, and unfamiliar linguistic notation slowed them down.\n\nRather than wrestle a tool built for German sentences into doing Bell Labs algebra, the trio decided to design their own string language from scratch.",
+          "questions": [
+            {
+              "id": "q_011",
+              "prompt": "What kinds of work pushed Bell Labs researchers to seek a dedicated text-processing language in 1962?",
+              "choices": [
+                "Rendering real-time animated graphics for early television commercials",
+                "Automating weekly payroll ledgers and decimal tax withholdings",
+                "Manipulating algebraic formulas, circuit graphs, and prototype language translators",
+                "Translating medieval poetry from ancient Greek into modern English"
+              ],
+              "correct_index": 2,
+              "explanation": "Farber, Griswold, and Polonsky regularly worked on symbolic algebra, switching-network graphs, and translators—all tasks centered on manipulating structured text."
+            },
+            {
+              "id": "q_012",
+              "prompt": "Why did Farber, Griswold, and Polonsky decide not to stick with COMIT for their Bell Labs projects?",
+              "choices": [
+                "Its single workspace and shelf-juggling model made handling many separate strings awkward",
+                "It could only run on specialized European computers unavailable in New Jersey",
+                "It lacked any ability to store letters, punctuation, or blank spaces",
+                "It was proprietary military software barred from civilian telephone laboratories"
+              ],
+              "correct_index": 0,
+              "explanation": "Although they liked COMIT's focus on text rewriting, juggling many independent symbolic expressions across one workspace and numbered shelves proved too confining."
+            }
+          ]
+        },
+        {
+          "id": "ch_007",
+          "title": "Named Strings \u0026 Pattern Matching at the Heart of SNOBOL",
+          "content_markdown": "Between 1962 and 1963, Farber, Griswold, and Polonsky implemented their new language—**SNOBOL**—on Bell Labs' IBM 7090 mainframe. Their first bold simplification swept away COMIT's single cutting board: every character string now lived inside its own ordinary named variable, such as `GREETING` or `FORMULA`, so a program could juggle fifty strings as effortlessly as fifty numbers.\n\nJoining strings became equally effortless: you simply wrote pieces side by side separated by a blank space. Even more central was **pattern matching**—the technique of describing the desired *shape* or sequence of text you want to locate inside a string and letting the computer scan for it automatically, rather than writing step-by-step character-counting loops.\n\nIn SNOBOL, pattern matching was not an obscure library extra tucked away in a manual. Nearly every statement in the language was designed around inspecting a named string, matching a pattern inside it, and optionally swapping that match for replacement text.",
+          "questions": [
+            {
+              "id": "q_013",
+              "prompt": "What is pattern matching in a string-processing language?",
+              "choices": [
+                "Sorting alphabetical lists of words into numbered storage shelves",
+                "Checking whether two separate computers share the same 36-bit word width",
+                "Converting every character in a document into an equivalent decimal number",
+                "Describing the desired shape of text so the language locates it automatically"
+              ],
+              "correct_index": 3,
+              "explanation": "Pattern matching lets programmers specify what sequence or structure of text to look for, delegating the character-by-character search to the language itself."
+            },
+            {
+              "id": "q_014",
+              "prompt": "How did SNOBOL break free from COMIT's single-workspace limitation?",
+              "choices": [
+                "By expanding COMIT's workspace into two fixed slots for input and output",
+                "By letting programmers store many separate strings in ordinary named variables",
+                "By forcing every text value to stay packed inside fixed-length FORTRAN arrays",
+                "By replacing character strings with Lisp's parenthesized S-expressions"
+              ],
+              "correct_index": 1,
+              "explanation": "SNOBOL replaced the single global workspace with named variables so programs could hold and transform many character strings at the same time."
+            }
+          ]
+        },
+        {
+          "id": "ch_008",
+          "title": "A Taste of Early SNOBOL in Action",
+          "content_markdown": "See how clean basic text manipulation looked in early SNOBOL compared with shuffling shelves in COMIT:\n\n```snobol\nFIRST = 'ADA'\nLAST  = 'LOVELACE'\nNAME  = FIRST ' ' LAST\nNAME 'ADA' = 'AUGUSTA'\n```\n\nRead those four lines almost like plain English. The first two store character strings inside named variables `FIRST` and `LAST`. The third glues `FIRST`, a single blank space, and `LAST` together just by placing them side by side with spaces between them, giving `'ADA LOVELACE'`.\n\nThe fourth line shows SNOBOL's signature pattern-and-replace statement. It looks inside the subject string `NAME`, searches for the pattern `'ADA'`, and swaps that matched slice with `'AUGUSTA'`, leaving `'AUGUSTA LOVELACE'`. No shelf numbers, no manual character counts, and no shuffling of trailing letters—SNOBOL quietly expands the string in memory behind the scenes so the programmer focuses strictly on meaning.",
+          "questions": [
+            {
+              "id": "q_015",
+              "prompt": "In the SNOBOL statement `NAME = FIRST ' ' LAST`, what tells the language to join the three text pieces together?",
+              "choices": [
+                "A special COMIT shelf number attached to the end of the line",
+                "An explicit arithmetic addition sign placed between each variable name",
+                "Writing the string pieces side by side separated by blank spaces",
+                "Wrapping the entire expression inside nested Lisp parentheses"
+              ],
+              "correct_index": 2,
+              "explanation": "SNOBOL joins strings together simply by placing them next to each other with blank spaces separating the pieces."
+            },
+            {
+              "id": "q_016",
+              "prompt": "What does the SNOBOL statement `NAME 'ADA' = 'AUGUSTA'` accomplish?",
+              "choices": [
+                "It creates a new variable called `'ADA'` and copies `NAME` into it",
+                "It checks whether `NAME` and `'AUGUSTA'` contain the same number of characters",
+                "It deletes the variable `NAME` unless it begins with the letters `'AUGUSTA'`",
+                "It finds `'ADA'` inside `NAME` and replaces that slice with `'AUGUSTA'`"
+              ],
+              "correct_index": 3,
+              "explanation": "SNOBOL's match-and-replace statement scans the subject `NAME` for the pattern `'ADA'` and replaces the matched substring with `'AUGUSTA'`, resizing the string automatically."
+            }
+          ]
+        },
+        {
+          "id": "ch_009",
+          "title": "Playful Naming \u0026 the Rapid Leap to SNOBOL4 (1967)",
+          "content_markdown": "Behind SNOBOL's sleek notation lay Bell Labs' delightfully irreverent humor. After struggling to invent a clever acronym—and rejecting joking proposals like 'SEXI'—the creators quipped they had 'a snowball's chance in hell' of finding a good name, christened it **SNOBOL**, and later back-fitted *String-Oriented Symbolic Language*.\n\nWhat started as an internal Bell Labs convenience caught fire far faster than anyone expected. Colleagues and outside universities requested copies, pushing the language through rapid upgrades. **SNOBOL2** added built-in utility functions, and **SNOBOL3** (1964–1966) introduced programmer-defined functions so users could break large text-processing tools into clean, reusable procedures.\n\nBy **1967**, Griswold, Polonsky, and new collaborator **James Poage** realized incremental patches were no longer enough. They launched **SNOBOL4**—a bold, ground-up redesign with rich data types, custom records, and an astonishingly powerful new model of pattern matching.",
+          "questions": [
+            {
+              "id": "q_017",
+              "prompt": "What major capability did SNOBOL3 add between 1964 and 1966 that helped programmers tackle larger projects?",
+              "choices": [
+                "Programmer-defined functions for organizing code into reusable procedures",
+                "Fixed-column accounting layouts modeled directly on commercial COBOL",
+                "A return to COMIT's numbered pantry shelves for stashing text",
+                "Automatic hardware compilation exclusively for 36-bit IBM 704 words"
+              ],
+              "correct_index": 0,
+              "explanation": "SNOBOL3 introduced user-defined functions (after SNOBOL2 added built-in functions), enabling programmers to structure larger text programs cleanly."
+            },
+            {
+              "id": "q_018",
+              "prompt": "How did SNOBOL4 (1967) differ in ambition from SNOBOL2 and SNOBOL3?",
+              "choices": [
+                "It stripped out named string variables to make the compiler smaller",
+                "It was a ground-up redesign introducing rich data types and far stronger patterns",
+                "It abandoned Bell Labs text tasks to focus strictly on numeric physics simulations",
+                "It translated SNOBOL programs directly into unmodified COMIT rewrite rules"
+              ],
+              "correct_index": 1,
+              "explanation": "Rather than adding another small patch, Griswold, Polonsky, and Poage redesigned SNOBOL4 from scratch with richer data structures and a revolutionary pattern model."
+            }
+          ]
+        },
+        {
+          "id": "ch_010",
+          "title": "From Inline Find-and-Replace to Patterns as Building Blocks",
+          "content_markdown": "Notice how quickly a single practical annoyance transformed computing. Because Bell Labs researchers worked every day with symbolic formulas, circuit graphs, and prototype translators, they refused to accept COMIT's single-workspace bottleneck. Within five short years—from the first SNOBOL in 1962 to SNOBOL4 in 1967—Farber, Griswold, Polonsky, and Poage turned text processing into an everyday general-purpose craft.\n\nYet through SNOBOL3, one hidden constraint still lingered: patterns lived strictly as fixed syntax typed directly into each matching statement. You couldn't store a complex pattern inside a variable, hand it to a helper function, or snap smaller patterns together dynamically while a program ran.\n\nIn SNOBOL4, Griswold shattered that last barrier by making patterns true data values in their own right—an idea so expressive that Section 3 devotes five full chunks to exploring how it works.",
+          "questions": [
+            {
+              "id": "q_019",
+              "prompt": "What lingering limitation still constrained pattern matching in SNOBOL1 through SNOBOL3?",
+              "choices": [
+                "Patterns could only match single letters and could never span full words",
+                "Patterns required manual punch-card column numbers on every statement",
+                "Patterns could not replace matched text with shorter or longer strings",
+                "Patterns were fixed inline syntax rather than reusable data values stored in variables"
+              ],
+              "correct_index": 3,
+              "explanation": "Before SNOBOL4, patterns had to be written directly inside each match statement and could not be stored in variables or combined dynamically at runtime."
+            },
+            {
+              "id": "q_020",
+              "prompt": "Which trajectory accurately summarizes the evolution from COMIT to SNOBOL4?",
+              "choices": [
+                "Named variables gave way to a single shared workspace with grammatical shelves",
+                "Numeric FORTRAN arrays were gradually replaced by fixed-width accounting ledgers",
+                "A single-workspace rule system evolved into named strings and then a full redesign",
+                "Lisp's garbage-collected lists were abandoned in favor of manual assembly opcodes"
+              ],
+              "correct_index": 2,
+              "explanation": "COMIT introduced single-workspace string rewriting, early SNOBOL added named string variables and pattern matching, and SNOBOL4 redesigned the entire language around richer data and patterns."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_03",
+      "title": "3. First-Class Patterns: Composing Rules \u0026 Capturing Substrings in SNOBOL4",
+      "summary": "Discover SNOBOL4's boldest breakthrough: elevating text patterns from fixed syntax into first-class runtime values stored in variables and combined through concatenation and alternation. Through short, concrete code contrasts against verbose imperative character-index loops, see how built-in backtracking searches alternatives automatically and why SNOBOL4 distinguished conditional capture (committing only if the whole match succeeds) from immediate capture during a scan.",
+      "introduced_terms": [
+        "first-class pattern",
+        "backtracking",
+        "substring capture"
+      ],
+      "chunks": [
+        {
+          "id": "ch_011",
+          "title": "Why Hand-Coded Text Loops Explode in Complexity",
+          "content_markdown": "Suppose you want a computer program to inspect a messy line of text and check whether it contains a polite title—either `'MR.'` or `'MS.'`—followed by a blank space and a capitalized last name. Sounds simple enough for a human eye.\n\nIn a traditional **imperative** language—one where you issue step-by-step commands walking through numbered character positions—that tiny request turns ugly fast. You create an index counter starting at position 1, check whether the next three letters spell `'MR.'` (being careful not to step past the end of the line and crash), try `'MS.'` if the first check misses, verify a space sits immediately after, and then loop letter by letter through the alphabet to collect the name. Add `'DR.'` or optional middle initials, and your neat loop balloons into tangled bookkeeping.\n\nSNOBOL4 asked a liberating question: why write character-scanning loops at all when you can treat search patterns like snap-together building blocks?",
+          "questions": [
+            {
+              "id": "q_021",
+              "prompt": "Why do step-by-step character-index loops become fragile as text-matching rules grow?",
+              "choices": [
+                "Every added alternative or variation multiplies manual counters, checks, and bounds tests",
+                "Character-index loops cannot examine uppercase letters without special compiler plugins",
+                "Traditional languages forbid checking more than three consecutive characters in a line",
+                "Loop counters automatically erase the original character string after each comparison"
+              ],
+              "correct_index": 0,
+              "explanation": "Manually tracking positions, string ends, and fallback branches causes low-level scanning loops to grow tangled and error-prone with every new case."
+            },
+            {
+              "id": "q_022",
+              "prompt": "What design insight motivated SNOBOL4's alternative to manual character-scanning loops?",
+              "choices": [
+                "Requiring every input text line to follow identical fixed-width punch-card columns",
+                "Replacing alphabetical text with numeric lookup codes before searching begins",
+                "Treating search patterns themselves as composable building blocks handled by the language",
+                "Forcing programmers to write assembly instructions tuned for each mainframe model"
+              ],
+              "correct_index": 2,
+              "explanation": "SNOBOL4 shifted the burden from manual index bookkeeping to composable pattern values interpreted automatically by the language's matcher."
+            }
+          ]
+        },
+        {
+          "id": "ch_012",
+          "title": "First-Class Patterns: Concatenation \u0026 Alternation",
+          "content_markdown": "SNOBOL4's signature leap was the **first-class pattern**: a text-matching rule treated as an ordinary data value while the program runs, just like a number or a character string. You can build a pattern, store it in a variable, pass it into a function, and combine smaller patterns into bigger ones.\n\nTwo simple operators glue SNOBOL4 patterns together. **Alternation**, written with a vertical bar `|`, means 'try the left option, or else try the right option.' **Concatenation**, written simply as a blank space between patterns, means 'match the first piece followed immediately by the next.' Look how naturally a rule composes:\n\n```snobol\nTITLE = 'MR.' | 'MS.' | 'DR.'\nWORD  = SPAN('ABCDEFGHIJKLMNOPQRSTUVWXYZ')\nENTRY = TITLE ' ' WORD\n```\n\nHere `SPAN(...)` matches a run of uppercase letters. You never hard-code one monolithic search—you snap `TITLE`, `' '`, and `WORD` into `ENTRY` like LEGO bricks.",
+          "questions": [
+            {
+              "id": "q_023",
+              "prompt": "What makes a SNOBOL4 pattern a 'first-class' pattern?",
+              "choices": [
+                "It always executes faster than hand-written assembly code on mainframe hardware",
+                "It is an ordinary runtime value that can be stored in variables, passed around, and composed",
+                "It can only appear once at the very top of a program before any strings are read",
+                "It automatically translates matched English phrases into foreign languages"
+              ],
+              "correct_index": 1,
+              "explanation": "Making patterns first-class values means programs can create, store, pass, and combine pattern objects dynamically at runtime just like strings or numbers."
+            },
+            {
+              "id": "q_024",
+              "prompt": "In `ENTRY = ('MR.' | 'MS.') ' ' WORD`, what roles do `|` and the blank space play?",
+              "choices": [
+                "`|` joins two pieces in strict sequence, while the blank space chooses between alternatives",
+                "`|` deletes matched spaces from the string, while the blank space ends the statement",
+                "`|` marks a comment for human readers, while the blank space compares string lengths",
+                "`|` offers an either-or alternation choice, while the blank space concatenates pieces in sequence"
+              ],
+              "correct_index": 3,
+              "explanation": "The vertical bar `|` represents alternation (either option may match), whereas separating patterns with a blank space concatenates them in order."
+            }
+          ]
+        },
+        {
+          "id": "ch_013",
+          "title": "Side-by-Side Contrast \u0026 Automatic Backtracking",
+          "content_markdown": "Compare finding a title-and-name inside `LINE` using a classic imperative character loop versus SNOBOL4:\n\n```text\n# Imperative character loop (sketch)\ni = 1\nwhile i \u003c= len(LINE) - 3:\n  if slice(LINE, i, 3) in ('MR.', 'MS.') and LINE[i+3] == ' ':\n    j = i + 4\n    while j \u003c= len(LINE) and is_upper(LINE[j]): j = j + 1\n    if j \u003e i + 4: found = 'YES'; stop\n  i = i + 1\n```\n\n```snobol\nTITLE = 'MR.' | 'MS.'\nWORD  = SPAN('ABCDEFGHIJKLMNOPQRSTUVWXYZ')\nLINE  TITLE ' ' WORD\n```\n\nNotice what vanished from the SNOBOL4 version: every index variable, length check, and retry branch! That magic relies on **backtracking**—when the matcher tries one option (say `'MR.'` against `'MS. ADA'`) and fails, or matches `'MR.'` without a space afterward, it automatically rewinds to its previous choice point and tries the next alternative or next starting position until a full match succeeds or all options run dry.",
+          "questions": [
+            {
+              "id": "q_025",
+              "prompt": "What does SNOBOL4's matcher do during backtracking when a chosen branch fails downstream?",
+              "choices": [
+                "It automatically rewinds to an earlier choice point and tries the next alternative",
+                "It immediately terminates the entire program with a fatal syntax error",
+                "It erases the unmatched characters from the input string and retries from zero",
+                "It asks the programmer to type a new loop counter into the terminal"
+              ],
+              "correct_index": 0,
+              "explanation": "Backtracking lets the matcher undo partial progress and automatically explore remaining alternatives or starting positions without manual retry loops."
+            },
+            {
+              "id": "q_026",
+              "prompt": "What concrete advantage stands out in the side-by-side comparison between the imperative loop and SNOBOL4?",
+              "choices": [
+                "The imperative loop eliminates the need to check uppercase letters at all",
+                "SNOBOL4 replaces manual index counters, bounds checks, and retry loops with composable rules",
+                "SNOBOL4 forces programmers to declare the exact byte length of every name beforehand",
+                "The imperative loop uses built-in backtracking while SNOBOL4 requires explicit counters"
+              ],
+              "correct_index": 1,
+              "explanation": "SNOBOL4 expresses the shape of the desired text in three composable lines, eliminating manual `i`/`j` indices, length bounds, and retry bookkeeping."
+            }
+          ]
+        },
+        {
+          "id": "ch_014",
+          "title": "Conditional vs. Immediate Substring Capture",
+          "content_markdown": "Spotting a pattern is great, but usually you want to pull out the matched text—a feature called **substring capture**, where a sub-pattern saves the exact slice of text it matched into a variable.\n\nSNOBOL4 offered a remarkably subtle twist: *two* capture operators with very different timing. **Conditional capture**, written with a dot (`.` as in `WORD . SURNAME`), plays it safe—it waits until the *entire* surrounding pattern succeeds before storing the text in `SURNAME`. **Immediate capture**, written with SNOBOL4's dollar-sign operator, saves the slice the very instant that sub-pattern matches during scanning, *even if a later piece fails and triggers backtracking*!\n\nSuppose `LINE` holds `'MR. 123'` and your pattern matches `TITLE` followed by a space and `WORD`. With conditional capture on `TITLE`, because `'123'` isn't uppercase letters, the overall match fails and your variable stays untouched. With immediate capture, `'MR.'` already got copied into the variable before `'123'` failed—useful for tracing how a tricky match unfolded, yet a classic surprise if you forgot backtracking might reject that branch.",
+          "questions": [
+            {
+              "id": "q_027",
+              "prompt": "When does conditional substring capture (the dot operator `.`) store the matched text into a variable?",
+              "choices": [
+                "The instant the sub-pattern matches, regardless of whether later parts fail",
+                "Before pattern matching begins, using a default placeholder string",
+                "Only after the entire surrounding pattern match succeeds as a whole",
+                "Only when the programmer manually pauses backtracking at a breakpoint"
+              ],
+              "correct_index": 2,
+              "explanation": "Conditional capture commits its assignment only if the whole pattern succeeds, keeping variables clean when backtracking rejects a partial match."
+            },
+            {
+              "id": "q_028",
+              "prompt": "What happens if an immediate capture succeeds on `'MR.'` inside `'MR. 123'`, and the rest of the pattern fails on `'123'`?",
+              "choices": [
+                "SNOBOL4 automatically rolls back the variable to its previous value",
+                "The matcher deletes `'123'` from the string so the capture remains valid",
+                "The entire program halts because immediate capture forbids backtracking",
+                "The variable already received `'MR.'` even though the overall match failed"
+              ],
+              "correct_index": 3,
+              "explanation": "Immediate capture (using SNOBOL4's dollar-sign operator) writes to the variable as soon as its sub-pattern matches, leaving that side effect even if later backtracking fails."
+            }
+          ]
+        },
+        {
+          "id": "ch_015",
+          "title": "Runtime Patterns Meet SNOBOL4's Bigger Question",
+          "content_markdown": "Pause and appreciate what Section 3 unlocked. Because SNOBOL4 patterns are first-class runtime values, you can assemble them from smaller named parts with alternation and concatenation, even constructing brand-new patterns on the fly from words the user just typed! Built-in backtracking sweeps away tedious character-index loops, while conditional and immediate substring capture let you extract matched text cleanly—or spy on the matcher mid-flight.\n\nNotice, however, that we have only shown a single matching statement sitting by itself. Real programs must make decisions: if `LINE` matches `ENTRY`, print the captured name and read the next line; if it fails, try a different pattern or stop.\n\nIn a mainstream language, you would reach for an `if` or `while` statement. SNOBOL4 had neither—and Section 4 reveals the strikingly unconventional control mechanism Griswold's team invented instead.",
+          "questions": [
+            {
+              "id": "q_029",
+              "prompt": "Because SNOBOL4 patterns are first-class runtime values, what unusual thing can a running program do?",
+              "choices": [
+                "Skip garbage collection entirely when resizing matched character strings",
+                "Assemble brand-new patterns dynamically from user input while the program runs",
+                "Run directly on 1950s numeric hardware without any pattern-matching engine",
+                "Guarantee that immediate capture never runs during a failing branch"
+              ],
+              "correct_index": 1,
+              "explanation": "Treating patterns as runtime data values lets programs build, combine, and store new patterns dynamically based on data read during execution."
+            },
+            {
+              "id": "q_030",
+              "prompt": "What piece of a complete SNOBOL4 program still remains unexplained after mastering pattern matching alone?",
+              "choices": [
+                "How the program steers control flow and loops when statements succeed or fail",
+                "How SNOBOL4 represents individual uppercase letters inside quoted literals",
+                "How blank spaces concatenate two adjacent pattern values in sequence",
+                "How conditional capture waits for an entire pattern match to complete"
+              ],
+              "correct_index": 0,
+              "explanation": "Pattern matching tells us whether a line matched and captures substrings, but real programs also need a way to branch and loop based on success or failure."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_04",
+      "title": "4. Succeed or Fail: SNOBOL4's Branching Labels, Dynamic Strings \u0026 Tables",
+      "summary": "Explore SNOBOL4's startling control model, which had no 'if' or 'while' keywords: every statement simply succeeds or fails and jumps via explicit success/failure goto labels such as ':S(label) F(label)'. See how automatically resized, garbage-collected dynamic strings and built-in associative tables—dictionaries indexed by arbitrary text keys rather than sequential integers—turned word counting and symbolic indexing into just a few expressive lines.",
+      "introduced_terms": [
+        "success/failure control flow",
+        "associative table"
+      ],
+      "chunks": [
+        {
+          "id": "ch_016",
+          "title": "The Language That Threw Away 'if' and 'while'",
+          "content_markdown": "Open a classic SNOBOL4 listing and a curious shock awaits you: hunt from top to bottom, and you will never spot a single `if`, `else`, `while`, or `for` keyword. Every familiar road sign of mainstream programming simply isn't there.\n\nInstead, SNOBOL4 statements march down the page in neat, flat lines, with cryptic markers perched at the far right edge—tags like `:S(LOOP)`, `:F(DONE)`, or `:S(FOUND) F(RETRY)`. To a newcomer raised on ordinary step-by-step instructions, those trailing tags look almost like alien punctuation.\n\nWhy would Bell Labs engineers omit the most universal decision keywords in computing? Because in a text-processing world where pattern matches and input reads constantly hit dead ends, SNOBOL4 treated *every* statement as a mini-experiment that either works or doesn't—and built the entire flow of the program directly around that single beat.",
+          "questions": [
+            {
+              "id": "q_031",
+              "prompt": "What immediately surprises newcomers when reading their first SNOBOL4 program?",
+              "choices": [
+                "Every variable name must begin with a three-digit shelf number",
+                "Lines must be written strictly backward from right to left",
+                "Patterns are forbidden from appearing inside any looping code",
+                "Standard keywords such as `if`, `else`, `while`, and `for` do not exist"
+              ],
+              "correct_index": 3,
+              "explanation": "SNOBOL4 omitted familiar control keywords like `if` and `while`, driving all branching through tags appended to the right end of statements."
+            },
+            {
+              "id": "q_032",
+              "prompt": "Why did SNOBOL4's designers omit separate `if` and `while` constructs?",
+              "choices": [
+                "Early IBM mainframes lacked hardware jump instructions needed for loops",
+                "Every statement already produced a built-in pass-or-fail outcome that could steer jumps",
+                "Bell Labs forbade conditional logic inside symbolic text translators",
+                "Pattern matches were guaranteed to succeed on every line of text"
+              ],
+              "correct_index": 1,
+              "explanation": "Because pattern matching, comparisons, and reading input naturally succeed or fail, SNOBOL4 unified all program branching around each statement's outcome."
+            }
+          ]
+        },
+        {
+          "id": "ch_017",
+          "title": "Success/Failure Control Flow \u0026 Explicit Goto Labels",
+          "content_markdown": "That mechanism is called **success/failure control flow**. In SNOBOL4, every statement quietly reports one of two outcomes: it either **succeeds** or **fails**. A pattern match succeeds when it finds the requested text and fails when it does not. Reading the next line of input succeeds while lines remain and fails at the end of the file. Even a numeric comparison like `LT(N, 10)` ('is `N` less than 10?') succeeds when true and fails when false.\n\nAt the end of any statement, a colon `:` introduces an optional **goto** branch naming a statement label elsewhere in the program. Write `:S(NEXT)` to jump to `NEXT` on success, `:F(DONE)` to jump to `DONE` on failure, `:S(YES) F(NO)` to steer both outcomes, or bare `:(TOP)` to jump unconditionally. Leave off the goto tag, and execution simply falls straight through to the very next line.",
+          "questions": [
+            {
+              "id": "q_033",
+              "prompt": "In SNOBOL4's success/failure control flow, what does attaching `:S(KEEP) F(SKIP)` to a statement mean?",
+              "choices": [
+                "Store the string `'KEEP'` if the file is empty, otherwise print `'SKIP'`",
+                "Search the variable `KEEP` for the pattern `SKIP` before running the line",
+                "Jump to label `KEEP` if the statement succeeds, or jump to `SKIP` if it fails",
+                "Run both labels `KEEP` and `SKIP` simultaneously on two mainframe processors"
+              ],
+              "correct_index": 2,
+              "explanation": "The `:S(label)` field jumps on statement success, while `:F(label)` jumps on statement failure, steering execution without an `if` block."
+            },
+            {
+              "id": "q_034",
+              "prompt": "What happens in SNOBOL4 when a statement finishes without any trailing colon goto field?",
+              "choices": [
+                "Execution simply continues straight down to the next line in sequence",
+                "The program halts immediately because every line requires an explicit jump",
+                "The statement repeats itself automatically until its pattern finally fails",
+                "SNOBOL4 jumps back to the first label defined at the top of the file"
+              ],
+              "correct_index": 0,
+              "explanation": "Goto fields are optional; when none applies or none is written, SNOBOL4 moves smoothly to the immediately following statement."
+            }
+          ]
+        },
+        {
+          "id": "ch_018",
+          "title": "Looping with Labels \u0026 Effortless Dynamic Strings",
+          "content_markdown": "Watch how cleanly success/failure branching builds a complete loop that reads lines, keeps those containing `'ERROR'`, and stops automatically when the file ends:\n\n```snobol\nLOOP  LINE = INPUT          :F(DONE)\n      LINE 'ERROR'          :F(LOOP)\n      OUTPUT = LINE         :(LOOP)\nDONE  OUTPUT = 'FINISHED'\n```\n\nStep through it line by line. Reading `INPUT` succeeds for each available line and fails at end-of-file, jumping straight to `DONE`. On line 2, if `LINE` lacks `'ERROR'`, the pattern fails and `:F(LOOP)` hops right back for another line; if it succeeds, execution falls into line 3, prints `LINE`, and `:(LOOP)` loops around unconditionally.\n\nNotice what else you never wrote: type declarations (announcing ahead of time whether a variable holds numbers or text) or maximum string lengths! SNOBOL4's **dynamic strings** automatically grow, shrink, and convert between text and numbers when arithmetic needs them, while an automatic garbage collector—just like Lisp's mark-and-sweep reclamation—quietly recycles discarded text.",
+          "questions": [
+            {
+              "id": "q_035",
+              "prompt": "In the four-line loop above, what causes execution to jump to the `DONE` label?",
+              "choices": [
+                "The string `'ERROR'` matches inside `LINE` on the second statement",
+                "A hidden counter reaches ten printed lines and terminates the loop",
+                "The unconditional jump `:(LOOP)` automatically exits after one pass",
+                "Reading `INPUT` reaches the end of the file and fails, triggering `:F(DONE)`"
+              ],
+              "correct_index": 3,
+              "explanation": "When no more input lines remain, `LINE = INPUT` fails, causing its `:F(DONE)` failure branch to break out of the loop cleanly."
+            },
+            {
+              "id": "q_036",
+              "prompt": "How does SNOBOL4 manage memory as dynamic strings continually grow, shrink, and get replaced?",
+              "choices": [
+                "It forces programmers to pre-allocate fixed character buffers for every variable",
+                "It truncates any string that grows beyond six 36-bit mainframe words",
+                "It resizes strings automatically and relies on garbage collection to reclaim old storage",
+                "It writes temporary strings to numbered punch cards whenever memory fills up"
+              ],
+              "correct_index": 2,
+              "explanation": "Like Lisp's runtime, SNOBOL4 managed dynamic string storage automatically and reclaimed discarded strings via garbage collection."
+            }
+          ]
+        },
+        {
+          "id": "ch_019",
+          "title": "Associative Tables: Dictionaries Decades Ahead of Their Time",
+          "content_markdown": "Now consider one of SNOBOL4's most prophetic inventions: the built-in **associative table** (`TABLE()`). In 1967, traditional arrays could only be indexed by consecutive integers—slot 1, slot 2, slot 3. If you wanted to count how many times each English word appeared in a novel, numeric arrays forced you to invent clumsy searching and sorting machinery just to map `'WHALE'` to a slot number.\n\nAn associative table works like an instant, expandable dictionary indexed by *arbitrary values*—most famously character strings! Look how tiny word-counting becomes in SNOBOL4:\n\n```snobol\nCOUNTS = TABLE()\nCOUNTS['WHALE'] = COUNTS['WHALE'] + 1\n```\n\nThe very first time `'WHALE'` appears, `COUNTS['WHALE']` quietly defaults to an empty string—which SNOBOL4 automatically treats as `0` when `+ 1` runs! Decades before modern languages like Python and JavaScript made built-in text-keyed dictionaries an everyday reflex, SNOBOL4 handed them to programmers right out of the box.",
+          "questions": [
+            {
+              "id": "q_037",
+              "prompt": "How does an associative table (`TABLE()`) differ from a traditional 1960s numeric array?",
+              "choices": [
+                "It stores only floating-point numbers sorted from smallest to largest",
+                "It looks up entries by arbitrary keys such as words instead of integer slots",
+                "It locks its total number of slots permanently before the program starts running",
+                "It requires every stored key to be converted manually into punch-card column numbers"
+              ],
+              "correct_index": 1,
+              "explanation": "Instead of indexing strictly by consecutive numbers like 1, 2, 3, an associative table maps arbitrary keys—such as whole words—directly to stored values."
+            },
+            {
+              "id": "q_038",
+              "prompt": "Why does `COUNTS['WHALE'] = COUNTS['WHALE'] + 1` work in SNOBOL4 even the very first time `'WHALE'` is seen?",
+              "choices": [
+                "Missing table entries default to an empty string that converts automatically to `0` for addition",
+                "SNOBOL4 pre-fills every new table with every English dictionary word set to zero",
+                "The `+` operator concatenates the character `'1'` onto the end of the word `'WHALE'`",
+                "Failure on a missing key automatically jumps to a hidden label that creates the entry"
+              ],
+              "correct_index": 0,
+              "explanation": "Unseen entries in a SNOBOL4 table default to the empty string, and SNOBOL4's automatic string-to-number conversion treats the empty string as `0` in arithmetic."
+            }
+          ]
+        },
+        {
+          "id": "ch_020",
+          "title": "Dazzling Power—And a Brutal Mainframe Portability Puzzle",
+          "content_markdown": "Look at the remarkable toolkit SNOBOL4 assembled by 1967. First-class backtracking patterns let you describe complex text shapes like LEGO bricks. Success/failure control flow turned every match, test, and file read into a compact branching engine. Self-resizing dynamic strings freed programmers from byte-counting, and built-in associative tables made word indexing almost effortless.\n\nYet packing all that dynamic intelligence—runtime pattern construction, automatic garbage collection, string-to-number conversion, and growing associative tables—inside a 1967 programming language created a massive engineering headache. Mainframes of that era spoke wildly incompatible machine languages, from IBM System/360 to CDC 6600 and DEC PDP-10.\n\nIf Bell Labs had hand-coded SNOBOL4 in one computer's native assembly language, it would have stayed trapped inside a single building. Section 5 reveals the ingenious portability trick Griswold invented to carry SNOBOL4 across the world—and the rival compiler that shocked everyone with raw speed.",
+          "questions": [
+            {
+              "id": "q_039",
+              "prompt": "Which combination of features made SNOBOL4 unusually expressive for 1967 text-processing tasks?",
+              "choices": [
+                "Fixed-width numeric arrays, manual memory allocation, and rigid column counters",
+                "Single-workspace rewrite rules, numbered shelves, and grammatical word subscripts",
+                "Success/failure branching, dynamically resized strings, and built-in associative tables",
+                "Punch-card column positions, COBOL record divisions, and packed decimal math"
+              ],
+              "correct_index": 2,
+              "explanation": "SNOBOL4 united success/failure goto branching, garbage-collected dynamic strings, first-class patterns, and string-keyed associative tables into a remarkably terse toolkit."
+            },
+            {
+              "id": "q_040",
+              "prompt": "What major practical challenge confronted Bell Labs as soon as SNOBOL4's design was ready in 1967?",
+              "choices": [
+                "Universities refused to accept any programming language that lacked an `if` keyword",
+                "SNOBOL4's tables could only store numbers until associative keys were invented later",
+                "Pattern matching was legally restricted to telephone switching exchanges inside New Jersey",
+                "Shipping such a rich dynamic runtime across dozens of incompatible mainframe architectures"
+              ],
+              "correct_index": 3,
+              "explanation": "In the late 1960s, computer centers used mutually incompatible mainframes, making hand-coding a complex dynamic language separately for every machine impractical."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_05",
+      "title": "5. Portability vs. Raw Speed: Griswold's SIL Virtual Machine \u0026 SPITBOL",
+      "summary": "Unpack the engineering challenge of shipping a dynamic text language across incompatible 1960s mainframes, solved by Griswold's portable macro-assembly virtual machine (SIL) that carried Macro SNOBOL4 onto dozens of architectures via machine-specific macro definitions. Then contrast that flexible but sluggish interpreter with Robert Dewar and Ken Belcher's SPITBOL, a lean native-code compiler that ran an order of magnitude faster and proved dynamic pattern languages did not have to be slow.",
+      "introduced_terms": [
+        "virtual machine",
+        "native-code compiler"
+      ],
+      "chunks": [
+        {
+          "id": "ch_021",
+          "title": "The Late-1960s Mainframe Tower of Babel",
+          "content_markdown": "Imagine you are Ralph Griswold at Bell Labs in 1967. Your small team has just designed SNOBOL4—complete with first-class backtracking patterns, dynamic strings, associative tables, and garbage collection. Letters pour in from universities begging for a copy. There is just one colossal problem: nobody owns the same computer.\n\nOne campus runs an IBM System/360 with 32-bit words; another runs a CDC 6600 with 60-bit words; a third runs a UNIVAC 1108 or a DEC PDP-10 with 36-bit words. Each machine uses totally different character codes, internal processor scratchpad registers, and assembly languages. Hand-writing and debugging a massive dynamic runtime from scratch for one mainframe could take a small team years—doing it for ten machines was out of the question.\n\nIf SNOBOL4 was ever going to escape Bell Labs, Griswold needed a way to write the language *once* and carry it onto wildly different hardware.",
+          "questions": [
+            {
+              "id": "q_041",
+              "prompt": "Why couldn't Bell Labs simply ship a single compiled SNOBOL4 executable to universities in 1967?",
+              "choices": [
+                "Universities were legally prohibited from running software created by telephone companies",
+                "Campus mainframes differed radically in word size, character codes, and machine instructions",
+                "SNOBOL4 required specialized Lisp hardware tags that only MIT possessed",
+                "Magnetic tapes could not survive postal shipping outside New Jersey"
+              ],
+              "correct_index": 1,
+              "explanation": "Late-1960s mainframes such as the IBM System/360, CDC 6600, UNIVAC 1108, and PDP-10 had completely incompatible architectures and assembly languages."
+            },
+            {
+              "id": "q_042",
+              "prompt": "What strategic goal guided Griswold's implementation plan for SNOBOL4?",
+              "choices": [
+                "Writing SNOBOL4's core logic once so it could move onto many incompatible machines",
+                "Convincing every university to scrap its hardware and purchase identical IBM 7090s",
+                "Removing dynamic strings and tables so SNOBOL4 would fit inside FORTRAN",
+                "Restricting SNOBOL4 strictly to Bell Labs' internal switching exchanges"
+              ],
+              "correct_index": 0,
+              "explanation": "Because a tiny team could not hand-code SNOBOL4 separately for every mainframe, Griswold prioritized writing a single portable implementation."
+            }
+          ]
+        },
+        {
+          "id": "ch_022",
+          "title": "Inventing an Imaginary Computer: Griswold's SIL Virtual Machine",
+          "content_markdown": "Griswold, Ivan Polonsky, and James Poage solved the mainframe Tower of Babel with an elegant architectural trick: instead of targeting IBM or CDC hardware directly, they designed a **virtual machine**—an imaginary computer defined purely in software, equipped with its own idealized instructions tailored to what SNOBOL4 actually needed.\n\nThey named this imaginary machine's language **SIL** (*SNOBOL Implementation Language*). Rather than generic math instructions, SIL offered roughly 130 high-level abstract operations built specifically for matching patterns, resizing strings, updating associative tables, and sweeping garbage.\n\nEach SIL instruction was written as an **assembly macro**—a text-expansion shorthand (distinct from the code-tree AST macros you met in Lisp) that automatically expands one abstract command into a handful of real hardware instructions. By writing the entire SNOBOL4 system once in SIL, Bell Labs created a universal blueprint completely decoupled from any single computer manufacturer.",
+          "questions": [
+            {
+              "id": "q_043",
+              "prompt": "What is a virtual machine in language implementation?",
+              "choices": [
+                "A spare physical mainframe kept powered off in case the primary computer fails",
+                "A mechanical simulator that converts paper punch cards into audio tones",
+                "A special CPU chip manufactured exclusively to execute text patterns in hardware",
+                "An imaginary computer defined in software with its own standardized instruction set"
+              ],
+              "correct_index": 3,
+              "explanation": "A virtual machine defines an idealized, software-specified computer architecture so a language can be written once against that clean target rather than raw vendor hardware."
+            },
+            {
+              "id": "q_044",
+              "prompt": "How did SIL's assembly macros differ from the Lisp AST macros covered in 'Before Compilers IV'?",
+              "choices": [
+                "SIL macros ran only at runtime during garbage collection, whereas Lisp macros ran in hardware",
+                "SIL macros manipulated linked lists of grammar rules, whereas Lisp macros expanded text",
+                "SIL macros expanded abstract virtual instructions into target assembly text rather than transforming code trees",
+                "SIL macros prevented SNOBOL4 from running on any IBM mainframe architecture"
+              ],
+              "correct_index": 2,
+              "explanation": "Unlike Lisp's structural AST macros, SIL's assembly macros acted as textual translators expanding roughly 130 abstract machine commands into local hardware assembly."
+            }
+          ]
+        },
+        {
+          "id": "ch_023",
+          "title": "How Macro SNOBOL4 Ported Worldwide—And the Price It Paid",
+          "content_markdown": "Watch how remarkably well Bell Labs' **Macro SNOBOL4** worked in practice. Suppose a graduate student at a university with a brand-new CDC 6600 wanted SNOBOL4. They didn't have to understand pattern backtracking or rewrite a single line of SNOBOL4's core logic! Instead, they simply wrote macro translation definitions explaining how each of SIL's ~130 abstract operations mapped onto CDC 6600 assembly, plugged in a small file input/output (I/O) wrapper, ran a macro assembler, and—within weeks—had a working SNOBOL4 system.\n\nThrough SIL, Macro SNOBOL4 spread across dozens of incompatible mainframes and minicomputers worldwide. Yet that brilliant portability came with a steep performance tax. Macro SNOBOL4 translated a user's program into compact internal tables and stepped through them **interpretively** atop bulky generic macro expansions. Because SIL hid hardware-specific shortcuts, Macro SNOBOL4 ran notoriously slowly and gulped down precious 1960s memory—giving dynamic text languages an undeserved reputation for sluggishness.",
+          "questions": [
+            {
+              "id": "q_045",
+              "prompt": "What did a university programmer actually have to write to port Macro SNOBOL4 to a new mainframe?",
+              "choices": [
+                "A complete rewrite of SNOBOL4's pattern matcher and garbage collector from scratch",
+                "Machine-specific macro definitions for SIL's ~130 abstract operations plus basic I/O glue",
+                "A brand-new operating system modeled directly on Bell Labs' telephone switches",
+                "A translator converting SNOBOL4 programs into fixed-column FORTRAN punch cards"
+              ],
+              "correct_index": 1,
+              "explanation": "Because SNOBOL4 itself was already written in SIL, porters only needed to define how SIL's abstract instructions expanded into their local assembly and hook up local I/O."
+            },
+            {
+              "id": "q_046",
+              "prompt": "What major downside came with Macro SNOBOL4's macro-assembly virtual machine approach?",
+              "choices": [
+                "It could only run on 36-bit IBM mainframes and failed to reach other vendors",
+                "It eliminated SNOBOL4's associative tables and dynamic string resizing",
+                "It prevented programs from matching patterns containing alternation choices",
+                "Its interpretive execution and generic macro expansions made programs slow and memory-hungry"
+              ],
+              "correct_index": 3,
+              "explanation": "Portability came at a speed and memory cost: stepping interpretively through generic SIL expansions left hardware-specific optimizations on the table."
+            }
+          ]
+        },
+        {
+          "id": "ch_024",
+          "title": "The SPITBOL Shock: Blazing Native-Code Compilation",
+          "content_markdown": "Many engineers assumed Macro SNOBOL4's sluggishness was inevitable—surely a language with runtime patterns, dynamic strings, and garbage collection *had* to crawl! Around 1969–1971 at the Illinois Institute of Technology, **Robert B. K. Dewar** and **Kenneth Belcher** proved that assumption dead wrong.\n\nThey built **SPITBOL** (*Speedy Implementation of SNOBOL*), a true **native-code compiler**—a translator that converts source code directly into the real host processor's (CPU's) tight, fast machine instructions rather than stepping through an interpretive virtual layer. Starting on the IBM System/360 and later ported broadly through a far leaner assembly layer, Dewar and Belcher engineered clever fast paths for common string operations, scratchpad register usage, and pattern matching.\n\nThe benchmark results stunned the computing world: SPITBOL routinely ran **five to ten times faster** than Bell Labs' Macro SNOBOL4 while using dramatically less memory. Suddenly, SNOBOL4 wasn't just an academic toy—it could chew through massive books and production files at industrial speed.",
+          "questions": [
+            {
+              "id": "q_047",
+              "prompt": "What distinguishes a native-code compiler like SPITBOL from an interpretive virtual-machine system?",
+              "choices": [
+                "It translates source programs directly into the real CPU's fast machine instructions",
+                "It skips parsing the program and runs text strings directly inside magnetic tape drives",
+                "It replaces all dynamic strings with fixed-length arrays before execution begins",
+                "It executes programs strictly by expanding SIL macros one line at a time"
+              ],
+              "correct_index": 0,
+              "explanation": "A native-code compiler emits real machine code tailored to the host CPU instead of stepping interpretively through generic virtual-machine tables."
+            },
+            {
+              "id": "q_048",
+              "prompt": "What widespread myth did Robert Dewar and Kenneth Belcher's SPITBOL shatter around 1969–1971?",
+              "choices": [
+                "That universities would never run Bell Labs languages on IBM System/360 hardware",
+                "That garbage collection could only work inside Lisp's linked cons cells",
+                "That dynamic, pattern-heavy text languages were doomed to run slowly and waste memory",
+                "That SNOBOL4 programs could be written only with `if` and `while` keywords"
+              ],
+              "correct_index": 2,
+              "explanation": "Running 5 to 10 times faster in far less memory than Macro SNOBOL4, SPITBOL proved that expressive dynamic pattern languages could achieve blazing practical speed."
+            }
+          ]
+        },
+        {
+          "id": "ch_025",
+          "title": "Reach Meets Speed: The Eternal Systems Trade-Off",
+          "content_markdown": "Together, Macro SNOBOL4 and SPITBOL reveal one of the deepest, recurring design trade-offs in software engineering. Griswold's **SIL virtual machine** optimized for *portability and reach*: by defining ~130 abstract operations once, a tiny Bell Labs team seeded SNOBOL4 across dozens of incompatible campus computers within just a few years. Dewar and Belcher's **SPITBOL native-code compiler** optimized for *raw efficiency*: once a platform mattered enough to justify tight machine-level engineering, native compilation delivered an order-of-magnitude speedup.\n\nYou still see that exact tension everywhere today—from portable virtual machines to aggressive native compilers. Even more importantly for our story, SIL's worldwide reach and SPITBOL's industrial speed combined to hand SNOBOL4 to a totally unexpected group of programmers who had never felt welcome in a mainframe room before.\n\nIn Section 6, we meet the poets, dictionary editors, and linguists who made SNOBOL4 their home—and discover the hidden design crack that eventually forced a reinvention.",
+          "questions": [
+            {
+              "id": "q_049",
+              "prompt": "How did Macro SNOBOL4 (SIL) and SPITBOL complement each other in SNOBOL4's historical spread?",
+              "choices": [
+                "SIL carried SNOBOL4 across incompatible machines while SPITBOL made heavy workloads fast",
+                "SIL handled numeric calculations while SPITBOL handled only string input and output",
+                "SIL replaced SPITBOL on IBM mainframes because macro expansion ran ten times faster",
+                "SPITBOL removed pattern matching while SIL removed associative tables to save memory"
+              ],
+              "correct_index": 0,
+              "explanation": "SIL's virtual machine enabled rapid portability across diverse campus hardware, while SPITBOL's native-code compiler provided the speed needed for huge real-world texts."
+            },
+            {
+              "id": "q_050",
+              "prompt": "Which timeless software-engineering trade-off is illustrated by comparing SIL with SPITBOL?",
+              "choices": [
+                "Choosing between fixed-width punch cards and interactive voice-recognition terminals",
+                "Balancing quick cross-machine portability via a virtual machine against peak native-code speed",
+                "Deciding whether variable names should be spelled in uppercase or lowercase letters",
+                "Trading Lisp's lexical scoping for COMIT's single-workspace grammatical subscripts"
+              ],
+              "correct_index": 1,
+              "explanation": "The SIL-versus-SPITBOL contrast exemplifies the classic engineering balance between portable virtual-machine simplicity and hardware-tuned native compilation."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_06",
+      "title": "6. Humanities Computing, Linguists \u0026 SNOBOL4's Two-Language Friction",
+      "summary": "Meet the vibrant non-numerical communities that embraced SNOBOL4—literary scholars building concordances and stylometry tools in humanities computing, lexicographers compiling dictionaries, and researchers in computational linguistics. Then diagnose the growing design flaw that frustrated larger projects: SNOBOL4's split between a declarative, backtracking pattern sub-language and an imperative, goto-driven statement world that could not share backtracking cleanly.",
+      "introduced_terms": [
+        "humanities computing",
+        "computational linguistics"
+      ],
+      "chunks": [
+        {
+          "id": "ch_026",
+          "title": "Poets and Dictionary Editors in the Mainframe Room",
+          "content_markdown": "Walk into a university computing center around 1972 and look closely at the stack of punch-card decks waiting in line for the IBM System/360. Alongside aerospace equations and chemistry simulations sit trays punched by Shakespeare scholars, biblical historians, classicists, and dictionary editors.\n\nWait—how did literature professors end up in the mainframe room? Earlier languages felt downright hostile to anyone studying words: FORTRAN expected matrices of floating-point numbers, while COBOL expected tidy corporate invoices. Thanks to SIL's campus-wide availability, SPITBOL's speed on book-length files, and Ralph and Madge Griswold's friendly 1968 textbook—affectionately nicknamed the **Green Book**—SNOBOL4 rolled out a welcome mat for people whose raw material was human culture.\n\nFor the first time, scholars with zero electrical-engineering background could type twenty readable lines of code and ask a mainframe nuanced questions about poetry, manuscripts, and living languages.",
+          "questions": [
+            {
+              "id": "q_051",
+              "prompt": "Why had earlier mainstream languages like FORTRAN and COBOL left literary and language scholars out in the cold?",
+              "choices": [
+                "Campus rules barred humanities departments from reserving mainframe computer time",
+                "Those languages could only print numeric tables and lacked alphabet characters",
+                "They were built around fixed numeric arrays and business ledgers rather than flexible prose",
+                "They required every user to hand-wire custom assembly macros before running code"
+              ],
+              "correct_index": 2,
+              "explanation": "FORTRAN targeted numeric math and COBOL targeted rigid business records, whereas SNOBOL4's strings, patterns, and tables matched variable-length human texts naturally."
+            },
+            {
+              "id": "q_052",
+              "prompt": "Which combination of factors helped bring SNOBOL4 to non-engineering scholars across 1970s campuses?",
+              "choices": [
+                "Dedicated university Lisp hardware, punch-card restrictions, and COMIT shelves",
+                "Free personal laptops, graphical web browsers, and touchscreen keyboards",
+                "Mandatory federal laws requiring English departments to learn mainframe assembly",
+                "SIL's broad campus reach, SPITBOL's speed, and the accessible Green Book manual"
+              ],
+              "correct_index": 3,
+              "explanation": "Wide university availability through SIL, fast book-scale execution via SPITBOL, and the clear Griswold Green Book made SNOBOL4 unusually approachable."
+            }
+          ]
+        },
+        {
+          "id": "ch_027",
+          "title": "Humanities Computing \u0026 Computational Linguistics",
+          "content_markdown": "Out of those late-night card decks bloomed two vibrant, lasting disciplines that made SNOBOL4 their signature workshop. The first was **humanities computing**—the direct ancestor of today's digital humanities—where scholars use computers to search, index, compare, and analyze literature, historical archives, and manuscripts. The second was **computational linguistics**, the field that uses algorithms and formal rules to analyze how human languages assemble words, grammar, and meaning.\n\nThink about why SNOBOL4 clicked so deeply with both communities. Human language is gloriously irregular: words carry prefixes, suffixes, punctuation, and variant spellings; lines of verse vary in length; dictionary entries mix definitions with cross-references. SNOBOL4's dynamic strings never choked on long sentences, its composable patterns matched complex word endings cleanly, and its associative tables tallied every distinct word in a novel without forcing scholars to invent complex numeric indexing schemes.",
+          "questions": [
+            {
+              "id": "q_053",
+              "prompt": "What is humanities computing (today commonly known as digital humanities)?",
+              "choices": [
+                "Using computers to index, compare, and analyze literature, manuscripts, and cultural texts",
+                "Designing ergonomic keyboards and padded chairs specifically for mainframe operators",
+                "Replacing human foreign-language teachers with automated punch-card audio drills",
+                "Teaching mainframe engineers to write historical biographies instead of compiler code"
+              ],
+              "correct_index": 0,
+              "explanation": "Humanities computing applies computational tools—like pattern matching and word indexing—to study literature, history, and other human cultural texts."
+            },
+            {
+              "id": "q_054",
+              "prompt": "What does the field of computational linguistics study?",
+              "choices": [
+                "How fast computer processors execute binary arithmetic across incompatible mainframes",
+                "How algorithms and formal rules analyze word structure, grammar, and human language",
+                "How compiler teams design compact numeric abbreviations for assembly instructions",
+                "How librarians sort printed encyclopedias using fixed punch-card column widths"
+              ],
+              "correct_index": 1,
+              "explanation": "Computational linguistics uses algorithmic models and rule systems to investigate natural human language—its word forms, grammar, and meaning."
+            }
+          ]
+        },
+        {
+          "id": "ch_028",
+          "title": "Concordances, Dictionaries \u0026 Literary Detective Work",
+          "content_markdown": "What did scholars actually build in SNOBOL4? One beloved staple was the **concordance**—an exhaustive alphabetical index showing every word in a huge book alongside every line and page where it appears. Hand-compiling a concordance of Shakespeare or ancient scripture once consumed decades of index-card labor; in SNOBOL4, a pattern peeled off each word while an associative table accumulated its locations in minutes.\n\n**Lexicographers** (dictionary makers) used SNOBOL4 to sort citation slips, check cross-references, and untangle spelling variants across multi-volume dictionaries. Literary detectives practiced **stylometry**, counting subtle signature habits—sentence lengths, favorite function words, meter, and rhyme schemes—to investigate anonymous pamphlets or disputed authorship. Computational linguists tested word-ending rules and sentence parsers (programs that break sentences into grammatical structure), while guides like Susan Hockey's *SNOBOL Programming for the Humanities* trained generations of historians and librarians to code.",
+          "questions": [
+            {
+              "id": "q_055",
+              "prompt": "Why were SNOBOL4's patterns and associative tables so ideal for building a literary concordance?",
+              "choices": [
+                "Patterns automatically translated ancient poetry while tables generated rhyming synonyms",
+                "Tables sorted physical punch cards alphabetically while patterns printed illustrations",
+                "Patterns extracted every word cleanly while associative tables indexed all of its locations",
+                "Patterns compressed books into fixed 36-bit numbers while tables checked spelling rules"
+              ],
+              "correct_index": 2,
+              "explanation": "Building a concordance requires slicing text into words and mapping each distinct word to every line where it occurs—an effortless fit for patterns plus `TABLE()`."
+            },
+            {
+              "id": "q_056",
+              "prompt": "How did literary scholars use SNOBOL4 for stylometry?",
+              "choices": [
+                "By counting subtle habits like word frequencies and sentence rhythms to study authorship",
+                "By rewriting classic novels into formal mathematical proofs using lambda calculus",
+                "By translating medieval manuscripts word-for-word into modern European languages",
+                "By storing scanned page illustrations inside fixed-width numeric mainframe arrays"
+              ],
+              "correct_index": 0,
+              "explanation": "Stylometry quantifies an author's linguistic fingerprints—such as common word frequencies, rhythms, and phrasing—to compare texts and investigate disputed authorship."
+            }
+          ]
+        },
+        {
+          "id": "ch_029",
+          "title": "The Hidden Crack: SNOBOL4's Two-Language Friction",
+          "content_markdown": "Yet as humanities projects, compilers, and linguistic tools grew from thirty-line scripts into sprawling multi-thousand-line systems, even SNOBOL4's fiercest fans ran headfirst into a surprising structural flaw: SNOBOL4 was quietly *two completely different languages* bolted awkwardly together.\n\nInside a pattern match lived a sleek, **declarative** world—where you describe *what* text shape you want and let built-in **backtracking** hunt for it automatically. Step outside the pattern into ordinary imperative statements, and all that magic evaporated! Ordinary expressions could not backtrack at all; there were still no structured `if` or `while` blocks; and big programs dissolved into tangled webs of `:S(L42) F(L19)` goto jumps that were brutal to read or modify.\n\nWorse still, whenever a pattern needed a normal calculation mid-search—or a normal loop wanted backtracking—programmers had to rig clumsy bridges between the two halves. SNOBOL4 had split text search from general programming right down the middle.",
+          "questions": [
+            {
+              "id": "q_057",
+              "prompt": "What caused the 'two-language friction' that frustrated programmers building large SNOBOL4 systems?",
+              "choices": [
+                "Programmers had to mix FORTRAN numeric subroutines with SNOBOL4 strings in one file",
+                "SIL virtual machines could only run patterns while SPITBOL handled ordinary statements",
+                "Humanities scholars had to keep COMIT shelves alongside SNOBOL4's associative tables",
+                "Backtracking lived inside a separate pattern sub-language rather than in goto-driven statements"
+              ],
+              "correct_index": 3,
+              "explanation": "SNOBOL4 split into a declarative, backtracking pattern world and an unstructured, goto-driven statement world that could not share backtracking smoothly."
+            },
+            {
+              "id": "q_058",
+              "prompt": "Why did SNOBOL4's `:S(...) F(...)` control flow become a headache as programs grew to thousands of lines?",
+              "choices": [
+                "Goto labels stopped working whenever a program contained more than ten variables",
+                "Without structured `if` or `while` blocks, tangled label jumps became hard to trace and maintain",
+                "SNOBOL4 prohibited jumping backward to any label defined earlier in the file",
+                "Every goto label forced the runtime to trigger a full garbage-collection sweep"
+              ],
+              "correct_index": 1,
+              "explanation": "While concise for five-line scripts, unstructured `:S(...) F(...)` jumps across large programs created hard-to-follow spaghetti control flow."
+            }
+          ]
+        },
+        {
+          "id": "ch_030",
+          "title": "Tearing Down the Wall Between Patterns and Programs",
+          "content_markdown": "SNOBOL4's golden decade left a bittersweet verdict. On one hand, it proved beyond doubt that putting human text at the center of a language could empower whole communities—literary scholars in humanities computing, dictionary-making lexicographers, and researchers in computational linguistics—who had been ignored by numeric computing.\n\nOn the other hand, SNOBOL4's split personality exposed a deep architectural tension. Why should smart, automatic backtracking live behind a glass wall inside a special pattern sub-language, while the rest of the program remained stuck with rigid, goto-heavy statements? Shouldn't clean, structured code and expressive text searching speak the *exact same language*?\n\nNobody felt that tension more keenly than Ralph Griswold himself. After leaving Bell Labs for the desert campus of the University of Arizona, he set out to tear that glass wall down—and in Section 7, we watch him invent **Icon**.",
+          "questions": [
+            {
+              "id": "q_059",
+              "prompt": "What core design question emerged from SNOBOL4's experience in large humanities and linguistics projects?",
+              "choices": [
+                "How to shrink all character strings back into fixed 36-bit numeric words",
+                "How to eliminate variable names and return to COMIT's single shared workspace",
+                "How to replace university mainframes with paper index cards for dictionary work",
+                "How to unify structured general programming and expressive backtracking into one coherent language"
+              ],
+              "correct_index": 3,
+              "explanation": "SNOBOL4's split between its backtracking pattern sub-language and goto-driven statements raised the challenge of uniting both capabilities cleanly in a single language."
+            },
+            {
+              "id": "q_060",
+              "prompt": "Which statement best captures SNOBOL4's dual legacy at the end of its peak era?",
+              "choices": [
+                "It failed to attract users outside Bell Labs because SIL could not port to campus hardware",
+                "It eliminated every readability problem by pioneering structured `while` and `if` blocks",
+                "It inspired vibrant text-scholarship communities yet suffered from its sub-language split and goto clutter",
+                "It abandoned associative tables so literary scholars could write pure FORTRAN loops"
+              ],
+              "correct_index": 2,
+              "explanation": "SNOBOL4 empowered humanities computing and computational linguistics worldwide, while its awkward divide between patterns and goto statements motivated Griswold's next reinvention."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_07",
+      "title": "7. Reinvention in Tucson: Ralph Griswold's Icon, No Booleans \u0026 String Scanning (1977)",
+      "summary": "Follow Ralph Griswold from Bell Labs to the University of Arizona, where his 1977 language Icon traded SNOBOL4's goto labels for clean structured syntax while discarding traditional true/false booleans altogether. Learn how Icon expressions either succeed with a concrete value or fail silently—making chained comparisons and end-of-file loops effortless—and how string scanning unified text processing into ordinary Icon expressions.",
+      "introduced_terms": [
+        "expression failure",
+        "string scanning"
+      ],
+      "chunks": [
+        {
+          "id": "ch_031",
+          "title": "From Bell Labs to Tucson: Designing a Successor Without the Wall",
+          "content_markdown": "In 1971, Ralph Griswold packed up his Bell Labs notebooks and headed west to Tucson, becoming the founding chair of the Department of Computer Science at the **University of Arizona**. Surrounded by desert sunshine and curious graduate students, he spent the next several years wrestling with SNOBOL4's unfinished business.\n\nAfter an experimental bridge language called **SL5**, Griswold and his team—including David Hanson, Tim Korb, and later Madge Griswold—launched **Icon** in **1977** (a name chosen deliberately *not* to be an acronym). At first glance, Icon looked wonderfully calm and modern: gone were SNOBOL4's cryptic `:S(...) F(...)` jump tags, replaced by clean, readable `if ... then ... else`, `while ... do`, and named `procedure` blocks.\n\nLook a little closer, though, and something astonishing is missing: search Icon's entire manual and you will never find the words `true` or `false`. Griswold had thrown out traditional truth values altogether!",
+          "questions": [
+            {
+              "id": "q_061",
+              "prompt": "Where did Ralph Griswold create Icon in 1977 after leaving Bell Labs?",
+              "choices": [
+                "At the University of Arizona in Tucson, where he chaired Computer Science",
+                "At MIT's Research Laboratory of Electronics alongside Victor Yngve",
+                "At the Illinois Institute of Technology alongside the SPITBOL team",
+                "At IBM's mainframe factory while designing the 36-bit IBM 704"
+              ],
+              "correct_index": 0,
+              "explanation": "Griswold moved from Bell Labs to the University of Arizona in 1971 and created Icon there with his research team in 1977."
+            },
+            {
+              "id": "q_062",
+              "prompt": "What familiar element of mainstream programming languages did Icon surprisingly leave out despite adopting clean `if` and `while` syntax?",
+              "choices": [
+                "Ordinary character strings capable of growing and shrinking dynamically",
+                "Traditional `true` and `false` truth values for steering conditions",
+                "Named variables capable of holding numbers or text simultaneously",
+                "Structured procedure blocks for organizing reusable program code"
+              ],
+              "correct_index": 1,
+              "explanation": "Although Icon adopted structured `if`, `while`, and `procedure` blocks, it intentionally eliminated `true` and `false` boolean values."
+            }
+          ]
+        },
+        {
+          "id": "ch_032",
+          "title": "No Booleans Required: Expression Failure in Icon",
+          "content_markdown": "In most programming languages, comparisons rely on **booleans**—a special two-value data type holding only `true` or `false`. Ask whether `a \u003c b`, and the computer hands back `true` or `false` so an `if` statement can decide what to do. That forces every search or input function into awkward tricks: what should `find` return when a word isn't there—`-1`? `0`? A special empty code?\n\nIcon swept all of that away with **expression failure**. In Icon, *every* expression does one of two things: it either **succeeds** by producing a real, usable value, or it **fails silently** by producing *no value at all*! Think of a librarian asked for a book: either she hands you the actual book (success with a value) or she quietly shakes her head with empty hands (failure).\n\nEnclosing keywords like `if` and `while` don't test for `true` or `false`—they simply watch whether their expression succeeds or fails, carrying SNOBOL4's sharpest idea smoothly into clean structured syntax.",
+          "questions": [
+            {
+              "id": "q_063",
+              "prompt": "How does Icon's model of expression failure replace traditional boolean `true`/`false` values?",
+              "choices": [
+                "Every test returns the text string `'YES'` or `'NO'` to control `if` blocks",
+                "Every failing comparison crashes the program until caught by a goto label",
+                "Every comparison returns the integer `1` for true or `-1` for false",
+                "Every expression either succeeds by producing a usable value or fails silently with no value"
+              ],
+              "correct_index": 3,
+              "explanation": "Icon eliminates separate boolean flags: expressions either succeed with a concrete value or fail silently, signaling enclosing control structures directly."
+            },
+            {
+              "id": "q_064",
+              "prompt": "Why does expression failure eliminate awkward placeholder error codes like returning `-1` when a search finds nothing?",
+              "choices": [
+                "Because Icon guarantees that every search always finds at least one matching letter",
+                "Because Icon automatically appends the missing word to the end of the string",
+                "Because a failed search yields no value, naturally stopping or steering control flow",
+                "Because Icon converts failed searches into COMIT shelf numbers automatically"
+              ],
+              "correct_index": 2,
+              "explanation": "Instead of pretending `-1` is a valid position number, a search that finds nothing simply fails silently, so enclosing assignments or loops never proceed with a bogus code."
+            }
+          ]
+        },
+        {
+          "id": "ch_033",
+          "title": "Chained Comparisons \u0026 Effortless Loops in Action",
+          "content_markdown": "Watch how delightfully clean everyday code becomes once comparisons return real values instead of `true` or `false`:\n\n```icon\nif a \u003c b \u003c c then write(\"ordered\")\nwhile line := read() do write(line)\n```\n\nTrace that first line! In a boolean language, `a \u003c b` returns `true`, and trying to test `true \u003c c` makes no sense unless the compiler adds a special exception. In Icon, `a \u003c b` succeeds by returning the *actual value of `b`*! That `b` feeds right into `\u003c c`, which succeeds if `b` is less than `c` and fails silently otherwise—no special grammar required.\n\nNow trace the second line (`:=` is Icon's assignment arrow). Each time around the `while` loop, `read()` succeeds and hands the next text line to `line`, so `write(line)` prints it. The moment the file ends, `read()` fails silently; because there is no value to assign, `line := read()` fails too, and the `while` loop stops gracefully with zero goto labels.",
+          "questions": [
+            {
+              "id": "q_065",
+              "prompt": "Why does `if a \u003c b \u003c c` work naturally in Icon with no special chained-comparison syntax?",
+              "choices": [
+                "When `a \u003c b` succeeds, it produces the actual value `b`, which flows directly into `\u003c c`",
+                "Icon rewrites `\u003c` into a SNOBOL4 pattern match before evaluating any numbers",
+                "When `a \u003c b` succeeds, it returns `true` and compares `true` numerically to `c`",
+                "Icon splits the line silently into two goto labels whenever two `\u003c` symbols appear"
+              ],
+              "correct_index": 0,
+              "explanation": "Because Icon's comparison operators return their right-hand operand on success (`a \u003c b` produces `b`), chaining `a \u003c b \u003c c` works straight from standard evaluation rules."
+            },
+            {
+              "id": "q_066",
+              "prompt": "In `while line := read() do write(line)`, what happens when `read()` reaches the end of the input file?",
+              "choices": [
+                "`read()` assigns the word `'EOF'` into `line` and prints one final blank line",
+                "`read()` jumps automatically to a hidden `:F(DONE)` goto label at the bottom",
+                "`read()` fails silently, preventing the assignment and ending the `while` loop cleanly",
+                "`read()` returns `false`, which gets stored inside `line` until the loop checks it"
+              ],
+              "correct_index": 2,
+              "explanation": "At end-of-file, `read()` fails with no value, causing the enclosing assignment to fail and terminating the `while` loop cleanly."
+            }
+          ]
+        },
+        {
+          "id": "ch_034",
+          "title": "String Scanning: Tearing Down the Pattern Sub-Language Wall",
+          "content_markdown": "Fixing SNOBOL4's goto labels was only half the battle. What about the awkward glass wall between SNOBOL4's separate pattern sub-language and its ordinary statements? Icon demolished that wall with **string scanning**.\n\nInstead of locking text analysis inside a separate `PATTERN` data type with its own private rules, Icon writes `text ? expr` (pronounced 'scan `text` using `expr`'). That `?` operator opens a scanning environment tracking two built-in markers: the string currently under the magnifying glass (`\u0026subject`) and a moving reading cursor (`\u0026pos`, starting at position 1).\n\nInside `expr`, ordinary Icon functions inspect and move that bookmark: `upto()` locates a target character, `tab()` slides the cursor to a position and returns the text crossed, and `move()` steps forward a chosen number of letters. Because string scanning uses plain Icon expressions, you can mix text slicing, arithmetic, `if` tests, and loops in one unified language!",
+          "questions": [
+            {
+              "id": "q_067",
+              "prompt": "What two built-in pieces of state does Icon's string scanning (`text ? expr`) maintain while scanning text?",
+              "choices": [
+                "A global COMIT workspace and a numbered table of temporary pantry shelves",
+                "The current subject string (`\u0026subject`) and a moving cursor position (`\u0026pos`)",
+                "A boolean `matched` flag and a goto label naming the next fallback line",
+                "Two fixed 36-bit character registers reserved for uppercase and lowercase letters"
+              ],
+              "correct_index": 1,
+              "explanation": "Icon's `text ? expr` scanning environment tracks the text being inspected (`\u0026subject`) alongside a cursor position (`\u0026pos`) that ordinary scanning functions inspect and advance."
+            },
+            {
+              "id": "q_068",
+              "prompt": "How did Icon's string scanning cure SNOBOL4's two-language friction?",
+              "choices": [
+                "It forbade programmers from mixing arithmetic or variables with text inspection",
+                "It compiled every Icon expression back into SNOBOL4's separate `PATTERN` data type",
+                "It required all string matching to happen inside fixed-length character arrays",
+                "It replaced the separate pattern sub-language with ordinary Icon expressions operating on a cursor"
+              ],
+              "correct_index": 3,
+              "explanation": "By expressing text navigation through ordinary Icon functions (`upto()`, `tab()`, `move()`), string scanning unified text processing and general code into one language."
+            }
+          ]
+        },
+        {
+          "id": "ch_035",
+          "title": "One Unified Language—And One Missing Superpower",
+          "content_markdown": "Look how far Griswold's Tucson reinvention has already come. By keeping SNOBOL4's success-and-failure intuition while abolishing boolean flags, Icon made structured loops and chained comparisons feel almost poetic. And by replacing SNOBOL4's isolated pattern sub-language with unified string scanning (`text ? expr`), Icon let text processing and ordinary logic live side by side under one roof.\n\nWait a second—did we lose something precious when we gave up SNOBOL4's separate pattern matcher? Remember what made SNOBOL4 patterns so magical in Section 3: when one candidate match failed downstream, SNOBOL4 *automatically backtracked* and tried another alternative!\n\nIf Icon refuses to lock backtracking inside a separate pattern sub-language, how can ordinary Icon expressions possibly backtrack on their own? That question sparked Ralph Griswold's single greatest contribution to computer science—**generators** and **goal-directed evaluation**—waiting right ahead in Section 8.",
+          "questions": [
+            {
+              "id": "q_069",
+              "prompt": "Which twin design changes defined Icon's fresh foundation in Section 7?",
+              "choices": [
+                "Fixed-width character arrays and numbered storage shelves borrowed from COMIT",
+                "Silent expression failure instead of booleans and unified string scanning",
+                "Explicit `:S(...) F(...)` goto labels and separate capture operators",
+                "Lisp's parenthesized S-expressions and hardware-tagged 36-bit mainframe registers"
+              ],
+              "correct_index": 1,
+              "explanation": "Icon replaced booleans with silent expression failure (paired with structured control flow) and replaced SNOBOL4's isolated pattern sub-language with unified string scanning."
+            },
+            {
+              "id": "q_070",
+              "prompt": "After eliminating SNOBOL4's separate pattern sub-language, what major capability did Icon still need to restore across ordinary expressions?",
+              "choices": [
+                "Automatic backtracking when an initial candidate choice fails a later condition",
+                "Six-character packing inside 36-bit numeric mainframe words",
+                "Boolean `true` and `false` keywords for every comparison operator",
+                "Macro-assembly translation tables for running on incompatible mainframes"
+              ],
+              "correct_index": 0,
+              "explanation": "Dropping SNOBOL4's walled-off pattern matcher meant Icon needed a way to bring automatic backtracking directly into ordinary expressions—leading to generators."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_08",
+      "title": "8. Generators \u0026 Goal-Directed Evaluation: Streaming Candidates on Demand",
+      "summary": "Unpack Icon's crowning invention: generators that produce zero, one, or a lazy stream of candidate values on demand, paired with goal-directed evaluation that automatically backtracks across ordinary expressions to satisfy enclosing conditions. Cement the paradigm leap through short side-by-side code contrasts solving the same text-search problem with an imperative loop, a SNOBOL4 pattern, and a crisp one-line Icon generator.",
+      "introduced_terms": [
+        "generator",
+        "goal-directed evaluation"
+      ],
+      "chunks": [
+        {
+          "id": "ch_036",
+          "title": "Why Should an Expression Only Give You One Answer?",
+          "content_markdown": "Pause and examine a quiet assumption buried inside almost every programming language ever invented: when you evaluate an expression like `find(\"a\", \"banana\")`, it is allowed to hand back *at most one* answer—usually just `2`, the first position where `'a'` appears (counting from 1).\n\nWhat if position `2` isn't the `'a'` you actually want? In an ordinary language, `find` has already quit and gone home! You must wrap it in a manual loop, pass in a new starting index each time, watch for the end of the string, and carefully track whether you found what you needed.\n\nRalph Griswold asked a mind-bending question while building Icon: why force an expression to stop at one answer? What if `find(\"a\", \"banana\")` could hand you `2`, pause patiently, and then—only if the rest of your test says 'nope, try again!'—offer `4`, and then `6`?",
+          "questions": [
+            {
+              "id": "q_071",
+              "prompt": "What conventional assumption about expressions did Icon challenge when searching text?",
+              "choices": [
+                "That strings must always begin numbering characters at zero instead of one",
+                "That search functions can only inspect lowercase alphabet letters",
+                "That searching a string requires writing custom assembly macros first",
+                "That evaluating an expression may return at most a single answer"
+              ],
+              "correct_index": 3,
+              "explanation": "Traditional languages limit expressions to one return value, forcing manual loops whenever a search has multiple possible matches."
+            },
+            {
+              "id": "q_072",
+              "prompt": "When searching `'banana'` for `'a'` in a traditional single-result language, what must a programmer do if the first match fails a later test?",
+              "choices": [
+                "Wait for the language to automatically rewind and return position 4",
+                "Rewrite the input string so the unwanted `'a'` disappears permanently",
+                "Write a manual loop that repeatedly restarts the search at later indices",
+                "Attach a SNOBOL4 `:F(RETRY)` label to the end of the search expression"
+              ],
+              "correct_index": 2,
+              "explanation": "Because a single-result `find` stops after returning only the first match, programmers must manually loop and advance the starting position themselves."
+            }
+          ]
+        },
+        {
+          "id": "ch_037",
+          "title": "Generators \u0026 Goal-Directed Evaluation Explained",
+          "content_markdown": "That breakthrough has two tightly linked names. A **generator** is an expression capable of producing zero, one, or a whole sequence of candidate values *on demand*, one at a time, rather than returning a single result or building an entire list upfront. Icon builds generators right into everyday syntax: `1 to 5` generates `1`, `2`, `3`, `4`, `5`; alternation `\"red\" | \"blue\"` yields `\"red\"` and then `\"blue\"`; and `find(\"a\", \"banana\")` generates `2`, `4`, and `6`.\n\nGenerators shine because of **goal-directed evaluation**: whenever an enclosing expression fails, Icon automatically backtracks into any upstream generator to request its *next* candidate value, repeating until the overall goal succeeds or every generator runs dry!\n\nThink of trying keys on a keyring in the dark: you try key 1 in the lock; if it fails, you don't rewrite your hand—you naturally pull key 2, then key 3, until the bolt turns. Icon wired that exact search instinct directly into *all* ordinary expressions.",
+          "questions": [
+            {
+              "id": "q_073",
+              "prompt": "What defines a generator in Icon?",
+              "choices": [
+                "An expression that streams zero, one, or multiple candidate values on demand",
+                "A compiler pass that converts Icon programs directly into IBM assembly",
+                "A built-in associative table that counts every word inside an input file",
+                "A special boolean flag indicating whether a comparison returned true or false"
+              ],
+              "correct_index": 0,
+              "explanation": "Unlike single-value expressions, a generator yields candidate results lazily one at a time whenever surrounding code asks for another option."
+            },
+            {
+              "id": "q_074",
+              "prompt": "How does goal-directed evaluation work when a test using a generator fails?",
+              "choices": [
+                "It halts the program immediately and reports an uncaught runtime error",
+                "It backtracks into the generator for fresh candidates until the test succeeds or fails",
+                "It builds a giant array of every answer before running the first test",
+                "It converts the failing test into a boolean `false` value inside a variable"
+              ],
+              "correct_index": 1,
+              "explanation": "Goal-directed evaluation drives automatic backtracking across ordinary Icon expressions, pulling fresh candidates from upstream generators whenever a downstream condition fails."
+            }
+          ]
+        },
+        {
+          "id": "ch_038",
+          "title": "Three Worlds Side by Side: Loop vs. SNOBOL4 vs. Icon",
+          "content_markdown": "Suppose `line` holds `'cat and dog and cat'`, and we want to check whether `'cat'` ever appears *after* `'dog'` (position 9). Notice the trap: `'cat'` appears first at position 1, *before* `'dog'`, and again at position 17! Compare three ways to express that check:\n\n```text\n# Imperative loop\nd = index_of(\"dog\", line)\nif d \u003e 0:\n  for i = d + 1 to len(line) - 2:\n    if slice(line, i, 3) == \"cat\": found = true; break\n```\n\n```snobol\n# SNOBOL4 pattern (ARB matches any intervening text)\nLINE 'dog' ARB 'cat' :S(YES) F(NO)\n```\n\n```icon\n# One-line Icon generator\nif find(\"dog\", line) \u003c find(\"cat\", line) then write(\"yes\")\n```\n\nLook at Icon's single line! `find(\"dog\", line)` produces `9`; `find(\"cat\", line)` first produces `1`; `9 \u003c 1` fails—so goal-directed evaluation silently asks `find(\"cat\", line)` for its *next* position, `17`! Now `9 \u003c 17` succeeds and prints `\"yes\"`. No manual loops, no goto labels, and no separate pattern sub-language!",
+          "questions": [
+            {
+              "id": "q_075",
+              "prompt": "When Icon runs `if find(\"dog\", line) \u003c find(\"cat\", line)` on `'cat and dog and cat'`, what happens right after `9 \u003c 1` fails?",
+              "choices": [
+                "The entire `if` test immediately fails because the first `'cat'` appeared before `'dog'`",
+                "Icon swaps the two strings inside `line` so `'dog'` moves ahead of `'cat'`",
+                "The runtime jumps to an explicit `:F(NO)` goto label at the end of the line",
+                "Goal-directed evaluation backtracks into `find(\"cat\", line)` to try its next match at position 17"
+              ],
+              "correct_index": 3,
+              "explanation": "Because `find(\"cat\", line)` is a generator, failure of `9 \u003c 1` automatically asks it for the next candidate (`17`), allowing `9 \u003c 17` to succeed."
+            },
+            {
+              "id": "q_076",
+              "prompt": "What key advantage does the one-line Icon expression hold over both the imperative loop and the SNOBOL4 version?",
+              "choices": [
+                "It eliminates the need to scan the string `'cat and dog and cat'` at all",
+                "It brings automatic backtracking straight into ordinary code without loops, gotos, or a sub-language",
+                "It runs exclusively on fixed-width 36-bit words without using dynamic character strings",
+                "It guarantees that `find` only ever returns a single match position per string"
+              ],
+              "correct_index": 1,
+              "explanation": "Icon avoids both the imperative loop's manual index tracking and SNOBOL4's separate pattern sub-language and goto labels by bringing backtracking directly into ordinary expressions."
+            }
+          ]
+        },
+        {
+          "id": "ch_039",
+          "title": "Exhausting Everything with 'every' \u0026 Knowing When Backtracking Stops",
+          "content_markdown": "What if you *don't* want to stop at the first answer that works—what if you want to print *every* position where `'a'` appears in `'banana'`? If you write `write(find(\"a\", \"banana\"))`, `find` hands over `2`, `write(2)` succeeds, and Icon stops happily after printing just `2`.\n\nTo pull every single candidate out of a generator, Icon gives you the `every` keyword:\n\n```icon\nevery write(find(\"a\", \"banana\"))\n```\n\n`every` deliberately forces repeated backtracking—even after `write` succeeds—draining `2`, `4`, and `6` until `find` finally runs dry! Meanwhile, ordinary `if` statements *limit* backtracking: the instant an `if` condition succeeds, it commits to the `then` branch instead of endlessly re-testing later candidates.\n\nNotice one subtle twist newcomers learn quickly: because backtracking steps right-to-left across nested expressions, putting unexpected side effects (like modifying a variable or printing) inside a failing branch can run more times than you meant—a nuance that makes understanding *when* generators resume essential.",
+          "questions": [
+            {
+              "id": "q_077",
+              "prompt": "Why does `every write(find(\"a\", \"banana\"))` print `2`, `4`, and `6`, whereas plain `write(find(\"a\", \"banana\"))` prints only `2`?",
+              "choices": [
+                "Plain `write` disables generators and turns `find` into a boolean comparison",
+                "Plain `write` deletes all remaining `'a'` characters from `'banana'` after printing `2`",
+                "`every` forces backtracking through all candidates, while plain `write` stops at first success",
+                "`every` pre-allocates a SNOBOL4 associative table containing every letter of the alphabet"
+              ],
+              "correct_index": 2,
+              "explanation": "Normally Icon stops once an expression succeeds (`write(2)`), whereas `every` keeps resuming upstream generators until every candidate value has been produced."
+            },
+            {
+              "id": "q_078",
+              "prompt": "What subtle debugging hazard can surprise programmers who are new to Icon's goal-directed backtracking?",
+              "choices": [
+                "Side effects inside a branch that fails and backtracks can execute multiple times unexpectedly",
+                "An `if` statement never commits to its `then` branch until every generator runs out",
+                "Icon refuses to let two generators appear inside the same comparison expression",
+                "Generators automatically convert all numeric ranges into alphabetical character strings"
+              ],
+              "correct_index": 0,
+              "explanation": "Because goal-directed evaluation silently retries upstream generators whenever a later check fails, side effects inside retried sub-expressions may happen repeatedly."
+            }
+          ]
+        },
+        {
+          "id": "ch_040",
+          "title": "Griswold's Unified Dream—And a Deep Runtime Mystery",
+          "content_markdown": "Take a moment to appreciate how cleanly Section 8 completes Ralph Griswold's decade-long quest. In SNOBOL4, automatic backtracking lived fenced inside a specialized pattern sub-language, isolated from unstructured goto statements. In Icon, **generators** and **goal-directed evaluation** dissolved that wall completely: numeric ranges (`1 to 5`), alternations (`a | b`), string-scanning functions (`find`, `upto`), and your own custom procedures all stream candidates and backtrack using the *exact same rules*.\n\nYet if you stop and think like a computer engineer, a fascinating mystery jumps right off the page. Earlier languages assumed that the moment a function returns a value, its work is completely finished and its temporary local variables get thrown away.\n\nHow on earth can an Icon generator pause right in the middle of a search, hand out `2`, let other code run, and then jump back into the exact middle of its work to produce `4` and `6`? Section 9 opens the hood of Icon's runtime to find out.",
+          "questions": [
+            {
+              "id": "q_079",
+              "prompt": "How did Icon's generators and goal-directed evaluation resolve SNOBOL4's biggest architectural weakness?",
+              "choices": [
+                "By restoring COMIT's single shared workspace and numbered holding shelves",
+                "By eliminating backtracking altogether in favor of hand-coded character-index loops",
+                "By bringing automatic backtracking uniformly to all expressions instead of a sub-language",
+                "By forcing every text search to compile directly into native IBM assembly"
+              ],
+              "correct_index": 2,
+              "explanation": "Generators and goal-directed evaluation generalized SNOBOL4's pattern backtracking into a unified mechanism shared by numbers, strings, scanning, and user procedures alike."
+            },
+            {
+              "id": "q_080",
+              "prompt": "What tricky runtime puzzle do Icon's resumable generators pose beneath the surface?",
+              "choices": [
+                "How to pack six variable-length strings into a single fixed 36-bit numeric word",
+                "How to prevent associative tables from accepting character strings as lookup keys",
+                "How to translate every Icon `if` statement back into SNOBOL4 `:S(...) F(...)` labels",
+                "How a generator can pause, hand back a value, and preserve its local state to resume later"
+              ],
+              "correct_index": 3,
+              "explanation": "Ordinary functions discard their local state as soon as they return, so Icon's runtime needed a clever mechanism to freeze and later resume a paused generator."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_09",
+      "title": "9. Under the Hood of Icon: Suspended Generator Frames \u0026 Co-Expressions",
+      "summary": "Peek beneath Icon's clean syntax by first building intuition for an ordinary function's call stack frame, which vanishes the instant a function returns. Then see how Icon's runtime keeps suspended generator frames alive on the stack—preserving local variables and execution state to resume on demand during backtracking—and introduces heap-allocated co-expressions so programs can interleave multiple independent streams outside nested expressions.",
+      "introduced_terms": [
+        "stack frame",
+        "co-expression"
+      ],
+      "chunks": [
+        {
+          "id": "ch_041",
+          "title": "The Bookmark Puzzle: Leaving a Room Without Losing Your Place",
+          "content_markdown": "Imagine you are reading a detective novel and spot a clue halfway down page 42. You want to walk into the next room to check a wall map, then walk right back and resume reading at the exact word where you stopped—with all your sticky notes and pencil tallies still sitting untouched on the desk.\n\nIn ordinary programming languages, functions work nothing like that! When a normal function finishes and hands back an answer, the computer sweeps its entire desk into the trash. Every local counter, temporary string, and line bookmark vanishes on the spot. Call that function a second time, and it starts completely over from page 1 with total amnesia.\n\nIcon's generators clearly cannot suffer from amnesia: when `find(\"a\", \"banana\")` hands back `2` and later resumes to find `4`, it *remembers* exactly how far along `'banana'` it had already walked. Seeing how Icon pulls off that memory trick reveals one of the cleverest runtime designs of the 1970s.",
+          "questions": [
+            {
+              "id": "q_081",
+              "prompt": "Why does an ordinary function's normal lifecycle clash with what an Icon generator must do?",
+              "choices": [
+                "Ordinary functions cannot read character strings longer than six letters",
+                "Ordinary functions discard their local variables and position the moment they return a value",
+                "Ordinary functions automatically pause forever and refuse to return to their caller",
+                "Ordinary functions can only return boolean flags instead of integers or strings"
+              ],
+              "correct_index": 1,
+              "explanation": "A standard function wipes its temporary workspace upon returning, whereas a generator must preserve its local state so it can resume where it left off."
+            },
+            {
+              "id": "q_082",
+              "prompt": "What must Icon's runtime keep intact after a generator hands out its first candidate value?",
+              "choices": [
+                "A full backup copy of the entire operating system stored on magnetic tape",
+                "A permanent list containing every future value the generator will ever produce",
+                "A SNOBOL4 goto table translating every expression back into assembly macros",
+                "The generator's local variables and the exact execution point where it paused"
+              ],
+              "correct_index": 3,
+              "explanation": "To resume smoothly on backtracking, the runtime must keep both the generator's local variables and its bookmark of where execution paused."
+            }
+          ]
+        },
+        {
+          "id": "ch_042",
+          "title": "Stack Frames \u0026 the Magic of 'suspend'",
+          "content_markdown": "To see Icon's trick clearly, picture how almost every language manages active functions using a **call stack**—a neat vertical pile of temporary trays where the newest tray goes on top and comes off first. Whenever a function starts running, the runtime sets a fresh **stack frame** on top of the pile holding that function's local variables and a bookmark pointing back to its caller. The instant a normal function runs `return`, its stack frame is popped off the top and erased.\n\nIcon breaks that tidy rule with a second way to hand back a value: **`suspend`**! When an Icon generator executes `suspend x`, it hands `x` upward to its caller—*without popping its own stack frame*. Instead, the runtime freezes that **suspended generator frame** right where it sits on the stack, leaving its local variables and internal bookmark completely intact underneath whatever the caller does next. If the caller later backtracks, the runtime simply jumps back into that frozen frame to wake it up!",
+          "questions": [
+            {
+              "id": "q_083",
+              "prompt": "What is a stack frame in a programming language runtime?",
+              "choices": [
+                "A fixed wooden rack used to organize punch-card decks beside a mainframe",
+                "A permanent database table mapping dictionary words to printed page numbers",
+                "A temporary call-stack workspace holding a function's local variables and return bookmark",
+                "A hardware instruction that compares two character strings in a single cycle"
+              ],
+              "correct_index": 2,
+              "explanation": "Each active function call gets a stack frame holding its local state and where to return; normally it is removed as soon as the function returns."
+            },
+            {
+              "id": "q_084",
+              "prompt": "How does Icon's `suspend` differ from an ordinary `return` at the stack-frame level?",
+              "choices": [
+                "`suspend` hands a value to the caller while keeping the generator's stack frame frozen alive on the stack",
+                "`suspend` immediately destroys the stack frame and restarts the generator from line 1 on retry",
+                "`suspend` copies the entire call stack into a SNOBOL4 associative table before returning",
+                "`suspend` prevents the caller from running any further comparisons until the program exits"
+              ],
+              "correct_index": 0,
+              "explanation": "While `return` pops and erases the frame, `suspend` leaves the frame intact on the stack so backtracking can jump straight back in and resume it."
+            }
+          ]
+        },
+        {
+          "id": "ch_043",
+          "title": "Tracing a Suspended Generator Frame Step by Step",
+          "content_markdown": "Watch a tiny custom Icon generator come alive on the stack:\n\n```icon\nprocedure evens(limit)\n  local i\n  i := 2\n  while i \u003c= limit do {\n    suspend i\n    i +:= 2\n  }\nend\n```\n\nSuppose our program runs `if evens(6) \u003e 3 then write(\"ok\")`. Step 1: `evens(6)` pushes a stack frame with `limit = 6` and `i = 2`, then hits `suspend i`. It hands `2` upward—leaving its frame frozen right inside the stack with `i = 2` and a bookmark sitting right after `suspend i`!\n\nStep 2: The caller checks `2 \u003e 3`, which fails. Goal-directed evaluation asks the suspended frame to resume! Icon's runtime—itself built as a clean, portable virtual machine written in C, echoing Section 5's portability lessons—jumps right back into `evens`, runs `i +:= 2` (`i` becomes `4`), loops around, and executes `suspend 4`. Step 3: Now `4 \u003e 3` succeeds! Because the `if` condition is satisfied and done searching, Icon finally discards `evens`'s suspended frame cleanly.",
+          "questions": [
+            {
+              "id": "q_085",
+              "prompt": "In `if evens(6) \u003e 3`, what happens inside `evens`'s suspended stack frame right after `2 \u003e 3` fails?",
+              "choices": [
+                "`evens` starts over from `i := 2` because its previous local variable was erased",
+                "Icon resumes the frozen frame after `suspend i`, bumps `i` to `4`, and suspends `4`",
+                "The `while` loop immediately prints `2`, `4`, and `6` all at once before re-testing",
+                "Icon converts `evens(6)` into a boolean `false` value and discards the frame early"
+              ],
+              "correct_index": 1,
+              "explanation": "Resuming picks up immediately after `suspend i` with `i = 2` still preserved, increments `i` to `4`, and suspends the next candidate value."
+            },
+            {
+              "id": "q_086",
+              "prompt": "When does Icon's runtime finally discard a suspended generator frame from the stack?",
+              "choices": [
+                "Once the enclosing expression commits to success or the generator finishes and fails",
+                "Immediately after the generator suspends its very first candidate value",
+                "Never—every suspended generator frame remains permanently on the stack until exit",
+                "Only when the programmer manually invokes a mark-and-sweep garbage collector"
+              ],
+              "correct_index": 0,
+              "explanation": "Icon keeps a suspended frame alive only while backtracking could still ask it for more values, discarding it once the enclosing goal commits or the generator runs dry."
+            }
+          ]
+        },
+        {
+          "id": "ch_044",
+          "title": "Breaking Free of the Stack: Icon's Co-Expressions",
+          "content_markdown": "Keeping suspended generator frames on the main call stack is blazingly tidy—yet it carries one sneaky boundary! Because a suspended frame sits buried inside the single expression that called it, its lifetime is strictly chained to that one spot. What if you want to pair up values from *two* generators side by side—say pulling one word from `streamA` and one number from `streamB` at totally different moments, or handing a half-finished generator to another helper function?\n\nIcon's answer was the **co-expression**. Writing `s := create evens(10)` builds a self-contained execution context with its *own* miniature stack stored in the **heap**—a flexible, garbage-collected pool of long-lived memory—rather than pinned inside the temporary call stack. Whenever your program wants the next value, it explicitly steps that co-expression using `@s`, pulling `2`, running unrelated code elsewhere, and later pulling `4` on its own schedule!",
+          "questions": [
+            {
+              "id": "q_087",
+              "prompt": "What limitation of ordinary stack-based generators prompted Icon to introduce co-expressions?",
+              "choices": [
+                "Stack-based generators could only produce numbers and could never produce character strings",
+                "Stack-based generators could not use local variables inside a `while` loop",
+                "Stack-based generators were forbidden from suspending more than two candidate values",
+                "Stack-based generators are tightly tethered to the lifetime of their single enclosing expression"
+              ],
+              "correct_index": 3,
+              "explanation": "Because an ordinary suspended frame lives inside the enclosing expression's stack boundary, you cannot pass it around freely or pull from two streams independently."
+            },
+            {
+              "id": "q_088",
+              "prompt": "How does an Icon co-expression (`create expr`) let a program pull values on its own schedule?",
+              "choices": [
+                "It pre-computes every value into a fixed array before returning from `create`",
+                "It forces the enclosing `if` statement to backtrack endlessly across the entire file",
+                "It gives the expression its own independent heap-allocated stack stepped explicitly with `@`",
+                "It stores the expression's progress inside a numbered COMIT shelf on magnetic tape"
+              ],
+              "correct_index": 2,
+              "explanation": "A co-expression lives in its own independent heap-allocated stack context, so any part of the program can step it manually with `@` whenever needed."
+            }
+          ]
+        },
+        {
+          "id": "ch_045",
+          "title": "Suspended State \u0026 Streams—Ready to Meet the Modern World",
+          "content_markdown": "Step back and marvel at the elegance hiding under Icon's hood. Ordinary languages treated the call stack as a strict one-way elevator: call goes up, `return` comes down and erases everything. By adding **suspended generator frames**, Icon let functions pause mid-flight with local variables intact so goal-directed evaluation could resume them automatically during backtracking. And by adding heap-allocated **co-expressions**, Icon let programmers detach those pausable streams from any single expression and step them wherever they pleased.\n\nWith COMIT's string rewriting, SNOBOL4's first-class patterns and associative tables, SIL versus SPITBOL, and Icon's generators and co-expressions all firmly in view, one big historical puzzle remains.\n\nIf this maverick lineage was so dazzlingly expressive, why didn't SNOBOL4 or Icon take over mainstream programming—and where are their fingerprints secretly running on your computer right now? Section 10 brings the entire story home to the present day.",
+          "questions": [
+            {
+              "id": "q_089",
+              "prompt": "How do suspended stack frames and co-expressions play distinct roles inside Icon's runtime?",
+              "choices": [
+                "Suspended frames drive expression backtracking, while co-expressions enable independent caller-stepped streams",
+                "Suspended frames handle text strings only, while co-expressions handle floating-point arithmetic",
+                "Suspended frames live permanently in heap memory, while co-expressions vanish upon return",
+                "Suspended frames replace string scanning, while co-expressions restore SNOBOL4's explicit goto labels"
+              ],
+              "correct_index": 0,
+              "explanation": "Stack-based suspended frames smoothly drive automatic goal-directed backtracking within an expression, whereas heap-allocated co-expressions let programs pass and step independent streams anywhere."
+            },
+            {
+              "id": "q_090",
+              "prompt": "What central historical question remains as we move from Icon's runtime into Section 10?",
+              "choices": [
+                "Whether Victor Yngve ever finished designing COMIT's holding shelves on the IBM 704",
+                "Why rival text tools won the mainstream while quietly adopting Griswold's breakthroughs",
+                "Why SPITBOL failed to run faster than Macro SNOBOL4 on IBM System/360 hardware",
+                "Whether Icon eventually removed `suspend` to reintroduce boolean `true` and `false` flags"
+              ],
+              "correct_index": 1,
+              "explanation": "Section 10 examines both why Unix regular expressions and scripting languages won the mainstream and how Icon's generators and SNOBOL4's patterns reshaped modern languages."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sec_10",
+      "title": "10. Enduring Echoes: Unix Regexes, Python's 'yield', Parser Combinators \u0026 Raku",
+      "summary": "Examine why compact Unix regular expressions and practical scripting languages like Perl won the programming mainstream while ubiquitous implicit backtracking stayed niche. Then trace how this maverick lineage quietly reshaped modern software: Icon's resumable generators directly inspired Python's 'yield' (PEP 255), while SNOBOL4's composable first-class patterns live on in modern parser combinators and Raku grammars.",
+      "introduced_terms": [
+        "regular expression",
+        "parser combinator"
+      ],
+      "chunks": [
+        {
+          "id": "ch_046",
+          "title": "The Great Paradox: Brilliant Mavericks, Quiet Mainstream",
+          "content_markdown": "Here is one of programming history's sharpest ironies. By 1980, Ralph Griswold's lineage had already gifted the world first-class composable patterns, string-keyed associative tables, unified string scanning, resumable generators, goal-directed backtracking, and lightweight co-expressions. Yet ask a roomful of software engineers today whether they have ever written a line of COMIT, SNOBOL4, or Icon, and almost every hand stays down.\n\nMeanwhile, nearly *every* working programmer has typed cryptic slash-and-punctuation text searches and written scripts to wrangle log files, web pages, and data tables—the exact problems SNOBOL4 and Icon were born to solve!\n\nHow did a paradigm so far ahead of its time lose the mainstream adoption race? To answer that, we need to look back at Bell Labs itself—where a totally different, brutally minimalist text philosophy was quietly conquering minicomputers right down the hall.",
+          "questions": [
+            {
+              "id": "q_091",
+              "prompt": "What historical irony surrounds COMIT, SNOBOL4, and Icon in modern software engineering?",
+              "choices": [
+                "They were kept classified as military secrets until the early twenty-first century",
+                "They solved only scientific physics equations and ignored everyday text manipulation",
+                "Most modern programmers solve text-wrangling tasks daily without ever using those pioneering languages",
+                "They refused to run on any computer built after the 1960s IBM System/360"
+              ],
+              "correct_index": 2,
+              "explanation": "Despite inventing foundational text-processing and generator ideas, SNOBOL4 and Icon stayed niche while competing Unix text tools captured the mainstream."
+            },
+            {
+              "id": "q_092",
+              "prompt": "Where did the rival minimalist text-processing tradition that eventually eclipsed SNOBOL4 and Icon take root?",
+              "choices": [
+                "Inside Bell Labs' own Unix culture running on lean minicomputers",
+                "Inside MIT's mechanical-translation lab using expanded COMIT shelves",
+                "Inside Illinois Institute of Technology's native-code SPITBOL project",
+                "Inside the University of Arizona's humanities-computing workshops"
+              ],
+              "correct_index": 0,
+              "explanation": "Ironically, the compact Unix pipeline and regular-expression toolkit grew out of Bell Labs itself, offering a far smaller, C-friendly alternative."
+            }
+          ]
+        },
+        {
+          "id": "ch_047",
+          "title": "Why Unix Regular Expressions \u0026 Scripting Languages Won",
+          "content_markdown": "Inside 1970s Unix—built on lean minicomputers with tight memory—Ken Thompson popularized the **regular expression**: a compact, punctuation-dense mini-language for matching text patterns inside single lines, powering Unix's `ed` editor and `grep` text searcher. In 1987, Larry Wall bundled regular expressions, dynamic strings, and associative tables into **Perl**, giving system administrators an unstoppable text-wrangling scripting language.\n\nWhy did Unix regular expressions and scripting beat SNOBOL4 and Icon in the market? Remember the pragmatic **Worse is Better** trade-off you met in *Before Compilers IV*! Regular expressions were tiny to implement, zipped through Unix **pipelines** (chaining small command-line tools so one program's output feeds straight into the next), and plugged effortlessly into C-based systems. By contrast, Icon's everywhere-implicit backtracking could surprise programmers debugging large business software, and smaller library ecosystems kept Icon a beloved specialist treasure rather than an industry default.",
+          "questions": [
+            {
+              "id": "q_093",
+              "prompt": "What is a regular expression as popularized in Unix tools like `ed` and `grep`?",
+              "choices": [
+                "A heap-allocated Icon execution context stepped manually with `@`",
+                "A compact, punctuation-based mini-language for matching text patterns quickly",
+                "A portable macro-assembly virtual machine targeting incompatible mainframes",
+                "A grammatical subscript tagging nouns and verbs inside a COMIT workspace"
+              ],
+              "correct_index": 1,
+              "explanation": "Regular expressions provide a terse, fast pattern notation that fit neatly inside lean Unix command-line utilities and later scripting languages like Perl."
+            },
+            {
+              "id": "q_094",
+              "prompt": "Which combination of practical advantages helped Unix regular expressions and Perl outcompete Icon in the mainstream?",
+              "choices": [
+                "Built-in goal-directed backtracking, abolition of booleans, and SPITBOL native code",
+                "Single-workspace rewrite rules, grammatical subscripts, and punch-card fixed widths",
+                "Tagged Lisp hardware, homoiconic AST macros, and image-based interactive desktops",
+                "Tiny implementations, seamless Unix/C integration, and predictable non-backtracking everyday code"
+              ],
+              "correct_index": 3,
+              "explanation": "Reflecting 'Worse is Better,' compact regex tools fit Unix pipelines and C ecosystems cleanly while avoiding the debugging surprises of pervasive implicit backtracking."
+            }
+          ]
+        },
+        {
+          "id": "ch_048",
+          "title": "Icon's Direct Heir: Python's 'yield' (PEP 255)",
+          "content_markdown": "Yet maverick languages rarely vanish—their boldest breakthroughs quietly migrate into the mainstream! Nowhere is that lineage clearer than in **Python's `yield`**, introduced in 2001 by **PEP 255** (*Python Enhancement Proposal 255: Simple Generators*). When Neil Schemenauer, Tim Peters, and Guido van Rossum added pausable generator functions to Python, PEP 255 explicitly credited **Icon** (alongside the 1970s language CLU's loop helpers) as a foundational inspiration.\n\nCompare our Section 9 Icon generator with modern Python:\n\n```python\ndef evens(limit):\n    i = 2\n    while i \u003c= limit:\n        yield i\n        i += 2\n```\n\nLook closely at what Python borrowed—and what it left behind! Python adopted Icon's suspended, state-preserving frames (closer to explicitly stepped co-expressions), letting `evens(6)` pause at `yield i` and resume on demand. What Python omitted was Icon's automatic, everywhere backtracking—choosing explicit, on-demand ('lazy') streams, a design soon echoed in JavaScript's `function*` generators and C#'s `yield return`.",
+          "questions": [
+            {
+              "id": "q_095",
+              "prompt": "Which 2001 Python milestone explicitly credited Icon's generators when bringing pausable functions to the mainstream?",
+              "choices": [
+                "ANSI Common Lisp's unification of lexical closures and macros",
+                "IBM's SIL macro-assembly specification for portable virtual machines",
+                "PEP 255 ('Simple Generators'), which introduced Python's `yield` keyword",
+                "Ken Thompson's original Unix `grep` utility for line-oriented search"
+              ],
+              "correct_index": 2,
+              "explanation": "PEP 255 introduced Python's `yield`-based generator functions in 2001 and directly cited Icon's generators as a key historical precedent."
+            },
+            {
+              "id": "q_096",
+              "prompt": "How do Python's `yield` generators intentionally differ from Icon's built-in expression generators?",
+              "choices": [
+                "Python generators erase all local variables immediately after every `yield`",
+                "Python generators force every comparison expression to abandon boolean values",
+                "Python generators can only yield character strings and forbid numeric ranges",
+                "Python adopts explicit caller-driven suspension without Icon's automatic everywhere backtracking"
+              ],
+              "correct_index": 3,
+              "explanation": "Python kept Icon's pausable, state-preserving frames (akin to manually stepped co-expressions) while leaving behind automatic goal-directed backtracking across ordinary expressions."
+            }
+          ]
+        },
+        {
+          "id": "ch_049",
+          "title": "SNOBOL4 Reborn: Parser Combinators \u0026 Raku Grammars",
+          "content_markdown": "What about SNOBOL4's 1967 breakthrough of first-class, composable patterns? For decades, compact regular expressions handled simple line searches easily—until programmers tackled deeply nested, **recursive** text (structures containing smaller copies of themselves, such as parentheses inside parentheses in web-page HTML, structured JSON data, or source code). Flat regular expressions break down on arbitrary nesting, and giant one-line regex strings quickly become unreadable 'write-only' punctuation soup.\n\nTo cure those flaws, modern computing rediscovered SNOBOL4's insight! A **parser combinator** builds full text parsers (programs that check and break structured text into grammatical pieces) by snapping tiny matching functions together with sequence and choice operators—treating grammar rules as ordinary, reusable values just like SNOBOL4 patterns! Even Perl's successor, **Raku** (formerly Perl 6), replaced opaque mega-regexes with structured **Raku grammars** made of named, composable rules—bringing Ralph Griswold's 1967 vision full circle.",
+          "questions": [
+            {
+              "id": "q_097",
+              "prompt": "What is a parser combinator in modern programming?",
+              "choices": [
+                "A method that snaps small matching functions together with sequence and choice rules",
+                "A hardware accelerator inside Unix servers dedicated strictly to speeding up `grep`",
+                "A one-line punctuation string that bans named sub-rules in order to stay compact",
+                "A memory allocator that merges two adjacent stack frames during garbage collection"
+              ],
+              "correct_index": 0,
+              "explanation": "Parser combinators echo SNOBOL4's first-class patterns by treating small text parsers as ordinary values composed cleanly through sequence and alternation."
+            },
+            {
+              "id": "q_098",
+              "prompt": "Why did both modern parser combinators and Raku grammars revive SNOBOL4's 1967 composable-pattern philosophy?",
+              "choices": [
+                "Because modern computers can no longer execute compact Unix regular expressions",
+                "Because flat punctuation-heavy regex strings struggle with readability and nested, recursive structures",
+                "Because programmers wanted to bring back SNOBOL4's `:S(...) F(...)` goto branching labels",
+                "Because Raku banned associative tables and needed patterns to store dictionary counts"
+              ],
+              "correct_index": 1,
+              "explanation": "Named, reusable, composable rules overcome classic regexes' unreadability and inability to handle cleanly nested or recursive text structures."
+            }
+          ]
+        },
+        {
+          "id": "ch_050",
+          "title": "When Human Text Took Center Stage: The Maverick Lesson",
+          "content_markdown": "Step back across seventy years of rebellious invention. When Victor Yngve refused to pack human sentences into fixed 36-bit numeric slots in 1957 COMIT, he unlocked a parallel universe of computing. Bell Labs' Farber, Griswold, and Polonsky turned that spark into SNOBOL4—pioneering first-class patterns, automatic backtracking, garbage-collected dynamic strings, associative tables, portable SIL virtual machines, blazing native SPITBOL compilers, and thriving humanities-computing communities. When SNOBOL4's pattern sub-language split chafed, Griswold reinvented everything in Tucson with Icon's boolean-free failure, string scanning, goal-directed generators, suspended stack frames, and co-expressions.\n\nEven though Unix regexes and scripting languages won the commercial crown, this maverick bloodline quietly rewired modern programming: dictionaries sit in every language, Python `yield` streams data lazily via suspended frames, and parser combinators plus Raku grammars carry composable patterns forward.\n\nWhenever you change what sits at the center of a language—from numbers to human text—entirely new ways of thinking about computation come to life.",
+          "questions": [
+            {
+              "id": "q_099",
+              "prompt": "Which set of modern programming features traces direct conceptual roots to SNOBOL4 and Icon?",
+              "choices": [
+                "Fixed 80-column punch-card layouts, COBOL record divisions, and numeric shelf indices",
+                "Manual bit-packing of six letters per 36-bit word and explicit assembly goto registers",
+                "Hardware-tagged Lisp machines, homoiconic S-expressions, and dynamic variable scoping",
+                "String-keyed dictionaries, `yield` generator functions, parser combinators, and Raku grammars"
+              ],
+              "correct_index": 3,
+              "explanation": "SNOBOL4's associative tables and composable patterns alongside Icon's suspended generators directly foreshadowed modern dicts, Python `yield`, parser combinators, and Raku grammars."
+            },
+            {
+              "id": "q_100",
+              "prompt": "What overarching historical lesson ties together COMIT, SNOBOL4, and Icon in Part 1 of this Quest Arc?",
+              "choices": [
+                "An experimental language only matters if its original syntax conquers industry untouched",
+                "Centering a language on human text spawns lasting paradigms even when rivals win",
+                "Portability virtual machines always outperform native-code compilers on text-heavy workloads",
+                "Structured control flow and automatic backtracking can never coexist in one language"
+              ],
+              "correct_index": 1,
+              "explanation": "Centering computing around human text inspired breakthroughs—first-class patterns, tables, and resumable generators—that reshaped modern languages even after Unix tools won the mainstream."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
